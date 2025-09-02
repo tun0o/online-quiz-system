@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Clock, CheckCircle, XCircle, Eye } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { quizService } from '../../services/quizService';
-import ConfirmationModal from '../common/ConfirmationModal';
+import { quizService } from '@/services/quizService';
+import ConfirmationModal from '@/components/common/ConfirmationModal';
+import { subjectDisplayMap } from '@/utils/displayMaps';
 
 export default function ModerationPanel() {
   const [pendingSubmissions, setPendingSubmissions] = useState([]);
@@ -141,7 +142,7 @@ export default function ModerationPanel() {
                       <h3 className="font-medium text-gray-800 mb-1">{submission.title}</h3>
                       <p className="text-sm text-gray-600 mb-2">{submission.description}</p>
                       <div className="flex items-center gap-4 text-xs text-gray-500">
-                        <span>Môn: <strong>{submission.subject}</strong></span>
+                        <span>Môn: <strong>{subjectDisplayMap[submission.subject] || submission.subject}</strong></span>
                         <span>Thời gian: <strong>{submission.durationMinutes} phút</strong></span>
                         <span>Câu hỏi: <strong>{submission.questionCount || submission.questions?.length || 0}</strong></span>
                       </div>
@@ -196,7 +197,7 @@ export default function ModerationPanel() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-500">Môn học:</span>
-                    <span className="font-medium text-gray-800">{selectedSubmission.subject}</span>
+                    <span className="font-medium text-gray-800">{subjectDisplayMap[selectedSubmission.subject] || selectedSubmission.subject}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-500">Thời gian làm bài:</span>

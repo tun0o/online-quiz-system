@@ -1,15 +1,18 @@
-import { Routes, Route, NavLink, Outlet, useLocation, Navigate, useNavigate } from "react-router-dom";
+import { Routes, Route, NavLink, Outlet, useLocation, Navigate, useNavigate, Link, useParams } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
 import { Home, Star, Shield, ClipboardList, User, Settings, UserPlus, LogIn, TrophyIcon, TargetIcon, ServerCrash } from "lucide-react";
-import { QuizProvider } from "./contexts/QuizContext";
-import { ToastContainer } from 'react-toastify';
+import { QuizProvider } from "@/contexts/QuizContext";
+import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import ContributorDashboard from "./components/contributor/ContributorDashboard";
-import ProtectedRoute from "./components/auth/ProtectedRoute";
-import useAuth from "./hooks/useAuth";
-import AdminLayout from "./components/admin/AdminLayout";
-import ModerationPanel from "./components/admin/ModerationPanel";
-import AllSubmissionsTable from "./components/admin/AllSubmissionsTable";
-import QuizSubmissionForm from "./components/contributor/QuizSubmissionForm";
+import ContributorDashboard from "@/components/contributor/ContributorDashboard";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import useAuth from "@/hooks/useAuth";
+import AdminLayout from "@/components/admin/AdminLayout";
+import ModerationPanel from "@/components/admin/ModerationPanel";
+import AllSubmissionsTable from "@/components/admin/AllSubmissionsTable";
+import QuizSubmissionForm from "@/components/contributor/QuizSubmissionForm";
+import { quizService } from "@/services/quizService";
+import { subjectDisplayMap } from "@/utils/displayMaps";
 
 /**
  * Layout chung cho toàn bộ ứng dụng, bao gồm Sidebar và khu vực nội dung chính.
@@ -145,58 +148,175 @@ function AppLayout() {
   );
 }
 
+// Component cho trang làm bài quiz (placeholder)
+function QuizTakingPage() {
+  const { quizId } = useParams();
+  return (
+    <div className="text-center p-10 bg-white rounded-lg shadow-sm">
+      <h1 className="text-2xl font-bold">Trang Làm Bài Quiz</h1>
+      <p className="mt-4">Bạn đang chuẩn bị làm đề thi với ID: <span className="font-bold text-green-600">{quizId}</span></p>
+      <p className="mt-2 text-gray-600">Giao diện làm bài chi tiết sẽ được phát triển ở đây.</p>
+    </div>
+  );
+}
+
 // Component cho trang chủ
 function HomePage() {
+  const [quizzes, setQuizzes] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // A single state object for all query parameters
+  const [query, setQuery] = useState({
+    keyword: '',
+    subject: '',
+    page: 0,
+  });
+
+  // Separate state for the search input to allow for debouncing
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const [pagination, setPagination] = useState({ size: 12, totalPages: 0 });
+
+  // Debounce the search term and update the main query state
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      // Reset to page 0 on a new search
+      setQuery(q => ({ ...q, keyword: searchTerm, page: 0 }));
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
+
+  // The single effect to fetch data whenever the query changes
+  useEffect(() => {
+    const fetchQuizzes = async () => {
+      setLoading(true);
+      try {
+        const params = {
+          ...query,
+          size: pagination.size,
+        };
+        const data = await quizService.getPublicQuizzes(params);
+        setQuizzes(data.content || []);
+        // Update total pages from the response
+        setPagination(p => ({ ...p, totalPages: data.totalPages }));
+
+        // If the API returns a different page number (e.g., requested page was out of bounds),
+        // update our query state to reflect the actual page. This prevents an inconsistent state.
+        if (query.page !== data.number) {
+          setQuery(q => ({ ...q, page: data.number }));
+        }
+      } catch (error) {
+        toast.error("Không thể tải danh sách đề thi.");
+        console.error("Failed to fetch quizzes:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchQuizzes();
+  }, [query, pagination.size]); // Dependency on the single query object
+
+  const handleFilterChange = (e) => {
+    // Reset to page 0 when filter changes
+    setQuery(q => ({ ...q, subject: e.target.value, page: 0 }));
+  };
+
+  const handlePageChange = (newPage) => {
+    setQuery(q => ({ ...q, page: newPage }));
+  };
+
   return (
     <>
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex-1">
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+        <div className="flex-1 w-full">
           <input
             type="text"
-            placeholder="Tìm kiếm..."
-            className="w-full p-3 rounded-lg bg-white border border-gray-200 text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
+            placeholder="Tìm kiếm theo tiêu đề, mô tả..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full p-3 rounded-lg bg-white border border-gray-200 text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent shadow-sm"
           />
+        </div>
+        <div className="w-full md:w-auto">
+           <select
+              name="subject"
+              value={query.subject}
+              onChange={handleFilterChange}
+              className="w-full md:w-48 p-3 border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 shadow-sm"
+            >
+              <option value="">Tất cả môn học</option>
+              {Object.entries(subjectDisplayMap).map(([value, label]) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
+            </select>
         </div>
       </div>
 
-      {/* Đề xuất */}
+      {/* Đề thi nổi bật */}
       <section className="mb-6">
-        <h2 className="text-xl font-semibold mb-4 text-gray-800">Đề xuất</h2>
+        <h2 className="text-xl font-semibold mb-4 text-gray-800">Đề thi nổi bật</h2>
         <div className="flex gap-4 overflow-x-auto pb-4">
           {["Ôn luyện đạo hàm", "Ôn luyện điện tử", "Hóa hữu cơ"].map(
             (title, i) => (
               <div
                 key={i}
-                className="min-w-[220px] border border-gray-200 rounded-lg p-4 bg-white hover:shadow-md transition-shadow"
+                className="min-w-[220px] border border-gray-200 rounded-lg p-4 bg-white hover:shadow-md transition-shadow cursor-pointer"
               >
                 <h3 className="font-bold text-gray-800">{title}</h3>
-                <p className="text-gray-600">Thời gian: 50p</p>
-                <p className="text-gray-600">Số người tham gia: 273829</p>
-                <p className="text-gray-600">Bình luận: 283</p>
-                <p className="text-gray-600">50 câu hỏi</p>
+                <p className="text-gray-600 text-sm">Thời gian: 50p</p>
+                <p className="text-gray-600 text-sm">50 câu hỏi</p>
               </div>
             )
           )}
         </div>
       </section>
 
-      {/* Danh sách đề */}
+      {/* Danh sách đề thi */}
       <section>
-        <h2 className="text-xl font-semibold mb-4 text-gray-800">Danh sách đề</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div
-              key={i}
-              className="border border-gray-200 rounded-lg p-4 bg-white hover:shadow-md transition-shadow cursor-pointer"
-            >
-              <h3 className="font-bold text-gray-800">Ôn luyện đạo hàm</h3>
-              <p className="text-gray-600">Thời gian: 50p</p>
-              <p className="text-gray-600">Số người tham gia: 273829</p>
-              <p className="text-gray-600">Bình luận: 283</p>
-              <p className="text-gray-600">50 câu hỏi</p>
+        <h2 className="text-xl font-semibold mb-4 text-gray-800">Danh sách đề thi</h2>
+        {loading ? (
+          <div className="text-center py-10">Đang tải...</div>
+        ) : quizzes.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {quizzes.filter(Boolean).map((quiz) => (
+                <Link to={`/quiz/${quiz.id}`} key={quiz.id}>
+                  <div
+                    className="border border-gray-200 rounded-lg p-4 bg-white hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer h-full flex flex-col"
+                  >
+                    <h3 className="font-bold text-gray-800 mb-2">{quiz.title}</h3>
+                    <p className="text-gray-600 text-sm mb-3 flex-grow">{quiz.description}</p>
+                    <div className="text-sm text-gray-500 border-t border-gray-100 pt-2 mt-auto">
+                      <p>Môn: {subjectDisplayMap[quiz.subject] || quiz.subject}</p>
+                      <p>Thời gian: {quiz.durationMinutes} phút</p>
+                      <p>{quiz.questions?.length || 0} câu hỏi</p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
             </div>
-          ))}
-        </div>
+            {/* Pagination */}
+            {pagination.totalPages > 1 && (
+              <div className="flex justify-center items-center gap-2 mt-6">
+                {Array.from({ length: pagination.totalPages }, (_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => handlePageChange(i)}
+                    className={`px-3 py-1 rounded ${
+                      i === query.page
+                        ? 'bg-green-600 text-white'
+                        : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="text-center py-10 text-gray-500">Không tìm thấy đề thi nào.</div>
+        )}
       </section>
     </>
   );
@@ -235,6 +355,7 @@ function AppRoutes() {
       <Route path="/" element={<AppLayout />}>
         <Route index element={<HomePage />} />
         <Route path="contribute" element={<ContributorDashboard />} />
+        <Route path="quiz/:quizId" element={<QuizTakingPage />} />
         {/* Các route khác cho ranking, tasks, profile... */}
         <Route path="ranking" element={<div>Trang Bảng xếp hạng</div>} />
         <Route path="tasks" element={<div>Trang Nhiệm vụ</div>} />
@@ -259,7 +380,7 @@ function AppRoutes() {
 function App() {
   return (
     <QuizProvider>
-      <ToastContainer autoClose={3000} hideProgressBar={false} />
+      <ToastContainer autoClose={3000} hideProgressBar={false} position="bottom-right" />
       <AppRoutes />
     </QuizProvider>
   );

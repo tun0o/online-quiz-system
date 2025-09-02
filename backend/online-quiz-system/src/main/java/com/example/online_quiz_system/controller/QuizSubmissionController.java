@@ -30,12 +30,25 @@ public class QuizSubmissionController {
         return ResponseEntity.ok(submission);
     }
 
-//    @GetMapping
+//    @GetMapping()
 //    public ResponseEntity<Page<QuizSubmission>> getAllSubmission(@RequestParam(defaultValue = "0") int page,
-//                                                                 @RequestParam(defaultValue = "10") int size){
+//                                                                 @RequestParam(defaultValue = "12") int size){
 //        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-//        Page<QuizSubmission> submissions = submissionService.get
+//        Page<QuizSubmission> submissions = submissionService.getAllSubmissions(pageable);
+//        return ResponseEntity.ok(submissions);
 //    }
+
+    @GetMapping("/public")
+    public ResponseEntity<Page<QuizSubmission>> getPublicQuizzes(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String subject,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<QuizSubmission> quizzes = submissionService.findPublicQuizzes(keyword, subject, pageable);
+        return ResponseEntity.ok(quizzes);
+    }
 
     @GetMapping("/contributor/{contributorId}")
     public ResponseEntity<Page<QuizSubmission>> getSubmissionsByContributor(@PathVariable Long contributorId,

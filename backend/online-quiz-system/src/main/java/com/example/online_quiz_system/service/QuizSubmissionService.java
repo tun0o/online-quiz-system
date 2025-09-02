@@ -3,16 +3,15 @@ package com.example.online_quiz_system.service;
 import com.example.online_quiz_system.dto.AnswerOptionDTO;
 import com.example.online_quiz_system.dto.QuestionDTO;
 import com.example.online_quiz_system.dto.QuizSubmissionDTO;
-import com.example.online_quiz_system.entity.QuizSubmission;
-import com.example.online_quiz_system.entity.SubmissionAnswerOption;
-import com.example.online_quiz_system.entity.SubmissionQuestion;
-import com.example.online_quiz_system.entity.SubmissionStatus;
+import com.example.online_quiz_system.entity.*;
 import com.example.online_quiz_system.repository.QuizSubmissionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -72,6 +71,73 @@ public class QuizSubmissionService {
     }
 
     @Transactional(readOnly = true)
+    public Page<QuizSubmission> getAllSubmissions(Pageable pageable){
+        return submissionRepository.findAll(pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<QuizSubmission> findPublicQuizzes(String keyword, String subject, Pageable pageable){
+        Specification<QuizSubmission> spec = isApproved();
+
+        if(StringUtils.hasText(keyword)){
+            spec = spec.and(hasKeyword(keyword));
+        }
+        if(StringUtils.hasText(subject)){
+            spec = spec.and(hasSubject(subject));
+        }
+
+        return submissionRepository.findAll(spec, pageable);
+    }
+
+    private Specification<QuizSubmission> isApproved(){
+        return ((root, query, criteriaBuilder) ->
+                criteriaBuilder.equal(root.get("status"), SubmissionStatus.APPROVED));
+    }
+
+    private Specification<QuizSubmission> hasKeyword(String keyword){
+        return (root, query, criteriaBuilder) -> {
+                String likePattern = "%" + keyword.toLowerCase() +"%";
+                return criteriaBuilder.or(
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("title")), likePattern),
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("description")), likePattern)
+                );
+        };
+    }
+
+    private Specification<QuizSubmission> hasSubject(String subject){
+        return (root, query, criteriaBuilder) -> {
+            try {
+                Subject subjectEnum = Subject.valueOf(subject.toUpperCase());
+                return criteriaBuilder.equal(root.get("subject"), subjectEnum.toString());
+            } catch (IllegalArgumentException e) {
+                return criteriaBuilder.disjunction();
+            }
+        };
+    }
+
+    private QuizSubmissionDTO convertToPublicDTO(QuizSubmission entity) {
+        QuizSubmissionDTO dto = new QuizSubmissionDTO();
+        dto.setId(entity.getId());
+        dto.setTitle(entity.getTitle());
+        dto.setDescription(entity.getDescription());
+        dto.setSubject(entity.getSubject());
+        dto.setDurationMinutes(entity.getDurationMinutes());
+
+        if(entity.getQuestions() != null){
+            dto.setQuestions(entity.getQuestions().stream()
+                    .map(this::convertQuestionToDTO)
+                    .collect(Collectors.toList()));
+        }
+
+        return dto;
+    }
+
+    private QuestionDTO convertQuestionToDTO(SubmissionQuestion question){
+        QuestionDTO dto = new QuestionDTO();
+        return dto;
+    }
+
+    @Transactional(readOnly = true)
     public Page<QuizSubmission> getPendingSubmissions(Pageable pageable){
         return submissionRepository.findByStatus(SubmissionStatus.PENDING, pageable);
     }
@@ -117,11 +183,11 @@ public class QuizSubmissionService {
     public void deleteSubmission(Long id, Long contributorId){
         QuizSubmission submission = submissionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đề thi"));
-
-        if(!submission.getContributorId().equals(contributorId))
-            throw new RuntimeException("Bạn không có quyền xóa đề thi này");
-        if(!submission.getStatus().equals(SubmissionStatus.PENDING))
-            throw new RuntimeException("Chỉ có thể xóa đề thi đang chờ duyệt");
+//
+//        if(!submission.getContributorId().equals(contributorId))
+//            throw new RuntimeException("Bạn không có quyền xóa đề thi này");
+//        if(!submission.getStatus().equals(SubmissionStatus.PENDING))
+//            throw new RuntimeException("Chỉ có thể xóa đề thi đang chờ duyệt");
 
         submissionRepository.delete(submission);
     }

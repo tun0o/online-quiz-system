@@ -1,5 +1,6 @@
 package com.example.online_quiz_system.dto;
 
+import com.example.online_quiz_system.entity.Subject;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -10,6 +11,8 @@ import java.util.List;
 
 @Data
 public class QuizSubmissionDTO {
+    private Long id;
+
     @NotBlank(message = "Tiêu đề không được để trống")
     private String title;
 

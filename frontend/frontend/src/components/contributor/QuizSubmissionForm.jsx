@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Plus, Trash2, Save } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { quizService } from '../../services/quizService';
+import { quizService } from '@/services/quizService';
 
 export default function QuizSubmissionForm({ submission, onSuccess }) {
   const [formData, setFormData] = useState({
@@ -183,7 +183,7 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
               name="title"
               value={formData.title}
               onChange={handleChange}
-              className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800"
               placeholder="VD: Ôn luyện đạo hàm cơ bản"
             />
           </div>
@@ -197,7 +197,7 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
               name="subject"
               value={formData.subject}
               onChange={handleChange}
-              className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800"
             >
               <option value="">Chọn môn học</option>
               <option value="MATH">Toán học</option>
@@ -222,7 +222,7 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
               name="durationMinutes"
               value={formData.durationMinutes}
               onChange={handleChange}
-              className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800"
             />
           </div>
         </div>
@@ -235,7 +235,7 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
             name="description"
             value={formData.description}
             onChange={handleChange}
-            className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800"
             rows="3"
             placeholder="Mô tả ngắn về đề thi..."
           />
@@ -273,7 +273,7 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
                     required
                     value={question.questionText}
                     onChange={(e) => updateQuestion(qIndex, 'questionText', e.target.value)}
-                    className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800"
                     rows="2"
                     placeholder="Nhập câu hỏi..."
                   />
@@ -287,7 +287,7 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
                     <select
                       value={question.difficultyLevel}
                       onChange={(e) => updateQuestion(qIndex, 'difficultyLevel', parseInt(e.target.value))}
-                      className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                      className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800"
                     >
                       <option value={1}>Dễ</option>
                       <option value={2}>Trung bình</option>
@@ -322,7 +322,7 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
                         required
                         value={option.optionText}
                         onChange={(e) => updateAnswerOption(qIndex, oIndex, 'optionText', e.target.value)}
-                        className="flex-1 p-2 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+                        className="flex-1 p-2 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800"
                         placeholder={`Đáp án ${String.fromCharCode(65 + oIndex)}`}
                       />
                     </div>
@@ -336,7 +336,7 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
                   <textarea
                     value={question.explanation}
                     onChange={(e) => updateQuestion(qIndex, 'explanation', e.target.value)}
-                    className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800"
                     rows="2"
                     placeholder="Giải thích đáp án đúng..."
                   />
@@ -351,7 +351,7 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
             <button
               type="button"
               onClick={addQuestion}
-              className="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+              className="flex items-center gap-2 px-4 py-2 bg-white text-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
             >
               <Plus size={16} />
               Thêm câu hỏi

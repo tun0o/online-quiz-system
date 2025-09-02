@@ -2,6 +2,27 @@
 const API_BASE = (import.meta?.env?.VITE_API_BASE) || '/api';
 
 export const quizService = {
+  // Public APIs
+  /**
+   * Fetches publicly available and approved quizzes with search, filter, and pagination.
+   * @param {object} params - The query parameters.
+   * @param {number} params.page - The page number to fetch.
+   * @param {number} params.size - The number of items per page.
+   * @param {string} [params.keyword] - The search keyword.
+   * @param {string} [params.subject] - The subject to filter by.
+   * @returns {Promise<any>} A promise that resolves to the paginated quiz data.
+   */
+  getPublicQuizzes: async (params) => {
+    // Lọc ra các tham số có giá trị (không phải null, undefined, hoặc chuỗi rỗng)
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, v]) => v != null && v !== '')
+    );
+    const query = new URLSearchParams(cleanParams).toString();
+    const response = await fetch(`${API_BASE}/quiz-submissions/public?${query}`);
+    if (!response.ok) throw new Error('Failed to fetch public quizzes');
+    return response.json();
+  },
+
   // Contributor APIs
   submitQuiz: async (quizData) => {
     const response = await fetch(`${API_BASE}/quiz-submissions`, {
@@ -38,8 +59,12 @@ export const quizService = {
 
   // API for admin to search all submissions with filters
   searchSubmissions: async (params) => {
-    const query = new URLSearchParams(params).toString();
-    const response = await fetch(`${API_BASE}/quiz-submissions?${query}`);
+    // Lọc ra các tham số có giá trị (không phải null, undefined, hoặc chuỗi rỗng)
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, v]) => v != null && v !== '')
+    );
+    const query = new URLSearchParams(cleanParams).toString();
+    const response = await fetch(`${API_BASE}/quiz-submissions/public?${query}`);
     if (!response.ok) {
       // Try to parse error message from backend
       const errorData = await response.json().catch(() => ({}));

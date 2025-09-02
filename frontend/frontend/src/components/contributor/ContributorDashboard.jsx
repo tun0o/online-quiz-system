@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Plus, Clock, CheckCircle, XCircle, Eye, Edit, Trash2 } from 'lucide-react';
+import { Plus, Clock, CheckCircle, XCircle, Eye, Edit, Trash2, X } from 'lucide-react';
 import { toast } from 'react-toastify';
-import QuizSubmissionForm from './QuizSubmissionForm';
-import ConfirmationModal from '../common/ConfirmationModal';
-import { quizService } from '../../services/quizService';
+import QuizSubmissionForm from '@/components/contributor/QuizSubmissionForm';
+import ConfirmationModal from '@/components/common/ConfirmationModal';
+import SubmissionDetailView from '@/components/contributor/SubmissionDetailView';
+import { subjectDisplayMap } from '@/utils/displayMaps';
+import { quizService } from '@/services/quizService';
 
 export default function ContributorDashboard() {
   const [activeTab, setActiveTab] = useState('list'); // 'list', 'create', or 'edit'
@@ -19,6 +21,9 @@ export default function ContributorDashboard() {
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
   const [modalContent, setModalContent] = useState({});
+
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [selectedSubmission, setSelectedSubmission] = useState(null);
 
   const loadSubmissions = async (page = 0) => {
     setLoading(true);
@@ -89,6 +94,19 @@ export default function ContributorDashboard() {
     setActiveTab('edit');
   };
 
+  const handleViewDetails = async (submissionId) => {
+    // Hiển thị modal ngay lập tức với trạng thái loading
+    setIsDetailModalOpen(true);
+    setSelectedSubmission(null); // Xóa dữ liệu cũ
+    try {
+      const submissionDetails = await quizService.getSubmissionDetail(submissionId);
+      setSelectedSubmission(submissionDetails);
+    } catch (error) {
+      toast.error("Không thể tải chi tiết đề thi.");
+      setIsDetailModalOpen(false); // Đóng modal nếu có lỗi
+    }
+  };
+
   const handleDeleteRequest = (id) => {
     setModalContent({
       title: 'Xác nhận xóa',
@@ -96,7 +114,7 @@ export default function ContributorDashboard() {
       confirmText: 'Xóa',
       variant: 'danger'
     });
-    setConfirmAction(() => () => performDelete(id));
+    setConfirmAction(() => performDelete(id));
     setIsConfirmModalOpen(true);
   };
 
@@ -217,7 +235,7 @@ export default function ContributorDashboard() {
                         <h3 className="font-semibold text-gray-800 mb-1">{submission.title}</h3>
                         <p className="text-gray-600 text-sm mb-2">{submission.description}</p>
                         <div className="flex items-center gap-4 text-sm text-gray-500">
-                          <span>Môn: {submission.subject}</span>
+                          <span>Môn: {subjectDisplayMap[submission.subject] || submission.subject}</span>
                           <span>Thời gian: {submission.durationMinutes}p</span>
                           <span>Câu hỏi: {submission.questions?.length || 0}</span>
                         </div>
@@ -237,8 +255,16 @@ export default function ContributorDashboard() {
                       </div>
                     )}
 
-                    {submission.status === 'PENDING' && (
-                      <div className="flex gap-2 mt-3">
+                    <div className="flex gap-2 mt-3">
+                      <button
+                        onClick={() => handleViewDetails(submission.id)}
+                        className="flex items-center gap-1 px-3 py-1 bg-white text-white border border-gray-300 rounded hover:bg-gray-50 transition text-sm"
+                      >
+                        <Eye size={14} />
+                        Xem chi tiết
+                      </button>
+                      {submission.status === 'PENDING' && (
+                        <>
                         <button
                           onClick={() => handleEdit(submission)}
                           className="flex items-center gap-1 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-sm"
@@ -253,8 +279,9 @@ export default function ContributorDashboard() {
                           <Trash2 size={14} />
                           Xóa
                         </button>
-                      </div>
-                    )}
+                        </>
+                      )}
+                    </div>
                   </div>
                 ))}
 
@@ -292,6 +319,27 @@ export default function ContributorDashboard() {
         variant={modalContent.variant}
         size={modalContent.size}
       />
+
+      {/* Detail View Modal */}
+      {isDetailModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-start z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl my-8 relative">
+            <div className="sticky top-0 bg-white p-4 border-b border-gray-200 flex justify-between items-center z-10">
+              <h2 className="text-lg font-semibold">Chi tiết đề thi</h2>
+              <button
+                onClick={() => {
+                  setIsDetailModalOpen(false);
+                  setSelectedSubmission(null); // Clear data on close
+                }}
+                className="p-2 rounded-full hover:bg-gray-100"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-6 max-h-[80vh] overflow-y-auto"><SubmissionDetailView submission={selectedSubmission} /></div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

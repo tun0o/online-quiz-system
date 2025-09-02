@@ -267,7 +267,7 @@ export default function ModerationPanel() {
               <textarea
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
-                className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full p-3 text-gray-700 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                 rows="4"
                 placeholder="Nhập lý do từ chối đề thi..."
               />

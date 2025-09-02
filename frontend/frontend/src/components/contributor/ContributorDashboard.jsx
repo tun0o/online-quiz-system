@@ -114,7 +114,9 @@ export default function ContributorDashboard() {
       confirmText: 'Xóa',
       variant: 'danger'
     });
-    setConfirmAction(() => performDelete(id));
+    // We need to pass a function that returns the action function.
+    // Otherwise, React treats `() => performDelete(id)` as an updater function and executes it immediately.
+    setConfirmAction(() => () => performDelete(id));
     setIsConfirmModalOpen(true);
   };
 
@@ -331,7 +333,7 @@ export default function ContributorDashboard() {
                   setIsDetailModalOpen(false);
                   setSelectedSubmission(null); // Clear data on close
                 }}
-                className="p-2 rounded-full hover:bg-gray-100"
+                className="p-2 rounded-full text-white hover:bg-gray-100"
               >
                 <X size={20} />
               </button>

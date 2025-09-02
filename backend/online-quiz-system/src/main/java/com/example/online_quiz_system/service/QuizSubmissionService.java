@@ -115,28 +115,6 @@ public class QuizSubmissionService {
         };
     }
 
-    private QuizSubmissionDTO convertToPublicDTO(QuizSubmission entity) {
-        QuizSubmissionDTO dto = new QuizSubmissionDTO();
-        dto.setId(entity.getId());
-        dto.setTitle(entity.getTitle());
-        dto.setDescription(entity.getDescription());
-        dto.setSubject(entity.getSubject());
-        dto.setDurationMinutes(entity.getDurationMinutes());
-
-        if(entity.getQuestions() != null){
-            dto.setQuestions(entity.getQuestions().stream()
-                    .map(this::convertQuestionToDTO)
-                    .collect(Collectors.toList()));
-        }
-
-        return dto;
-    }
-
-    private QuestionDTO convertQuestionToDTO(SubmissionQuestion question){
-        QuestionDTO dto = new QuestionDTO();
-        return dto;
-    }
-
     @Transactional(readOnly = true)
     public Page<QuizSubmission> getPendingSubmissions(Pageable pageable){
         return submissionRepository.findByStatus(SubmissionStatus.PENDING, pageable);
@@ -156,12 +134,6 @@ public class QuizSubmissionService {
     public QuizSubmission updateSubmission(Long id, QuizSubmissionDTO dto, Long contributorId){
         QuizSubmission submission = submissionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đề thi"));
-
-        if(!submission.getContributorId().equals(contributorId))
-            throw new RuntimeException("Bạn không có quyền sửa đề thi này");
-
-        if(!submission.getStatus().equals(SubmissionStatus.PENDING))
-            throw new RuntimeException("Chỉ có thể sửa đề thi đang chờ duyệt");
 
         submission.setTitle(dto.getTitle());
         submission.setDescription(dto.getDescription());
@@ -183,11 +155,6 @@ public class QuizSubmissionService {
     public void deleteSubmission(Long id, Long contributorId){
         QuizSubmission submission = submissionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đề thi"));
-//
-//        if(!submission.getContributorId().equals(contributorId))
-//            throw new RuntimeException("Bạn không có quyền xóa đề thi này");
-//        if(!submission.getStatus().equals(SubmissionStatus.PENDING))
-//            throw new RuntimeException("Chỉ có thể xóa đề thi đang chờ duyệt");
 
         submissionRepository.delete(submission);
     }

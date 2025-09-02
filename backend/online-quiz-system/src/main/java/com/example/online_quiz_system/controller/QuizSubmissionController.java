@@ -30,14 +30,6 @@ public class QuizSubmissionController {
         return ResponseEntity.ok(submission);
     }
 
-//    @GetMapping()
-//    public ResponseEntity<Page<QuizSubmission>> getAllSubmission(@RequestParam(defaultValue = "0") int page,
-//                                                                 @RequestParam(defaultValue = "12") int size){
-//        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-//        Page<QuizSubmission> submissions = submissionService.getAllSubmissions(pageable);
-//        return ResponseEntity.ok(submissions);
-//    }
-
     @GetMapping("/public")
     public ResponseEntity<Page<QuizSubmission>> getPublicQuizzes(
             @RequestParam(required = false) String keyword,

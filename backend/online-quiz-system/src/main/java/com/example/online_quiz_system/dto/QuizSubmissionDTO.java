@@ -11,7 +11,6 @@ import java.util.List;
 
 @Data
 public class QuizSubmissionDTO {
-    private Long id;
 
     @NotBlank(message = "Tiêu đề không được để trống")
     private String title;

@@ -30,9 +30,6 @@ public class SubmissionQuestion {
     @Column(name = "question_type")
     private String questionType = "MULTIPLE_CHOICE";
 
-    @Column(name = "correct_answer")
-    private String correctAnswer;
-
     private String explanation;
 
     @Column(name = "difficulty_level")

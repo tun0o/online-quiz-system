@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Plus, Clock, CheckCircle, XCircle, Eye, Edit, Trash2, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import QuizSubmissionForm from '@/components/contributor/QuizSubmissionForm';
@@ -6,6 +6,78 @@ import ConfirmationModal from '@/components/common/ConfirmationModal';
 import SubmissionDetailView from '@/components/contributor/SubmissionDetailView';
 import { subjectDisplayMap } from '@/utils/displayMaps';
 import { quizService } from '@/services/quizService';
+
+const getStatusBadge = (status) => {
+  const styles = {
+    PENDING: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    APPROVED: 'bg-green-100 text-green-800 border-green-200',
+    REJECTED: 'bg-red-100 text-red-800 border-red-200'
+  };
+
+  const icons = {
+    PENDING: <Clock size={14} />,
+    APPROVED: <CheckCircle size={14} />,
+    REJECTED: <XCircle size={14} />
+  };
+
+  const labels = {
+    PENDING: 'Chờ duyệt',
+    APPROVED: 'Đã duyệt',
+    REJECTED: 'Từ chối'
+  };
+
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${styles[status]}`}>
+      {icons[status]}
+      {labels[status]}
+    </span>
+  );
+};
+
+const formatDate = (dateString) => {
+  return new Date(dateString).toLocaleDateString('vi-VN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
+
+const SubmissionItem = ({ submission, onViewDetails, onEdit, onDeleteRequest }) => (
+  <div className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+    <div className="flex justify-between items-start mb-3">
+      <div className="flex-1">
+        <h3 className="font-semibold text-gray-800 mb-1">{submission.title}</h3>
+        <p className="text-gray-600 text-sm mb-2">{submission.description}</p>
+        <div className="flex items-center gap-4 text-sm text-gray-500">
+          <span>Môn: {subjectDisplayMap[submission.subject] || submission.subject}</span>
+          <span>Thời gian: {submission.durationMinutes}p</span>
+          <span>Câu hỏi: {submission.questions?.length || 0}</span>
+        </div>
+      </div>
+      <div className="text-right">
+        {getStatusBadge(submission.status)}
+        <div className="text-xs text-gray-500 mt-1">{formatDate(submission.createdAt)}</div>
+      </div>
+    </div>
+
+    {submission.status === 'REJECTED' && submission.adminFeedback && (
+      <div className="bg-red-50 border border-red-200 rounded p-3 mt-3">
+        <div className="text-sm font-medium text-red-800 mb-1">Lý do từ chối:</div>
+        <div className="text-sm text-red-700">{submission.adminFeedback}</div>
+      </div>
+    )}
+
+    <div className="flex gap-2 mt-3">
+      <button onClick={() => onViewDetails(submission.id)} className="flex items-center gap-1 px-3 py-1 bg-white text-white border border-gray-300 rounded hover:bg-gray-50 transition text-sm"><Eye size={14} /> Xem chi tiết</button>
+      {submission.status === 'PENDING' && (<>
+        <button onClick={() => onEdit(submission)} className="flex items-center gap-1 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-sm"><Edit size={14} /> Sửa</button>
+        <button onClick={() => onDeleteRequest(submission.id)} className="flex items-center gap-1 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition text-sm"><Trash2 size={14} /> Xóa</button>
+      </>)}
+    </div>
+  </div>
+);
 
 export default function ContributorDashboard() {
   const [activeTab, setActiveTab] = useState('list'); // 'list', 'create', or 'edit'
@@ -51,43 +123,6 @@ export default function ContributorDashboard() {
       setEditingSubmission(null); // Ensure form is clean for creation
     }
   }, [activeTab]);
-
-  const getStatusBadge = (status) => {
-    const styles = {
-      PENDING: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      APPROVED: 'bg-green-100 text-green-800 border-green-200',
-      REJECTED: 'bg-red-100 text-red-800 border-red-200'
-    };
-    
-    const icons = {
-      PENDING: <Clock size={14} />,
-      APPROVED: <CheckCircle size={14} />,
-      REJECTED: <XCircle size={14} />
-    };
-
-    const labels = {
-      PENDING: 'Chờ duyệt',
-      APPROVED: 'Đã duyệt',
-      REJECTED: 'Từ chối'
-    };
-
-    return (
-      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${styles[status]}`}>
-        {icons[status]}
-        {labels[status]}
-      </span>
-    );
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('vi-VN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
 
   const handleEdit = (submission) => {
     setEditingSubmission(submission);
@@ -136,6 +171,13 @@ export default function ContributorDashboard() {
     setIsConfirmModalOpen(false);
     setConfirmAction(null);
   };
+
+  const stats = useMemo(() => {
+    const pending = submissions.filter(s => s.status === 'PENDING').length;
+    const approved = submissions.filter(s => s.status === 'APPROVED').length;
+    const rejected = submissions.filter(s => s.status === 'REJECTED').length;
+    return { pending, approved, rejected };
+  }, [submissions]);
 
   return (
     <div className="space-y-6">
@@ -192,21 +234,15 @@ export default function ContributorDashboard() {
                 <div className="text-sm text-gray-600">Tổng đề</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-yellow-600">
-                  {submissions.filter(s => s.status === 'PENDING').length}
-                </div>
+                <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
                 <div className="text-sm text-gray-600">Chờ duyệt</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">
-                  {submissions.filter(s => s.status === 'APPROVED').length}
-                </div>
+                <div className="text-2xl font-bold text-green-600">{stats.approved}</div>
                 <div className="text-sm text-gray-600">Đã duyệt</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-red-600">
-                  {submissions.filter(s => s.status === 'REJECTED').length}
-                </div>
+                <div className="text-2xl font-bold text-red-600">{stats.rejected}</div>
                 <div className="text-sm text-gray-600">Từ chối</div>
               </div>
             </div>
@@ -231,60 +267,13 @@ export default function ContributorDashboard() {
             ) : (
               <div className="space-y-4">
                 {submissions.map((submission) => (
-                  <div key={submission.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-gray-800 mb-1">{submission.title}</h3>
-                        <p className="text-gray-600 text-sm mb-2">{submission.description}</p>
-                        <div className="flex items-center gap-4 text-sm text-gray-500">
-                          <span>Môn: {subjectDisplayMap[submission.subject] || submission.subject}</span>
-                          <span>Thời gian: {submission.durationMinutes}p</span>
-                          <span>Câu hỏi: {submission.questions?.length || 0}</span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        {getStatusBadge(submission.status)}
-                        <div className="text-xs text-gray-500 mt-1">
-                          {formatDate(submission.createdAt)}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {submission.status === 'REJECTED' && submission.adminFeedback && (
-                      <div className="bg-red-50 border border-red-200 rounded p-3 mt-3">
-                        <div className="text-sm font-medium text-red-800 mb-1">Lý do từ chối:</div>
-                        <div className="text-sm text-red-700">{submission.adminFeedback}</div>
-                      </div>
-                    )}
-
-                    <div className="flex gap-2 mt-3">
-                      <button
-                        onClick={() => handleViewDetails(submission.id)}
-                        className="flex items-center gap-1 px-3 py-1 bg-white text-white border border-gray-300 rounded hover:bg-gray-50 transition text-sm"
-                      >
-                        <Eye size={14} />
-                        Xem chi tiết
-                      </button>
-                      {submission.status === 'PENDING' && (
-                        <>
-                        <button
-                          onClick={() => handleEdit(submission)}
-                          className="flex items-center gap-1 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-sm"
-                        >
-                          <Edit size={14} />
-                          Sửa
-                        </button>
-                        <button
-                          onClick={() => handleDeleteRequest(submission.id)}
-                          className="flex items-center gap-1 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition text-sm"
-                        >
-                          <Trash2 size={14} />
-                          Xóa
-                        </button>
-                        </>
-                      )}
-                    </div>
-                  </div>
+                  <SubmissionItem
+                    key={submission.id}
+                    submission={submission}
+                    onViewDetails={handleViewDetails}
+                    onEdit={handleEdit}
+                    onDeleteRequest={handleDeleteRequest}
+                  />
                 ))}
 
                 {/* Pagination */}

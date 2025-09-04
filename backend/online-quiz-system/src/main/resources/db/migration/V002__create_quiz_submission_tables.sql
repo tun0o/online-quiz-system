@@ -20,7 +20,6 @@ CREATE TABLE submission_questions (
     submission_id BIGINT NOT NULL,
     question_text TEXT NOT NULL,
     question_type VARCHAR(20) DEFAULT 'MULTIPLE_CHOICE',
-    correct_answer VARCHAR(255),
     explanation TEXT,
     difficulty_level INTEGER DEFAULT 1,
     FOREIGN KEY (submission_id) REFERENCES quiz_submissions(id) ON DELETE CASCADE

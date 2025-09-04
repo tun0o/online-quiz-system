@@ -48,7 +48,6 @@ public class QuizSubmissionService {
         question.setSubmission(submission);
         question.setQuestionText(dto.getQuestionText());
         question.setQuestionType(dto.getQuestionType());
-        question.setCorrectAnswer(dto.getCorrectAnswer());
         question.setExplanation(dto.getExplanation());
         question.setDifficultyLevel(dto.getDifficultyLevel());
 

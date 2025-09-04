@@ -12,7 +12,6 @@ public class QuestionDTO {
     private String questionText;
 
     private String questionType = "MULTIPLE_CHOICE";
-    private String correctAnswer;
     private String explanation;
     private Integer difficultyLevel = 1;
 

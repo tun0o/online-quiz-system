@@ -4,6 +4,8 @@ import com.example.online_quiz_system.dto.AnswerOptionDTO;
 import com.example.online_quiz_system.dto.QuestionDTO;
 import com.example.online_quiz_system.dto.QuizSubmissionDTO;
 import com.example.online_quiz_system.entity.*;
+import com.example.online_quiz_system.enums.Subject;
+import com.example.online_quiz_system.enums.SubmissionStatus;
 import com.example.online_quiz_system.repository.QuizSubmissionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;

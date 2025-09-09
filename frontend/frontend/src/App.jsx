@@ -13,6 +13,9 @@ import AllSubmissionsTable from "@/components/admin/AllSubmissionsTable";
 import QuizSubmissionForm from "@/components/contributor/QuizSubmissionForm";
 import { quizService } from "@/services/quizService";
 import { subjectDisplayMap } from "@/utils/displayMaps";
+import { challengeService } from "@/services/challengeService";
+import TasksPage from "@/components/tasks/TasksPage";
+import RankingPage from "@/components/ranking/RankingPage";
 
 /**
  * Layout chung cho toàn bộ ứng dụng, bao gồm Sidebar và khu vực nội dung chính.
@@ -23,6 +26,42 @@ function AppLayout() {
   const { user } = useAuth();
   const showRightSidebar = !['/contribute'].includes(location.pathname);
 
+  // State cho challenges và rankings thật
+  const [challenges, setChallenges] = useState([]);
+  const [rankings, setRankings] = useState([]);
+  const [loadingChallenges, setLoadingChallenges] = useState(true);
+  const [loadingRankings, setLoadingRankings] = useState(true);
+
+  // Load dữ liệu thật từ API
+  useEffect(() => {
+    if (showRightSidebar) {
+      loadChallenges();
+      loadRankings();
+    }
+  }, [showRightSidebar]);
+
+  const loadChallenges = async () => {
+    try {
+      const data = await challengeService.getTodayChallenges();
+      setChallenges(data);
+    } catch (error) {
+      console.error('Error loading challenges:', error);
+    } finally {
+      setLoadingChallenges(false);
+    }
+  };
+
+  const loadRankings = async () => {
+    try {
+      const data = await challengeService.getLeaderboard();
+      setRankings(data);
+    } catch (error) {
+      console.error('Error loading rankings:', error);
+    } finally {
+      setLoadingRankings(false);
+    }
+  };
+
   const baseMenu = [
     { icon: <Home size={20} />, label: "HỌC", path: "/" },
     { icon: <Star size={20} />, label: "ĐÓNG GÓP", path: "/contribute" },
@@ -31,19 +70,7 @@ function AppLayout() {
     { icon: <User size={20} />, label: "HỒ SƠ", path: "/profile" },
   ];
 
-  // Menu cho người dùng thông thường. Admin sẽ truy cập trang của họ qua đường dẫn trực tiếp.
   const menu = baseMenu;
-  const tasks = [
-    { title: "Làm đúng 10 câu trong 1 đề", progress: 7, total: 10 },
-    { title: "Học 10 phút", progress: 3, total: 10 },
-    { title: "Hoàn thành 10 đề", progress: 2, total: 10 },
-  ];
-
-  const rankings = [
-    { rank: 1, name: "Nguyễn Văn A", score: 128247, medal: "🥇" },
-    { rank: 2, name: "Hehe", score: 982988, medal: "🥈" },
-    { rank: 3, name: "Nguyễn Thị B", score: 2323, medal: "🥉" },
-  ];
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800 flex">
@@ -55,7 +82,7 @@ function AppLayout() {
             <NavLink
               key={item.label}
               to={item.path}
-              end // `end` prop đảm bảo NavLink chỉ active khi path khớp chính xác
+              end
               className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-3 rounded-lg transition ${isActive
                   ? "bg-green-50 text-green-600 border border-green-200 shadow-sm"
@@ -73,10 +100,10 @@ function AppLayout() {
       {/* Main content area */}
       <div className="flex-1 flex">
         <main className={`flex-1 overflow-y-auto min-h-screen ${showRightSidebar ? 'p-6' : 'p-4'}`}>
-          <Outlet /> {/* Nội dung của các trang sẽ được render ở đây */}
+          <Outlet />
         </main>
 
-        {/* Right sidebar (có thể được điều khiển hiển thị theo route) */}
+        {/* Right sidebar với dữ liệu thật */}
         {showRightSidebar && (
           <aside className="w-80 bg-white border-l border-gray-200 shadow-sm min-h-screen flex-shrink-0">
             <div className="w-80 p-6 space-y-6">
@@ -92,52 +119,78 @@ function AppLayout() {
                 </button>
               </div>
 
-              {/* Ranking */}
+              {/* Ranking với dữ liệu thật */}
               <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-5 border border-yellow-200">
                 <div className="flex items-center gap-2 mb-4">
                   <TrophyIcon className="text-yellow-600" size={20} />
                   <h3 className="font-bold text-gray-800">Bảng xếp hạng</h3>
                 </div>
                 <div className="space-y-3">
-                  {rankings.map((user) => (
-                    <div key={user.rank} className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm border border-yellow-100">
-                      <div className="flex items-center gap-3">
-                        <span className="text-lg">{user.medal || `${user.rank}.`}</span>
-                        <div>
-                          <p className="font-medium text-gray-800">{user.name}</p>
-                          <p className="text-sm text-gray-600">{user.score.toLocaleString()} điểm</p>
+                  {loadingRankings ? (
+                    <div className="text-center text-gray-500">Đang tải...</div>
+                  ) : rankings.length > 0 ? (
+                    rankings.slice(0, 3).map((user) => (
+                      <div key={user.rank} className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm border border-yellow-100">
+                        <div className="flex items-center gap-3">
+                          <span className="text-lg">{user.medal || `${user.rank}.`}</span>
+                          <div>
+                            <p className="font-medium text-gray-800">{user.userName}</p>
+                            <p className="text-sm text-gray-600">{user.totalPoints.toLocaleString()} điểm</p>
+                          </div>
                         </div>
+                        {user.rank <= 3 && (
+                          <div className="text-right">
+                            <p className="text-xs text-gray-500">Streak: {user.currentStreak}</p>
+                          </div>
+                        )}
                       </div>
-                      {user.rank <= 3 && (
-                        <div className="w-2 h-8 bg-gradient-to-b from-yellow-400 to-yellow-600 rounded-full"></div>
-                      )}
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <div className="text-center text-gray-500">Chưa có dữ liệu</div>
+                  )}
                 </div>
               </div>
 
-              {/* Nhiệm vụ */}
+              {/* Nhiệm vụ với dữ liệu thật */}
               <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-5 border border-green-200">
                 <div className="flex justify-between items-center mb-4">
                   <div className="flex items-center gap-2">
                     <TargetIcon className="text-green-600" size={20} />
                     <h3 className="font-bold text-gray-800">Nhiệm vụ hằng ngày</h3>
                   </div>
-                  <a href="#" className="text-blue-600 text-sm font-medium hover:text-blue-700">XEM TẤT CẢ</a>
+                  <Link to="/tasks" className="text-blue-600 text-sm font-medium hover:text-blue-700">XEM TẤT CẢ</Link>
                 </div>
                 <div className="space-y-4">
-                  {tasks.map((task, i) => (
-                    <div key={i} className="p-3 bg-white rounded-lg shadow-sm border border-green-100">
-                      <div className="flex justify-between items-center mb-2">
-                        <p className="text-sm font-medium text-gray-800">{task.title}</p>
-                        <span className="text-xs text-gray-500">{task.progress}/{task.total}</span>
+                  {loadingChallenges ? (
+                    <div className="text-center text-gray-500">Đang tải...</div>
+                  ) : challenges.length > 0 ? (
+                    challenges.map((challenge) => (
+                      <div key={challenge.id} className="p-3 bg-white rounded-lg shadow-sm border border-green-100">
+                        <div className="flex justify-between items-center mb-2">
+                          <p className="text-sm font-medium text-gray-800">{challenge.title}</p>
+                          <span className="text-xs text-green-600 font-medium">+{challenge.rewardPoints} điểm</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                          <div 
+                            className={`h-2 rounded-full transition-all duration-300 ${
+                              challenge.isCompleted ? 'bg-green-500' : 'bg-green-400'
+                            }`}
+                            style={{ width: `${challenge.progressPercentage}%` }}
+                          />
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <p className="text-xs text-gray-600">
+                            {challenge.currentProgress}/{challenge.targetValue}
+                          </p>
+                          {challenge.isCompleted && (
+                            <span className="text-xs text-green-600 font-medium">✓ Hoàn thành</span>
+                          )}
+                        </div>
                       </div>
-                      <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-                        <div className="bg-gradient-to-r from-green-400 to-green-500 h-2 rounded-full transition-all duration-300" style={{ width: `${(task.progress / task.total) * 100}%` }} />
-                      </div>
-                      <p className="text-xs text-green-600 mt-1 font-medium">{Math.round((task.progress / task.total) * 100)}% hoàn thành</p>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <div className="text-center text-gray-500">Chưa có nhiệm vụ</div>
+                  )}
                 </div>
               </div>
             </div>
@@ -356,9 +409,8 @@ function AppRoutes() {
         <Route index element={<HomePage />} />
         <Route path="contribute" element={<ContributorDashboard />} />
         <Route path="quiz/:quizId" element={<QuizTakingPage />} />
-        {/* Các route khác cho ranking, tasks, profile... */}
-        <Route path="ranking" element={<div>Trang Bảng xếp hạng</div>} />
-        <Route path="tasks" element={<div>Trang Nhiệm vụ</div>} />
+        <Route path="ranking" element={<RankingPage />} />
+        <Route path="tasks" element={<TasksPage />} />
         <Route path="profile" element={<div>Trang Hồ sơ</div>} />
       </Route>
 
@@ -387,3 +439,5 @@ function App() {
 }
 
 export default App;
+
+

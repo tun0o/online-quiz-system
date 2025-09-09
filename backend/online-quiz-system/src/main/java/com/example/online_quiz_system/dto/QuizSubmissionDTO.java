@@ -1,6 +1,5 @@
 package com.example.online_quiz_system.dto;
 
-import com.example.online_quiz_system.entity.Subject;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

@@ -3,7 +3,7 @@ import { Clock, CheckCircle, XCircle, Eye } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { quizService } from '@/services/quizService';
 import ConfirmationModal from '@/components/common/ConfirmationModal';
-import { subjectDisplayMap } from '@/utils/displayMaps';
+import { subjectDisplayMap, difficultyDisplayMap, getDifficultyColor } from '@/utils/displayMaps';
 
 export default function ModerationPanel() {
   const [pendingSubmissions, setPendingSubmissions] = useState([]);
@@ -200,6 +200,10 @@ export default function ModerationPanel() {
                     <span className="font-medium text-gray-800">{subjectDisplayMap[selectedSubmission.subject] || selectedSubmission.subject}</span>
                   </div>
                   <div className="flex justify-between">
+                    <span className="text-gray-500">Độ khó:</span>
+                    <span className={`font-medium text-gray-800 ${getDifficultyColor(selectedSubmission.difficultyLevel)}`}>{difficultyDisplayMap[selectedSubmission.difficultyLevel]}</span>
+                  </div>
+                  <div className="flex justify-between">
                     <span className="text-gray-500">Thời gian làm bài:</span>
                     <span className="font-medium text-gray-800">{selectedSubmission.durationMinutes} phút</span>
                   </div>
@@ -218,27 +222,67 @@ export default function ModerationPanel() {
                   <h3 className="font-medium text-gray-800 mb-3">Nội dung câu hỏi:</h3>
                   {selectedSubmission.questions?.map((question, index) => (
                     <div key={question.id} className="mb-4 p-3 bg-gray-50 rounded">
-                      <div className="font-medium text-gray-800 mb-2">
-                        Câu {index + 1}: {question.questionText}
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="font-medium text-gray-800">
+                          Câu {index + 1}: {question.questionText}
+                        </div>
+                        <div className="flex gap-2 text-xs">
+                          <span className={`px-2 py-1 rounded ${
+                            question.questionType === 'MULTIPLE_CHOICE' ? 'bg-blue-100 text-blue-800' :
+                            question.questionType === 'TRUE_FALSE' ? 'bg-green-100 text-green-800' :
+                            'bg-purple-100 text-purple-800'
+                          }`}>
+                            {question.questionType === 'MULTIPLE_CHOICE' ? 'Trắc nghiệm' :
+                             question.questionType === 'TRUE_FALSE' ? 'Đúng/Sai' : 'Tự luận'}
+                          </span>
+                          {question.questionType === 'ESSAY' && (
+                            <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded">
+                              {question.maxScore} điểm
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <div className="space-y-1">
-                        {question.answerOptions?.map((option, optIndex) => (
-                          <div
-                            key={option.id}
-                            className={`text-sm px-2 py-1 rounded ${
-                              option.isCorrect
-                                ? 'bg-green-100 text-green-800 font-medium'
-                                : 'text-gray-600'
-                            }`}
-                          >
-                            {String.fromCharCode(65 + optIndex)}. {option.optionText}
-                            {option.isCorrect && ' ✓'}
+
+                      {/* Hiển thị đáp án cho câu trắc nghiệm và đúng/sai */}
+                      {question.questionType !== 'ESSAY' && (
+                        <div className="space-y-1">
+                          {question.answerOptions?.map((option, optIndex) => (
+                            <div
+                              key={option.id}
+                              className={`text-sm px-2 py-1 rounded ${
+                                option.isCorrect
+                                  ? 'bg-green-100 text-green-800 font-medium'
+                                  : 'text-gray-600'
+                              }`}
+                            >
+                              {String.fromCharCode(65 + optIndex)}. {option.optionText}
+                              {option.isCorrect && ' ✓'}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Hiển thị thông tin câu tự luận */}
+                      {question.questionType === 'ESSAY' && (
+                        <div className="space-y-2">
+                          <div className="text-sm text-gray-600">
+                            <strong>Điểm tối đa:</strong> {question.maxScore} điểm
                           </div>
-                        ))}
-                      </div>
+                          {question.essayGuidelines && (
+                            <div className="text-sm text-gray-600">
+                              <strong>Hướng dẫn trả lời:</strong>
+                              <div className="mt-1 p-2 bg-blue-50 rounded text-gray-700">
+                                {question.essayGuidelines}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Hiển thị giải thích nếu có */}
                       {question.explanation && (
-                        <div className="mt-2 text-xs text-gray-500 italic">
-                          Giải thích: {question.explanation}
+                        <div className="mt-2 text-sm text-gray-600">
+                          <strong>Giải thích:</strong> {question.explanation}
                         </div>
                       )}
                     </div>

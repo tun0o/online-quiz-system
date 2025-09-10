@@ -1,12 +1,15 @@
 package com.example.online_quiz_system.entity;
 
+import com.example.online_quiz_system.enums.DifficultyLevel;
 import com.example.online_quiz_system.enums.SubmissionStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -32,6 +35,11 @@ public class QuizSubmission {
 
     @Column(name = "duration_minutes", nullable = false)
     private Integer durationMinutes;
+
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "difficulty_level")
+    private DifficultyLevel difficultyLevel;
 
     @Column(name = "contributor_id", nullable = false)
     private Long contributorId;

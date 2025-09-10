@@ -44,6 +44,24 @@ const formatDate = (dateString) => {
   });
 };
 
+const getStatusColor = (status) => {
+  const styles = {
+    PENDING: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    APPROVED: 'bg-green-100 text-green-800 border-green-200',
+    REJECTED: 'bg-red-100 text-red-800 border-red-200'
+  };
+  return styles[status] || 'bg-gray-100 text-gray-800 border-gray-200';
+};
+
+const getStatusText = (status) => {
+  const labels = {
+    PENDING: 'Chờ duyệt',
+    APPROVED: 'Đã duyệt',
+    REJECTED: 'Từ chối'
+  };
+  return labels[status] || 'Không xác định';
+};
+
 const SubmissionItem = ({ submission, onViewDetails, onEdit, onDeleteRequest }) => (
   <div className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
     <div className="flex justify-between items-start mb-3">
@@ -311,26 +329,163 @@ export default function ContributorDashboard() {
         size={modalContent.size}
       />
 
-      {/* Detail View Modal */}
+      {/* Detail Modal */}
       {isDetailModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-start z-50 p-4 overflow-y-auto">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl my-8 relative">
-            <div className="sticky top-0 bg-white p-4 border-b border-gray-200 flex justify-between items-center z-10">
-              <h2 className="text-lg font-semibold">Chi tiết đề thi</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="text-lg font-semibold">Chi tiết đề thi</h3>
               <button
-                onClick={() => {
-                  setIsDetailModalOpen(false);
-                  setSelectedSubmission(null); // Clear data on close
-                }}
-                className="p-2 rounded-full text-white hover:bg-gray-100"
+                onClick={() => setIsDetailModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600"
               >
                 <X size={20} />
               </button>
             </div>
-            <div className="p-6 max-h-[80vh] overflow-y-auto"><SubmissionDetailView submission={selectedSubmission} /></div>
+
+            {selectedSubmission ? (
+              <div className="space-y-4">
+                {/* Basic Info */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-gray-500">Tiêu đề:</span>
+                    <p className="font-medium">{selectedSubmission.title}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Môn học:</span>
+                    <p className="font-medium">{selectedSubmission.subject}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Thời gian:</span>
+                    <p className="font-medium">{selectedSubmission.durationMinutes} phút</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Số câu hỏi:</span>
+                    <p className="font-medium">{selectedSubmission.questions?.length || 0}</p>
+                  </div>
+                </div>
+
+                {/* Description */}
+                {selectedSubmission.description && (
+                  <div>
+                    <span className="text-gray-500">Mô tả:</span>
+                    <p className="mt-1">{selectedSubmission.description}</p>
+                  </div>
+                )}
+
+                {/* Questions */}
+                <div>
+                  <h4 className="font-medium mb-3">Danh sách câu hỏi:</h4>
+                  <div className="space-y-4">
+                    {selectedSubmission.questions?.map((question, index) => (
+                      <div key={question.id} className="border border-gray-200 rounded-lg p-4">
+                        <div className="flex justify-between items-start mb-3">
+                          <h5 className="font-medium">
+                            Câu {index + 1}: {question.questionText}
+                          </h5>
+                          <div className="flex gap-2 text-xs">
+                            <span className={`px-2 py-1 rounded ${
+                              question.questionType === 'MULTIPLE_CHOICE' ? 'bg-blue-100 text-blue-800' :
+                              question.questionType === 'TRUE_FALSE' ? 'bg-green-100 text-green-800' :
+                              'bg-purple-100 text-purple-800'
+                            }`}>
+                              {question.questionType === 'MULTIPLE_CHOICE' ? 'Trắc nghiệm' :
+                               question.questionType === 'TRUE_FALSE' ? 'Đúng/Sai' : 'Tự luận'}
+                            </span>
+                            {question.questionType === 'ESSAY' && (
+                              <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded">
+                                {question.maxScore} điểm
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Hiển thị đáp án cho câu trắc nghiệm và đúng/sai */}
+                        {question.questionType !== 'ESSAY' && (
+                          <div className="space-y-2">
+                            <p className="text-sm font-medium text-gray-700">Các đáp án:</p>
+                            {question.answerOptions?.map((option, optIndex) => (
+                              <div
+                                key={option.id}
+                                className={`text-sm px-3 py-2 rounded ${
+                                  option.isCorrect
+                                    ? 'bg-green-100 text-green-800 font-medium border border-green-200'
+                                    : 'bg-gray-50 text-gray-600'
+                                }`}
+                              >
+                                {String.fromCharCode(65 + optIndex)}. {option.optionText}
+                                {option.isCorrect && ' ✓ (Đáp án đúng)'}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Hiển thị thông tin câu tự luận */}
+                        {question.questionType === 'ESSAY' && (
+                          <div className="space-y-3">
+                            <div className="text-sm">
+                              <span className="font-medium text-gray-700">Điểm tối đa:</span>
+                              <span className="ml-2 px-2 py-1 bg-orange-100 text-orange-800 rounded">
+                                {question.maxScore} điểm
+                              </span>
+                            </div>
+                            {question.essayGuidelines && (
+                              <div className="text-sm">
+                                <p className="font-medium text-gray-700 mb-2">Hướng dẫn trả lời:</p>
+                                <div className="p-3 bg-blue-50 rounded border-l-4 border-blue-200 text-gray-700">
+                                  {question.essayGuidelines}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Hiển thị giải thích nếu có */}
+                        {question.explanation && (
+                          <div className="mt-3 text-sm">
+                            <p className="font-medium text-gray-700">Giải thích:</p>
+                            <p className="mt-1 text-gray-600">{question.explanation}</p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Status and Feedback */}
+                <div className="border-t pt-4">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <span className="text-gray-500">Trạng thái:</span>
+                      <span className={`ml-2 px-2 py-1 rounded text-xs font-medium ${getStatusColor(selectedSubmission.status)}`}>
+                        {getStatusText(selectedSubmission.status)}
+                      </span>
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      Ngày tạo: {formatDate(selectedSubmission.createdAt)}
+                    </div>
+                  </div>
+                  
+                  {selectedSubmission.adminFeedback && (
+                    <div className="mt-3">
+                      <span className="text-gray-500">Phản hồi từ admin:</span>
+                      <p className="mt-1 p-3 bg-yellow-50 border border-yellow-200 rounded text-gray-700">
+                        {selectedSubmission.adminFeedback}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="flex justify-center items-center h-32">
+                <div className="text-gray-500">Đang tải...</div>
+              </div>
+            )}
           </div>
         </div>
       )}
     </div>
   );
 }
+
+

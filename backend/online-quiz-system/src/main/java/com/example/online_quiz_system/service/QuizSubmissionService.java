@@ -4,6 +4,8 @@ import com.example.online_quiz_system.dto.AnswerOptionDTO;
 import com.example.online_quiz_system.dto.QuestionDTO;
 import com.example.online_quiz_system.dto.QuizSubmissionDTO;
 import com.example.online_quiz_system.entity.*;
+import com.example.online_quiz_system.enums.DifficultyLevel;
+import com.example.online_quiz_system.enums.QuestionType;
 import com.example.online_quiz_system.enums.Subject;
 import com.example.online_quiz_system.enums.SubmissionStatus;
 import com.example.online_quiz_system.repository.QuizSubmissionRepository;
@@ -26,6 +28,21 @@ public class QuizSubmissionService {
     @Autowired
     private QuizSubmissionRepository submissionRepository;
 
+    private DifficultyLevel calculateSubmissionDifficulty(List<SubmissionQuestion> questions){
+        if(questions.isEmpty()){
+            return DifficultyLevel.EASY;
+        }
+
+        double avgDifficulty = questions.stream()
+                .mapToInt(SubmissionQuestion::getDifficultyLevel)
+                .average()
+                .orElse(1.0);
+
+        if(avgDifficulty <= 1.3) return DifficultyLevel.EASY;
+        else if (avgDifficulty <= 2.3) return DifficultyLevel.MEDIUM;
+        else return DifficultyLevel.HARD;
+    }
+
     public QuizSubmission submitQuiz(QuizSubmissionDTO dto, Long contributorId){
         QuizSubmission submission = new QuizSubmission();
         submission.setTitle(dto.getTitle());
@@ -40,6 +57,8 @@ public class QuizSubmissionService {
                     .map(q -> mapToQuestion(q, submission))
                     .collect(Collectors.toList());
             submission.setQuestions(questions);
+
+            submission.setDifficultyLevel(calculateSubmissionDifficulty(questions));
         }
 
         return submissionRepository.save(submission);
@@ -52,8 +71,10 @@ public class QuizSubmissionService {
         question.setQuestionType(dto.getQuestionType());
         question.setExplanation(dto.getExplanation());
         question.setDifficultyLevel(dto.getDifficultyLevel());
+        question.setMaxScore(dto.getMaxScore());
+        question.setEssayGuidelines(dto.getEssayGuidelines());
 
-        if(dto.getAnswerOptions() != null){
+        if(dto.getAnswerOptions() != null && dto.getQuestionType() != QuestionType.ESSAY){
             List<SubmissionAnswerOption> options = dto.getAnswerOptions().stream()
                     .map(o -> mapToAnswerOption(o, question))
                     .collect(Collectors.toList());
@@ -77,7 +98,7 @@ public class QuizSubmissionService {
     }
 
     @Transactional(readOnly = true)
-    public Page<QuizSubmission> findPublicQuizzes(String keyword, String subject, Pageable pageable){
+    public Page<QuizSubmission> findPublicQuizzes(String keyword, String subject, String difficulty, Pageable pageable){
         Specification<QuizSubmission> spec = isApproved();
 
         if(StringUtils.hasText(keyword)){
@@ -85,6 +106,9 @@ public class QuizSubmissionService {
         }
         if(StringUtils.hasText(subject)){
             spec = spec.and(hasSubject(subject));
+        }
+        if(StringUtils.hasText(difficulty)){
+            spec = spec.and(hasDifficulty(difficulty));
         }
 
         return submissionRepository.findAll(spec, pageable);
@@ -111,6 +135,17 @@ public class QuizSubmissionService {
                 Subject subjectEnum = Subject.valueOf(subject.toUpperCase());
                 return criteriaBuilder.equal(root.get("subject"), subjectEnum.toString());
             } catch (IllegalArgumentException e) {
+                return criteriaBuilder.disjunction();
+            }
+        };
+    }
+
+    private Specification<QuizSubmission> hasDifficulty(String difficulty){
+        return (root, query, criteriaBuilder) -> {
+            try {
+                DifficultyLevel difficultyEnum = DifficultyLevel.valueOf(difficulty.toUpperCase());
+                return criteriaBuilder.equal(root.get("difficultyLevel"), difficultyEnum);
+            } catch (IllegalArgumentException e){
                 return criteriaBuilder.disjunction();
             }
         };

@@ -12,7 +12,7 @@ import ModerationPanel from "@/components/admin/ModerationPanel";
 import AllSubmissionsTable from "@/components/admin/AllSubmissionsTable";
 import QuizSubmissionForm from "@/components/contributor/QuizSubmissionForm";
 import { quizService } from "@/services/quizService";
-import { subjectDisplayMap } from "@/utils/displayMaps";
+import { subjectDisplayMap, difficultyDisplayMap, getDifficultyColor } from "@/utils/displayMaps";
 import { challengeService } from "@/services/challengeService";
 import TasksPage from "@/components/tasks/TasksPage";
 import RankingPage from "@/components/ranking/RankingPage";
@@ -222,6 +222,7 @@ function HomePage() {
   const [query, setQuery] = useState({
     keyword: '',
     subject: '',
+    difficulty: '',
     page: 0,
   });
 
@@ -250,11 +251,8 @@ function HomePage() {
         };
         const data = await quizService.getPublicQuizzes(params);
         setQuizzes(data.content || []);
-        // Update total pages from the response
         setPagination(p => ({ ...p, totalPages: data.totalPages }));
 
-        // If the API returns a different page number (e.g., requested page was out of bounds),
-        // update our query state to reflect the actual page. This prevents an inconsistent state.
         if (query.page !== data.number) {
           setQuery(q => ({ ...q, page: data.number }));
         }
@@ -270,8 +268,8 @@ function HomePage() {
   }, [query, pagination.size]); // Dependency on the single query object
 
   const handleFilterChange = (e) => {
-    // Reset to page 0 when filter changes
-    setQuery(q => ({ ...q, subject: e.target.value, page: 0 }));
+    const { name, value } = e.target;
+    setQuery(q => ({ ...q, [name]: value, page: 0 }));
   };
 
   const handlePageChange = (newPage) => {
@@ -290,18 +288,29 @@ function HomePage() {
             className="w-full p-3 rounded-lg bg-white border border-gray-200 text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent shadow-sm"
           />
         </div>
-        <div className="w-full md:w-auto">
-           <select
-              name="subject"
-              value={query.subject}
-              onChange={handleFilterChange}
-              className="w-full md:w-48 p-3 border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 shadow-sm"
-            >
-              <option value="">Tất cả môn học</option>
-              {Object.entries(subjectDisplayMap).map(([value, label]) => (
-                <option key={value} value={value}>{label}</option>
-              ))}
-            </select>
+        <div className="flex gap-4 w-full md:w-auto">
+          <select
+            name="subject"
+            value={query.subject}
+            onChange={handleFilterChange}
+            className="flex-1 md:w-48 p-3 border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 shadow-sm"
+          >
+            <option value="">Tất cả môn học</option>
+            {Object.entries(subjectDisplayMap).map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
+          </select>
+          <select
+            name="difficulty"
+            value={query.difficulty}
+            onChange={handleFilterChange}
+            className="flex-1 md:w-48 p-3 border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 shadow-sm"
+          >
+            <option value="">Tất cả độ khó</option>
+            {Object.entries(difficultyDisplayMap).map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -339,8 +348,16 @@ function HomePage() {
                   >
                     <h3 className="font-bold text-gray-800 mb-2">{quiz.title}</h3>
                     <p className="text-gray-600 text-sm mb-3 flex-grow">{quiz.description}</p>
-                    <div className="text-sm text-gray-500 border-t border-gray-100 pt-2 mt-auto">
+                    <div className="text-sm text-gray-500 border-t border-gray-100 pt-2 mt-auto space-y-1">
                       <p>Môn: {subjectDisplayMap[quiz.subject] || quiz.subject}</p>
+                      {quiz.difficultyLevel && (
+                        <div className="flex justify-between items-center">
+                          <span>Độ khó:</span>
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${getDifficultyColor(quiz.difficultyLevel)}`}>
+                            {difficultyDisplayMap[quiz.difficultyLevel]}
+                          </span>
+                        </div>
+                      )}
                       <p>Thời gian: {quiz.durationMinutes} phút</p>
                       <p>{quiz.questions?.length || 0} câu hỏi</p>
                     </div>
@@ -439,5 +456,9 @@ function App() {
 }
 
 export default App;
+
+
+
+
 
 

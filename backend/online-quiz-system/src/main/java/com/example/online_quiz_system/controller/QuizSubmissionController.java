@@ -34,11 +34,12 @@ public class QuizSubmissionController {
     public ResponseEntity<Page<QuizSubmission>> getPublicQuizzes(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String subject,
+            @RequestParam(required = false) String difficulty,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size) {
 
         Pageable pageable = PageRequest.of(page, size);
-        Page<QuizSubmission> quizzes = submissionService.findPublicQuizzes(keyword, subject, pageable);
+        Page<QuizSubmission> quizzes = submissionService.findPublicQuizzes(keyword, subject, difficulty, pageable);
         return ResponseEntity.ok(quizzes);
     }
 

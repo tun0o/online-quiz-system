@@ -71,12 +71,13 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
 
   function createEmptyQuestion() {
     return {
-      // Key tạm thời phía client để React nhận diện chính xác các câu hỏi khi thêm/xóa
       clientKey: `q_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
       questionText: '',
       questionType: 'MULTIPLE_CHOICE',
       explanation: '',
       difficultyLevel: 1,
+      maxScore: 10.0,
+      essayGuidelines: '',
       answerOptions: [
         { optionText: '', isCorrect: false },
         { optionText: '', isCorrect: false },
@@ -127,19 +128,30 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
     e.preventDefault();
     setLoading(true);
 
-    // Validation: mỗi câu hỏi phải có ít nhất 1 đáp án đúng
-    const allQuestionsHaveCorrect = formData.questions.every(q =>
-      q.answerOptions.some(a => a.isCorrect)
-    );
+    // Validation cho từng loại câu hỏi
+    const validationErrors = [];
+    
+    formData.questions.forEach((q, index) => {
+      if (q.questionType === 'ESSAY') {
+        // Câu tự luận không cần đáp án
+        return;
+      } else {
+        // Câu trắc nghiệm và đúng/sai phải có ít nhất 1 đáp án đúng
+        const hasCorrectAnswer = q.answerOptions.some(a => a.isCorrect);
+        if (!hasCorrectAnswer) {
+          validationErrors.push(`Câu hỏi ${index + 1}: Vui lòng chọn đáp án đúng`);
+        }
+      }
+    });
 
-    if (!allQuestionsHaveCorrect) {
-      toast.warn("Vui lòng chọn ít nhất một đáp án đúng cho mỗi câu hỏi!");
+    if (validationErrors.length > 0) {
+      toast.warn(validationErrors.join('\n'));
       setLoading(false);
       return;
     }
 
     try {
-      if (formData.id) { // Check if we are editing (ID is present)
+      if (formData.id) {
         await quizService.updateSubmission(formData.id, formData);
         toast.success('Đề thi đã được cập nhật thành công!');
         onSuccess?.();
@@ -157,7 +169,6 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
           questions: [createEmptyQuestion()]
         });
       }
-
     } catch (error) {
       toast.error('Có lỗi xảy ra: ' + (error.response?.data?.message || error.message));
     } finally {
@@ -282,6 +293,44 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Loại câu hỏi
+                    </label>
+                    <select
+                      value={question.questionType}
+                      onChange={(e) => {
+                        const newType = e.target.value;
+                        let newOptions = question.answerOptions;
+                        
+                        // Cập nhật answerOptions dựa trên loại câu hỏi
+                        if (newType === 'TRUE_FALSE') {
+                          newOptions = [
+                            { optionText: 'Đúng', isCorrect: false },
+                            { optionText: 'Sai', isCorrect: false }
+                          ];
+                        } else if (newType === 'ESSAY') {
+                          newOptions = [];
+                        } else if (newType === 'MULTIPLE_CHOICE' && question.answerOptions.length < 4) {
+                          newOptions = [
+                            { optionText: '', isCorrect: false },
+                            { optionText: '', isCorrect: false },
+                            { optionText: '', isCorrect: false },
+                            { optionText: '', isCorrect: false }
+                          ];
+                        }
+                        
+                        updateQuestion(qIndex, 'questionType', newType);
+                        updateQuestion(qIndex, 'answerOptions', newOptions);
+                      }}
+                      className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800"
+                    >
+                      <option value="MULTIPLE_CHOICE">Trắc nghiệm</option>
+                      <option value="TRUE_FALSE">Đúng/Sai</option>
+                      <option value="ESSAY">Tự luận</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       Độ khó
                     </label>
                     <select
@@ -296,38 +345,81 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
                   </div>
                 </div>
 
-                {/* Answer Options */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Các đáp án
-                  </label>
-                  {question.answerOptions.map((option, oIndex) => (
-                    <div key={oIndex} className="flex items-center gap-3 mb-2">
-                      <input
-                        type="radio"
-                        name={`correct-${qIndex}`}
-                        checked={option.isCorrect}
-                        onChange={() => {
-                          // Set only this option as correct
-                          const newOptions = question.answerOptions.map((opt, i) => ({
-                            ...opt,
-                            isCorrect: i === oIndex
-                          }));
-                          updateQuestion(qIndex, 'answerOptions', newOptions);
-                        }}
-                        className="text-green-600"
-                      />
-                      <input
-                        type="text"
-                        required
-                        value={option.optionText}
-                        onChange={(e) => updateAnswerOption(qIndex, oIndex, 'optionText', e.target.value)}
-                        className="flex-1 p-2 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800"
-                        placeholder={`Đáp án ${String.fromCharCode(65 + oIndex)}`}
-                      />
-                    </div>
-                  ))}
-                </div>
+                {/* Điểm tối đa cho câu tự luận */}
+                {question.questionType === 'ESSAY' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Điểm tối đa
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="100"
+                      step="0.5"
+                      value={question.maxScore}
+                      onChange={(e) => updateQuestion(qIndex, 'maxScore', parseFloat(e.target.value) || 10)}
+                      className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800"
+                    />
+                  </div>
+                )}
+
+                {/* Hướng dẫn cho câu tự luận */}
+                {question.questionType === 'ESSAY' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Hướng dẫn trả lời (tùy chọn)
+                    </label>
+                    <textarea
+                      value={question.essayGuidelines}
+                      onChange={(e) => updateQuestion(qIndex, 'essayGuidelines', e.target.value)}
+                      className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800"
+                      rows="3"
+                      placeholder="VD: Trả lời trong khoảng 200-300 từ, nêu rõ luận điểm và dẫn chứng..."
+                    />
+                  </div>
+                )}
+
+                {/* Answer Options - chỉ hiển thị cho MULTIPLE_CHOICE và TRUE_FALSE */}
+                {question.questionType !== 'ESSAY' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Các đáp án
+                    </label>
+                    {question.answerOptions.map((option, oIndex) => (
+                      <div key={oIndex} className="flex items-center gap-3 mb-2">
+                        <input
+                          type="radio"
+                          name={`correct-${qIndex}`}
+                          checked={option.isCorrect}
+                          onChange={() => {
+                            const newOptions = question.answerOptions.map((opt, i) => ({
+                              ...opt,
+                              isCorrect: i === oIndex
+                            }));
+                            updateQuestion(qIndex, 'answerOptions', newOptions);
+                          }}
+                          className="text-green-600 focus:ring-green-500"
+                        />
+                        <input
+                          type="text"
+                          required
+                          value={option.optionText}
+                          onChange={(e) => {
+                            const newOptions = [...question.answerOptions];
+                            newOptions[oIndex].optionText = e.target.value;
+                            updateQuestion(qIndex, 'answerOptions', newOptions);
+                          }}
+                          className="flex-1 p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800"
+                          placeholder={question.questionType === 'TRUE_FALSE' ? 
+                            (oIndex === 0 ? 'Đúng' : 'Sai') : 
+                            `Đáp án ${String.fromCharCode(65 + oIndex)}`
+                          }
+                          readOnly={question.questionType === 'TRUE_FALSE'}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -377,3 +469,5 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
     </div>
   );
 }
+
+

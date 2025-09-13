@@ -203,4 +203,30 @@ public class ChallengeService {
     public Long getUserRank(Long userId){
         return rankingRepository.findUserRankByUserId(userId);
     }
+
+    public void updateQuizCompletionProgress(Long userId, int correctAnswersCount, int studyTimeMinutes, int quizPoints, Long sourceId){
+        List<DailyChallengeDTO> challenges = getTodayChallenges(userId);
+
+        for(DailyChallengeDTO challenge : challenges){
+            if(!challenge.getIsCompleted()) {
+                switch (challenge.getChallengeType()) {
+                    case CORRECT_ANSWERS:
+                        updateProgress(challenge.getId(), userId, challenge.getCurrentProgress() + correctAnswersCount);
+                        break;
+                    case STUDY_TIME_MINUTES:
+                        if(studyTimeMinutes > 0) {
+                            updateProgress(challenge.getId(), userId, challenge.getCurrentProgress() + studyTimeMinutes);
+                        }
+                        break;
+                    case COMPLETE_QUIZZES:
+                        updateProgress(challenge.getId(), userId, challenge.getCurrentProgress() + 1);
+                        break;
+                }
+            }
+        }
+
+        if(quizPoints > 0){
+            updateUserPoints(userId, quizPoints, "QUIZ_COMPLETION", sourceId);
+        }
+    }
 }

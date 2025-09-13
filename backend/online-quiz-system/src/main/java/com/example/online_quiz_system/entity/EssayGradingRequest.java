@@ -29,7 +29,7 @@ public class EssayGradingRequest {
     private GradingStatus status = GradingStatus.PENDING;
 
     @CreationTimestamp
-    @Column(name = "requested_at")
+    @Column(name = "requested_at", updatable = false)
     private LocalDateTime requestedAt;
 
     @Column(name = "assigned_to")

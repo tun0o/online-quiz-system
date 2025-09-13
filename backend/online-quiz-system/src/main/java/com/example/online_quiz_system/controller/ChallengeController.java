@@ -46,32 +46,32 @@ public class ChallengeController {
         return ResponseEntity.ok(rank != null ? rank : 0L);
     }
 
-    @PostMapping("/update-quiz-progress")
-    public ResponseEntity<String> updateQuizProgress(@RequestParam Integer correctAnswer,
-                                                     @RequestParam Integer studyTimeMinutes,
-                                                     @RequestParam Integer quizPoints){
-        List<DailyChallengeDTO> challenges = challengeService.getTodayChallenges(MOCK_USER_ID);
-
-        for(DailyChallengeDTO challenge : challenges){
-            if(!challenge.getIsCompleted()){
-                switch (challenge.getChallengeType()){
-                    case CORRECT_ANSWERS:
-                        challengeService.updateProgress(challenge.getId(), MOCK_USER_ID, challenge.getCurrentProgress() + correctAnswer);
-                        break;
-                    case STUDY_TIME_MINUTES:
-                        challengeService.updateProgress(challenge.getId(), MOCK_USER_ID, challenge.getCurrentProgress() + studyTimeMinutes);
-                        break;
-                    case COMPLETE_QUIZZES:
-                        challengeService.updateProgress(challenge.getId(), MOCK_USER_ID, challenge.getCurrentProgress() + 1);
-                        break;
-                }
-            }
-        }
-
-        if(quizPoints > 0) {
-            challengeService.updateUserPoints(MOCK_USER_ID, quizPoints, "QUIZ_COMPLETION", null);
-        }
-
-        return ResponseEntity.ok("Progress updated successfully");
-    }
+//    @PostMapping("/update-quiz-progress")
+//    public ResponseEntity<String> updateQuizProgress(@RequestParam Integer correctAnswer,
+//                                                     @RequestParam Integer studyTimeMinutes,
+//                                                     @RequestParam Integer quizPoints){
+//        List<DailyChallengeDTO> challenges = challengeService.getTodayChallenges(MOCK_USER_ID);
+//
+//        for(DailyChallengeDTO challenge : challenges){
+//            if(!challenge.getIsCompleted()){
+//                switch (challenge.getChallengeType()){
+//                    case CORRECT_ANSWERS:
+//                        challengeService.updateProgress(challenge.getId(), MOCK_USER_ID, challenge.getCurrentProgress() + correctAnswer);
+//                        break;
+//                    case STUDY_TIME_MINUTES:
+//                        challengeService.updateProgress(challenge.getId(), MOCK_USER_ID, challenge.getCurrentProgress() + studyTimeMinutes);
+//                        break;
+//                    case COMPLETE_QUIZZES:
+//                        challengeService.updateProgress(challenge.getId(), MOCK_USER_ID, challenge.getCurrentProgress() + 1);
+//                        break;
+//                }
+//            }
+//        }
+//
+//        if(quizPoints > 0) {
+//            challengeService.updateUserPoints(MOCK_USER_ID, quizPoints, "QUIZ_COMPLETION", null);
+//        }
+//
+//        return ResponseEntity.ok("Progress updated successfully");
+//    }
 }

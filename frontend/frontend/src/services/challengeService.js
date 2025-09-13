@@ -21,19 +21,5 @@ export const challengeService = {
     const response = await fetch(`${API_BASE}/challenges/leaderboard`);
     if (!response.ok) throw new Error('Failed to fetch leaderboard');
     return response.json();
-  },
-
-  updateQuizProgress: async (correctAnswers, studyTimeMinutes, quizPoints) => {
-    const response = await fetch(`${API_BASE}/challenges/update-quiz-progress`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        correctAnswers: correctAnswers.toString(),
-        studyTimeMinutes: studyTimeMinutes.toString(),
-        quizPoints: quizPoints.toString()
-      })
-    });
-    if (!response.ok) throw new Error('Failed to update quiz progress');
-    return response.text();
   }
 };

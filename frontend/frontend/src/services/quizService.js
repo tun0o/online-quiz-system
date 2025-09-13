@@ -24,15 +24,33 @@ export const quizService = {
   },
 
   // Contributor APIs
-  submitQuiz: async (quizData) => {
+  createSubmission: async (quizData) => {
     const response = await fetch(`${API_BASE}/quiz-submissions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(quizData)
     });
-    if (!response.ok) throw new Error('Failed to submit quiz');
+    if (!response.ok) throw new Error('Failed to create quiz submission');
     return response.json();
   },
+
+  // Quiz Taking APIs
+  getQuizForTaking: async (quizId) => {
+    const response = await fetch(`${API_BASE}/quizzes/${quizId}/take`);
+    if (!response.ok) throw new Error('Failed to fetch quiz for taking');
+    return response.json();
+  },
+
+  submitAttempt: async (attemptData) => {
+    const response = await fetch(`${API_BASE}/quizzes/submit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(attemptData)
+    });
+    if (!response.ok) throw new Error('Failed to submit quiz attempt');
+    return response.json();
+  },
+
 
   getMySubmissions: async (contributorId = 1, page = 0, size = 10) => {
     const response = await fetch(

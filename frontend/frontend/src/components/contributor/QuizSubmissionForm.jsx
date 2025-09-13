@@ -156,7 +156,7 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
         toast.success('Đề thi đã được cập nhật thành công!');
         onSuccess?.();
       } else {
-        await quizService.submitQuiz(formData);
+        await quizService.createSubmission(formData);
         toast.success('Đề thi đã được gửi thành công!');
         onSuccess?.();
 
@@ -469,5 +469,3 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
     </div>
   );
 }
-
-

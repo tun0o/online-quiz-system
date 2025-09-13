@@ -12,6 +12,7 @@ import ModerationPanel from "@/components/admin/ModerationPanel";
 import AllSubmissionsTable from "@/components/admin/AllSubmissionsTable";
 import QuizSubmissionForm from "@/components/contributor/QuizSubmissionForm";
 import { quizService } from "@/services/quizService";
+import QuizTakingPage from "@/components/quiz/QuizTakingPage";
 import { subjectDisplayMap, difficultyDisplayMap, getDifficultyColor } from "@/utils/displayMaps";
 import { challengeService } from "@/services/challengeService";
 import TasksPage from "@/components/tasks/TasksPage";
@@ -76,7 +77,7 @@ function AppLayout() {
     <div className="min-h-screen bg-gray-50 text-gray-800 flex">
       {/* Sidebar */}
       <aside className="w-64 bg-white flex flex-col p-6 space-y-6 border-r border-gray-200 shadow-sm flex-shrink-0">
-        <h1 className="text-2xl font-bold text-green-600">Practizz</h1>
+        <a href="/"><h1 className="text-2xl font-bold text-green-600">Practizz</h1></a>
         <nav className="flex flex-col gap-2">
           {menu.map((item) => (
             <NavLink
@@ -197,18 +198,6 @@ function AppLayout() {
           </aside>
         )}
       </div>
-    </div>
-  );
-}
-
-// Component cho trang làm bài quiz (placeholder)
-function QuizTakingPage() {
-  const { quizId } = useParams();
-  return (
-    <div className="text-center p-10 bg-white rounded-lg shadow-sm">
-      <h1 className="text-2xl font-bold">Trang Làm Bài Quiz</h1>
-      <p className="mt-4">Bạn đang chuẩn bị làm đề thi với ID: <span className="font-bold text-green-600">{quizId}</span></p>
-      <p className="mt-2 text-gray-600">Giao diện làm bài chi tiết sẽ được phát triển ở đây.</p>
     </div>
   );
 }
@@ -425,11 +414,13 @@ function AppRoutes() {
       <Route path="/" element={<AppLayout />}>
         <Route index element={<HomePage />} />
         <Route path="contribute" element={<ContributorDashboard />} />
-        <Route path="quiz/:quizId" element={<QuizTakingPage />} />
         <Route path="ranking" element={<RankingPage />} />
         <Route path="tasks" element={<TasksPage />} />
         <Route path="profile" element={<div>Trang Hồ sơ</div>} />
       </Route>
+
+      {/* Trang làm bài thi - không có sidebar để người dùng tập trung */}
+      <Route path="quiz/:quizId" element={<div className="min-h-screen bg-gray-50 p-6"><QuizTakingPage /></div>} />
 
       {/* Admin Routes - Hoàn toàn riêng biệt */}
       <Route path="/admin" element={<ProtectedRoute allowedRole="ADMIN"><AdminLayout /></ProtectedRoute>}>
@@ -456,9 +447,3 @@ function App() {
 }
 
 export default App;
-
-
-
-
-
-

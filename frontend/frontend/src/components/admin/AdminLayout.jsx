@@ -1,9 +1,10 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { ShieldCheck, ListChecks, LogOut } from 'lucide-react';
+import { ShieldCheck, ListChecks, LogOut, Edit3 } from 'lucide-react';
 
 const adminMenu = [
   { to: '/admin/moderation', label: 'Kiểm duyệt', icon: <ShieldCheck size={20} /> },
   { to: '/admin/management', label: 'Quản lý Đề thi', icon: <ListChecks size={20} /> },
+  { to: '/admin/grading', label: 'Chấm bài', icon: <Edit3 size={20} /> },
 ];
 
 const navLinkClasses = ({ isActive }) =>

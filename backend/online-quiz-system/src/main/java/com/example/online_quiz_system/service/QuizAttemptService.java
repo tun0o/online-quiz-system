@@ -84,7 +84,7 @@ public class QuizAttemptService {
 
         QuizAttempt attempt = new QuizAttempt();
         attempt.setUserId(userId);
-        attempt.setQuizSubmissionId(quiz.getId());
+        attempt.setQuizSubmission(quiz);
         attempt.setStartTime(LocalDateTime.now());
         attempt.setTotalQuestions(quiz.getQuestions().size());
         attempt.setStatus("IN_PROGRESS");
@@ -122,7 +122,7 @@ public class QuizAttemptService {
 
             UserAnswer userAnswer = new UserAnswer();
             userAnswer.setQuizAttempt(savedAttempt);
-            userAnswer.setQuestionId(question.getId());
+            userAnswer.setQuestion(question);
 
             QuestionResultDTO questionResult = new QuestionResultDTO();
             questionResult.setQuestionId(question.getId());
@@ -135,7 +135,7 @@ public class QuizAttemptService {
                         .filter(SubmissionAnswerOption::getIsCorrect).findFirst().orElse(null);
                 questionResult.setCorrectAnswer(correctOption);
 
-                userAnswer.setSelectedOptionId(userAnswerDTO.getSelectedOptionId());
+                userAnswer.setSelectedOption(correctOption);
                 boolean isCorrect = correctOption != null && Objects.equals(userAnswerDTO.getSelectedOptionId(), correctOption.getId());
                 userAnswer.setIsCorrect(isCorrect);
                 questionResult.setIsCorrect(isCorrect);
@@ -158,7 +158,7 @@ public class QuizAttemptService {
         if(essayQuestionsCount > 0 && attemptDTO.isRequestEssayGrading()){
             EssayGradingRequest gradingRequest = new EssayGradingRequest();
             gradingRequest.setUserId(userId);
-            gradingRequest.setQuizAttemptId(savedAttempt.getId());
+            gradingRequest.setQuizAttempt(savedAttempt);
             gradingRequest.setStatus(GradingStatus.PENDING);
             gradingRequest.setTotalEssayQuestions(essayQuestionsCount);
             essayGradingRequestRepository.save(gradingRequest);

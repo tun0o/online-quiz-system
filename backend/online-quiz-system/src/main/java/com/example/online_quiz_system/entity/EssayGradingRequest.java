@@ -22,8 +22,9 @@ public class EssayGradingRequest {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = "quiz_attempt_id", nullable = false)
-    private Long quizAttemptId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "quiz_attempt_id", nullable = false)
+    private QuizAttempt quizAttempt;
 
     @Enumerated(EnumType.STRING)
     private GradingStatus status = GradingStatus.PENDING;

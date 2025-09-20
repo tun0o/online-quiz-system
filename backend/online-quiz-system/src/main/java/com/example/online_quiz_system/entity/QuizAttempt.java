@@ -24,8 +24,9 @@ public class QuizAttempt {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = "quiz_submission_id", nullable = false)
-    private Long quizSubmissionId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "quiz_submission_id", nullable = false)
+    private QuizSubmission quizSubmission;
 
     @Column(name = "start_time", nullable = false)
     private LocalDateTime startTime;

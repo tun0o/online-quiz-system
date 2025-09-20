@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -22,13 +23,14 @@ public class UserAnswer {
     @JoinColumn(name = "quiz_attempt_id", nullable = false)
     private QuizAttempt quizAttempt;
 
-    @Column(name = "question_id", nullable = false)
-    private Long questionId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "question_id", nullable = false)
+    private SubmissionQuestion question;
 
-    @Column(name = "selected_option_id")
-    private Long selectedOptionId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "selected_option_id")
+    private SubmissionAnswerOption selectedOption;
 
-    @Lob
     @Column(name = "answer_text", columnDefinition = "TEXT")
     private String answerText;
 
@@ -38,4 +40,10 @@ public class UserAnswer {
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "score", precision = 5, scale = 2)
+    private BigDecimal score;
+
+    @Column(name = "admin_feedback", columnDefinition = "TEXT")
+    private String adminFeedback;
 }

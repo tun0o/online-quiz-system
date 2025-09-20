@@ -17,6 +17,8 @@ import { subjectDisplayMap, difficultyDisplayMap, getDifficultyColor } from "@/u
 import { challengeService } from "@/services/challengeService";
 import TasksPage from "@/components/tasks/TasksPage";
 import RankingPage from "@/components/ranking/RankingPage";
+import GradingListPage from "@/components/admin/GradingListPage";
+import GradingDetailPage from "@/components/admin/GradingDetailPage";
 
 /**
  * Layout chung cho toàn bộ ứng dụng, bao gồm Sidebar và khu vực nội dung chính.
@@ -427,6 +429,8 @@ function AppRoutes() {
         <Route index element={<Navigate to="moderation" replace />} />
         <Route path="moderation" element={<ModerationPanel />} />
         <Route path="management" element={<AllSubmissionsTable />} />
+        <Route path="grading" element={<GradingListPage />} />
+        <Route path="grading/attempt/:attemptId" element={<GradingDetailPage />} />
         <Route path="management/edit/:submissionId" element={<QuizSubmissionForm onSuccess={() => navigate('/admin/management')} />} />
       </Route>
 

@@ -338,53 +338,58 @@ export default function QuizTakingPage() {
         <div className="mt-10">
           <h2 className="text-2xl text-gray-600 font-semibold mb-6">Xem lại chi tiết</h2>
           <div className="space-y-6">
-            {result.results.map((res, index) => (
-              <div key={res.questionId} className="border text-gray-600 border-gray-200 rounded-lg p-5">
-                <p className="font-semibold mb-3">Câu {index + 1}: {res.questionText}</p>
+            {result.results.map((res, index) => {
+              const wasAnswered = !!res.userAnswer;
+              return (
+                <div key={res.questionId} className={`border text-gray-600 border-gray-200 rounded-lg p-5 ${!wasAnswered ? 'bg-gray-200' : 'bg-white'}`}>
+                  <p className="font-semibold mb-3">Câu {index + 1}: {res.questionText}</p>
 
-                {res.correctAnswer ? ( // Multiple Choice or True/False
-                  quiz.questions.find(q => q.id === res.questionId)?.answerOptions.map(option => {
-                    const isUserAnswer = res.userAnswer?.selectedOptionId === option.id;
-                    const isCorrectAnswer = res.correctAnswer.id === option.id;
-                    let style = 'bg-gray-100 border-gray-200';
-                    let icon = null;
+                  {res.correctAnswer ? ( // Multiple Choice or True/False
+                    quiz.questions.find(q => q.id === res.questionId)?.answerOptions.map(option => {
+                      const isUserAnswer = wasAnswered && res.userAnswer.selectedOptionId === option.id;
+                      const isCorrectAnswer = res.correctAnswer.id === option.id;
+                      let style = 'bg-white border-gray-200'; // Default for neutral options in an answered question
+                      let icon = null;
 
-                    if (isCorrectAnswer) {
-                      style = 'bg-green-100 border-green-300 text-green-900';
-                      icon = <Check size={16} className="text-green-600" />;
-                    }
-                    if (isUserAnswer && !isCorrectAnswer) {
-                      style = 'bg-red-100 border-red-300 text-red-900';
-                      icon = <X size={16} className="text-red-600" />;
-                    }
+                      if (isCorrectAnswer) {
+                        style = 'bg-green-100 border-green-300 text-green-900';
+                        icon = <Check size={16} className="text-green-600" />;
+                      } else if (isUserAnswer) { // User's answer, but not correct
+                        style = 'bg-red-100 border-red-300 text-red-900';
+                        icon = <X size={16} className="text-red-600" />;
+                      } else if (!wasAnswered) { // Other options in an unanswered question
+                        // For unanswered questions, other options are just neutral within the gray background
+                        style = 'bg-white border-gray-300 text-gray-500';
+                      }
 
-                    return (
-                      <div key={option.id} className={`flex items-center justify-between p-3 mt-2 border rounded-lg ${style}`}>
-                        <span>{option.optionText}</span>
-                        {icon}
+                      return (
+                        <div key={option.id} className={`flex items-center justify-between p-3 mt-2 border rounded-lg ${style}`}>
+                          <span>{option.optionText}</span>
+                          {icon}
+                        </div>
+                      );
+                    })
+                  ) : ( // Essay
+                    <div className="space-y-3">
+                      <p className="text-sm font-medium text-gray-600">Câu trả lời của bạn:</p>
+                      <div className="p-3 bg-gray-50 border border-gray-200 rounded-md text-gray-800 whitespace-pre-wrap">
+                        {res.userAnswer?.answerText || <i className="text-gray-400">Không trả lời</i>}
                       </div>
-                    );
-                  })
-                ) : ( // Essay
-                  <div className="space-y-3">
-                    <p className="text-sm font-medium text-gray-600">Câu trả lời của bạn:</p>
-                    <div className="p-3 bg-gray-50 border border-gray-200 rounded-md text-gray-800 whitespace-pre-wrap">
-                      {res.userAnswer?.answerText || <i className="text-gray-400">Không trả lời</i>}
+                      <div className="p-3 bg-indigo-50 text-indigo-700 text-sm rounded-md border border-indigo-200">
+                        Câu trả lời đang chờ admin chấm điểm.
+                      </div>
                     </div>
-                    <div className="p-3 bg-indigo-50 text-indigo-700 text-sm rounded-md border border-indigo-200">
-                      Câu trả lời đang chờ admin chấm điểm.
-                    </div>
-                  </div>
-                )}
+                  )}
 
-                {res.explanation && (
-                  <div className="mt-4 p-3 bg-blue-50 border-l-4 border-blue-300">
-                    <p className="font-semibold text-blue-800">Giải thích:</p>
-                    <p className="text-blue-700 mt-1">{res.explanation}</p>
-                  </div>
-                )}
-              </div>
-            ))}
+                  {res.explanation && (
+                    <div className="mt-4 p-3 bg-blue-50 border-l-4 border-blue-300">
+                      <p className="font-semibold text-blue-800">Giải thích:</p>
+                      <p className="text-blue-700 mt-1">{res.explanation}</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 

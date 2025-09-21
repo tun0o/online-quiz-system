@@ -17,10 +17,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -114,44 +111,58 @@ public class QuizAttemptService {
         int essayQuestionsCount = 0;
         List<UserAnswer> userAnswersToSave = new ArrayList<>();
         BigDecimal calculatedScore = BigDecimal.ZERO;
-        List<QuestionResultDTO> questionResults = new ArrayList<>();
 
-        for(UserAnswerRequestDTO userAnswerDTO : attemptDTO.getAnswers()){
-            SubmissionQuestion question = questionMap.get(userAnswerDTO.getQuestionId());
-            if(question == null) continue;
+        Map<Long, UserAnswerRequestDTO> userAnswerMap = Optional.ofNullable(attemptDTO.getAnswers()).orElse(Collections.emptyList())
+                .stream()
+                .collect(Collectors.toMap(UserAnswerRequestDTO::getQuestionId, Function.identity()));
 
-            UserAnswer userAnswer = new UserAnswer();
-            userAnswer.setQuizAttempt(savedAttempt);
-            userAnswer.setQuestion(question);
+        for(SubmissionQuestion question : allQuestions) {
+            UserAnswerRequestDTO userAnswerDTO = userAnswerMap.get(question.getId());
 
-            QuestionResultDTO questionResult = new QuestionResultDTO();
-            questionResult.setQuestionId(question.getId());
-            questionResult.setQuestionText(questionResult.getQuestionText());
-            questionResult.setUserAnswer(userAnswerDTO);
-            questionResult.setExplanation(questionResult.getExplanation());
+            if (userAnswerDTO != null) {
+                UserAnswer userAnswer = new UserAnswer();
+                userAnswer.setQuizAttempt(savedAttempt);
+                userAnswer.setQuestion(question);
 
-            if(question.getQuestionType() == QuestionType.MULTIPLE_CHOICE || question.getQuestionType() == QuestionType.TRUE_FALSE){
-                SubmissionAnswerOption correctOption = question.getAnswerOptions().stream()
-                        .filter(SubmissionAnswerOption::getIsCorrect).findFirst().orElse(null);
-                questionResult.setCorrectAnswer(correctOption);
+                if (question.getQuestionType() == QuestionType.MULTIPLE_CHOICE || question.getQuestionType() == QuestionType.TRUE_FALSE) {
+                    Optional<SubmissionAnswerOption> selectedOption = question.getAnswerOptions().stream()
+                            .filter(o -> Objects.equals(o.getId(), userAnswerDTO.getSelectedOptionId()))
+                            .findFirst();
+                    selectedOption.ifPresent(userAnswer::setSelectedOption);
 
-                userAnswer.setSelectedOption(correctOption);
-                boolean isCorrect = correctOption != null && Objects.equals(userAnswerDTO.getSelectedOptionId(), correctOption.getId());
-                userAnswer.setIsCorrect(isCorrect);
-                questionResult.setIsCorrect(isCorrect);
-                if(isCorrect){
-                    correctAnswersCount++;
-                    calculatedScore = calculatedScore.add(scorePerMcq);
+                    SubmissionAnswerOption correctOption = question.getAnswerOptions().stream()
+                            .filter(SubmissionAnswerOption::getIsCorrect).findFirst().orElse(null);
+
+                    boolean isCorrect = correctOption != null && Objects.equals(userAnswerDTO.getSelectedOptionId(), correctOption.getId());
+                    userAnswer.setIsCorrect(isCorrect);
+                    if (isCorrect) {
+                        correctAnswersCount++;
+                        calculatedScore = calculatedScore.add(scorePerMcq);
+                    }
+                } else if (question.getQuestionType() == QuestionType.ESSAY) {
+                    userAnswer.setAnswerText(userAnswerDTO.getAnswerText());
+                    userAnswer.setIsCorrect(null);
+                    essayQuestionsCount++;
                 }
-            } else if (question.getQuestionType() == QuestionType.ESSAY) {
-                userAnswer.setAnswerText(userAnswerDTO.getAnswerText());
-                userAnswer.setIsCorrect(null);
-                questionResult.setIsCorrect(null);
-                essayQuestionsCount++;
+                userAnswersToSave.add(userAnswer);
             }
-            userAnswersToSave.add(userAnswer);
-            questionResults.add(questionResult);
         }
+
+        List<QuestionResultDTO> questionResults = allQuestions.stream().map(question -> {
+                    QuestionResultDTO questionResult = new QuestionResultDTO();
+                    questionResult.setQuestionId(question.getId());
+                    questionResult.setQuestionText(question.getQuestionText());
+                    questionResult.setExplanation(question.getExplanation());
+                    questionResult.setUserAnswer(userAnswerMap.get(question.getId()));
+
+                    SubmissionAnswerOption correctOption = question.getAnswerOptions().stream()
+                            .filter(SubmissionAnswerOption::getIsCorrect).findFirst().orElse(null);
+                    questionResult.setCorrectAnswer(correctOption);
+
+                    boolean isCorrect = correctOption != null && userAnswerMap.containsKey(question.getId()) && Objects.equals(userAnswerMap.get(question.getId()).getSelectedOptionId(), correctOption.getId());
+                    questionResult.setIsCorrect(question.getQuestionType() == QuestionType.ESSAY ? null : isCorrect);
+                    return questionResult;
+                }).collect(Collectors.toList());
 
         userAnswerRepository.saveAll(userAnswersToSave);
 

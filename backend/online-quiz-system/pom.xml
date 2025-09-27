@@ -62,12 +62,6 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Redis -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-redis</artifactId>
-        </dependency>
-
         <!-- JWT -->
         <dependency>
             <groupId>com.auth0</groupId>
@@ -113,21 +107,12 @@
             <scope>runtime</scope>
         </dependency>
 
-        
+        <!-- OAuth2 Client -->
         <dependency>
-            <groupId>commons-validator</groupId>
-            <artifactId>commons-validator</artifactId>
-            <version>1.7</version>
-        </dependency>
-
-        <!-- Nimbus JOSE for JWK handling -->
-        <dependency>
-            <groupId>com.nimbusds</groupId>
-            <artifactId>nimbus-jose-jwt</artifactId>
-            <version>9.40</version>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-client</artifactId>
         </dependency>
     </dependencies>
-
 
     <build>
 		<plugins>

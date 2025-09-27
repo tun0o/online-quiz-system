@@ -20,12 +20,4 @@ public class EmailService {
 
         mailSender.send(message);
     }
-
-    public void sendPasswordResetEmail(String toEmail, String resetLink) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(toEmail);
-        message.setSubject("Reset Your Password");
-        message.setText("Please click the link below to reset your password:\n" + resetLink);
-        mailSender.send(message);
-    }
 }

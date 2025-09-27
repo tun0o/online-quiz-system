@@ -3,7 +3,9 @@ package com.example.online_quiz_system.config;
 import com.example.online_quiz_system.config.JwtAuthenticationFilter;
 import com.example.online_quiz_system.service.CustomUserDetailsService;
 import com.example.online_quiz_system.service.JwtService;
-import com.example.online_quiz_system.service.RedisService;
+import com.example.online_quiz_system.service.CustomOAuth2UserService;
+import com.example.online_quiz_system.service.OAuth2AuthenticationSuccessHandler;
+import com.example.online_quiz_system.security.HttpCookieOAuth2AuthorizationRequestRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -31,20 +33,17 @@ public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
     private final JwtService jwtService;
-    private final RedisService redisService;
 
     // Note: we intentionally do NOT inject CustomOAuth2UserService / OAuth2AuthenticationSuccessHandler
     // via the constructor to avoid circular dependencies. They are injected into the filterChain method instead.
-    public SecurityConfig(CustomUserDetailsService userDetailsService, JwtService jwtService, RedisService redisService) {
+    public SecurityConfig(CustomUserDetailsService userDetailsService, JwtService jwtService) {
         this.userDetailsService = userDetailsService;
         this.jwtService = jwtService;
-        this.redisService = redisService;
     }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        // Increase strength (log rounds). Default is 10; use 12 for better security.
-        return new BCryptPasswordEncoder(12);
+        return new BCryptPasswordEncoder();
     }
 
     @Bean
@@ -62,28 +61,44 @@ public class SecurityConfig {
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new JwtAuthenticationFilter(jwtService, userDetailsService, redisService);
+        return new JwtAuthenticationFilter(jwtService, userDetailsService);
     }
 
-    
-
-    /** Security filter chain for stateless JWT auth. */
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public HttpCookieOAuth2AuthorizationRequestRepository cookieAuthorizationRequestRepository() {
+        return new HttpCookieOAuth2AuthorizationRequestRepository();
+    }
+
+    /**
+     * Security filter chain. Inject OAuth2-related beans as method parameters to break circular refs.
+     */
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http,
+                                           CustomOAuth2UserService customOAuth2UserService,
+                                           OAuth2AuthenticationSuccessHandler oauth2AuthenticationSuccessHandler) throws Exception {
         http
                 .cors(c -> c.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/logout").authenticated()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/user/**").hasRole("USER")
                         .requestMatchers("/api/quiz-submissions/public").permitAll()
                         .requestMatchers("/api/quiz-submissions/**").authenticated()
+                        .requestMatchers("/oauth2/**", "/login/**", "/oauth2/authorization/**", "/login/oauth2/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())
+                .oauth2Login(oauth2 -> oauth2
+                        .authorizationEndpoint(authz -> authz
+                                .authorizationRequestRepository(cookieAuthorizationRequestRepository())
+                        )
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(customOAuth2UserService)
+                        )
+                        .successHandler(oauth2AuthenticationSuccessHandler)
+                )
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

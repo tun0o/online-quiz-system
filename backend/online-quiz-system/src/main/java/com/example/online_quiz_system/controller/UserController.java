@@ -1,7 +1,6 @@
 package com.example.online_quiz_system.controller;
 
 import com.example.online_quiz_system.security.UserPrincipal;
-import com.example.online_quiz_system.repository.LoginSessionRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -15,12 +14,6 @@ import java.util.Map;
 @RequestMapping("/api/user")
 @PreAuthorize("hasRole('USER')")
 public class UserController {
-
-    private final LoginSessionRepository loginSessionRepository;
-
-    public UserController(LoginSessionRepository loginSessionRepository) {
-        this.loginSessionRepository = loginSessionRepository;
-    }
 
     @GetMapping("/dashboard")
     public ResponseEntity<?> userDashboard() {
@@ -63,13 +56,5 @@ public class UserController {
                 "averageScore", 85,
                 "lastActivity", "2023-10-15"
         ));
-    }
-
-    @GetMapping("/sessions")
-    public ResponseEntity<?> listSessions() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-        var sessions = loginSessionRepository.findAllByUser_Id(userPrincipal.getId());
-        return ResponseEntity.ok(Map.of("sessions", sessions));
     }
 }

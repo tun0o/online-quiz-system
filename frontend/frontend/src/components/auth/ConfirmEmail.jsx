@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import api from '@/services/api.js';
 import { toast } from 'react-toastify';
-import { mapApiError } from '@/utils/errorCodes.js';
 import { CheckCircle, XCircle, ArrowLeft, Mail } from 'lucide-react';
 
 const ConfirmEmail = () => {
@@ -47,7 +46,7 @@ const ConfirmEmail = () => {
                     }, 3000);
                 } catch (err) {
                     setStatus('error');
-                    toast.error(mapApiError(err) || 'Xác thực thất bại');
+                    toast.error(err.response?.data?.error || 'Xác thực thất bại');
                 }
             }
         };
@@ -69,7 +68,7 @@ const ConfirmEmail = () => {
             await api.post('/api/auth/resend-verification', { email });
             toast.success('Đã gửi lại email xác thực');
         } catch (error) {
-            toast.error(mapApiError(error) || 'Gửi lại email thất bại');
+            toast.error(error.response?.data?.error || 'Gửi lại email thất bại');
         }
     };
 

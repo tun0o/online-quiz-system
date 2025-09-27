@@ -92,8 +92,7 @@ public class VerificationService {
         tokenRepository.deleteByUser(user);
         String rawToken = createTokenForUser(user);
 
-        String frontendBaseUrl = System.getProperty("app.frontend.url", System.getenv().getOrDefault("APP_FRONTEND_URL", "http://localhost:3000"));
-        String verificationLink = frontendBaseUrl + "/confirm?token=" + rawToken;
+        String verificationLink = "http://localhost:3000/confirm?token=" + rawToken;
         logger.info("Sending verification email to {} with link {}", user.getEmail(), verificationLink);
         emailService.sendVerificationEmail(user.getEmail(), verificationLink);
         logger.info("Resend verification email sent to {}", user.getEmail());

@@ -20,8 +20,6 @@ import Login from "@/components/auth/Login";
 import Register from "@/components/auth/Register";
 import ConfirmEmail from "@/components/auth/ConfirmEmail";
 import Logout from "@/components/auth/Logout";
-import ForgotPassword from "@/components/auth/ForgotPassword";
-import ResetPassword from "@/components/auth/ResetPassword";
 import NotFoundPage from "@/components/common/NotFoundPage";
 import UserDashboard from "@/components/user/UserDashboard";
 import AdminDashboard from "@/components/admin/AdminDashboard";
@@ -415,8 +413,6 @@ function AppRoutes() {
             <Route path="/register" element={<Register />} />
             <Route path="/confirm" element={<ConfirmEmail />} />
             <Route path="/logout" element={<Logout />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
 
             {/* App routes (dùng layout chung: sidebar, header, etc.) */}
             <Route path="/*" element={<AppLayout />} />

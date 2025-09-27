@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Online Quiz System (Spring Boot + React + AI Recommendation)
 
 ## 📖 Giới thiệu
@@ -18,6 +17,3 @@ Công nghệ chính:
 ```bash
 git clone <repo_url>
 cd online-quiz-system
-=======
-# -n-t-t-nghi-p
->>>>>>> c216670e37095d06950a2df641e80e76a0bad987

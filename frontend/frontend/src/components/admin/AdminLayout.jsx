@@ -1,5 +1,5 @@
-import { NavLink, Outlet, Navigate, useLocation, Link } from 'react-router-dom';
-import { ShieldCheck, ListChecks, LogOut, BarChart3 } from 'lucide-react';
+import { NavLink, Outlet, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { ShieldCheck, ListChecks, LogOut, BarChart3, Home } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 const adminMenu = [
@@ -20,8 +20,14 @@ const DefaultLoader = () => (
 );
 
 export default function AdminLayout() {
-    const { user, loading, isAuthenticated } = useAuth();
+    const { user, loading, isAuthenticated, logout } = useAuth();
     const location = useLocation();
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        logout();
+        navigate('/login');
+    };
 
     if (loading) return <DefaultLoader />;
 
@@ -47,14 +53,24 @@ export default function AdminLayout() {
                         </NavLink>
                     ))}
                 </nav>
-                <div className="p-4 border-t border-gray-700">
-                    <Link
-                        to="/user/dashboard"
-                        className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white"
+                <div className="p-4 border-t border-gray-700 space-y-2">
+                    <a
+                        href="/"
+                        className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
                     >
-                        <LogOut size={20} className="transform rotate-180" />
-                        <span>Về trang chính</span>
-                    </Link>
+                        <Home size={20} />
+                        <span>Về trang chủ</span>
+                    </a>
+                    <button
+                        onClick={handleLogout}
+                        type="button"
+                        className="group flex items-center gap-3 w-full px-4 py-3 rounded-lg
+               text-gray-300 hover:bg-gray-700 transition-colors
+               focus:outline-none focus:ring-0 focus:border-0 border-0"
+                    >
+                        <LogOut size={20} className="text-gray-300 group-hover:text-red-600 transition-colors" />
+                        <span className="text-gray-300 group-hover:text-red-600 transition-colors">Đăng xuất</span>
+                    </button>
                 </div>
             </aside>
             <main className="flex-1 p-6 overflow-y-auto">

@@ -1,7 +1,6 @@
 // hooks/useAuth.js
 import { useState, useEffect, useCallback } from 'react';
 import api from '@/services/api.js';
-import { ensureDeviceIdentity } from '@/utils/device.js';
 
 export const useAuth = () => {
     const [user, setUser] = useState(null);
@@ -29,7 +28,6 @@ export const useAuth = () => {
     // Hàm login
     const login = useCallback(async (email, password) => {
         try {
-            await ensureDeviceIdentity();
             const response = await api.post('/api/auth/login', { email, password });
 
             const { accessToken, refreshToken, ...userData } = response.data;
@@ -52,19 +50,13 @@ export const useAuth = () => {
     }, []);
 
     // Hàm logout
-    const logout = useCallback(async () => {
-        try {
-            // gọi backend để blacklist access + xóa refresh (nếu có)
-            await api.post('/api/auth/logout', {
-                refreshToken: localStorage.getItem('refreshToken') || undefined,
-            });
-        } catch (e) {
-            // bỏ qua lỗi logout để đảm bảo client cleanup
-        }
+    const logout = useCallback(() => {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
         setUser(null);
+
+        return Promise.resolve();
     }, []);
 
     // Kiểm tra đã đăng nhập hay chưa

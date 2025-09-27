@@ -5,11 +5,12 @@ import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.util.*;
 
 @Getter
-public class UserPrincipal implements UserDetails {
+public class UserPrincipal implements UserDetails, OAuth2User {
 
     private final Long id;
     private final String email;
@@ -17,7 +18,8 @@ public class UserPrincipal implements UserDetails {
     private final Collection<? extends GrantedAuthority> authorities;
     private final boolean verified;
 
-    
+    // Dùng cho OAuth2 (Google, Facebook)
+    private Map<String, Object> attributes;
 
     public UserPrincipal(Long id,
                          String email,
@@ -47,7 +49,12 @@ public class UserPrincipal implements UserDetails {
         );
     }
 
-    
+    // Factory method cho OAuth2 login
+    public static UserPrincipal create(User user, Map<String, Object> attributes) {
+        UserPrincipal principal = create(user);
+        principal.attributes = attributes;
+        return principal;
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -84,7 +91,16 @@ public class UserPrincipal implements UserDetails {
         return verified;
     }
 
-    
+    // ---- Implement OAuth2User ----
+    @Override
+    public Map<String, Object> getAttributes() {
+        return attributes != null ? attributes : Collections.emptyMap();
+    }
+
+    @Override
+    public String getName() {
+        return String.valueOf(id); // hoặc return email;
+    }
 
     // Helper method kiểm tra role nhanh
     public boolean hasRole(String roleWithoutPrefix) {

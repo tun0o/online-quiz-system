@@ -7,27 +7,18 @@ const baseURL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
 const api = axios.create({
     baseURL,
     headers: { 'Content-Type': 'application/json' },
-    withCredentials: true, // send cookies (httpOnly refresh token)
 });
 
 // Request interceptor: tự động gắn token
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('accessToken');
-        // Device headers
-        const fingerprint = localStorage.getItem('deviceFingerprint');
-        const deviceName = localStorage.getItem('deviceName');
         if (token) {
             config.headers = {
                 ...config.headers,
                 Authorization: `Bearer ${token}`,
             };
         }
-        config.headers = {
-            ...config.headers,
-            ...(fingerprint ? { 'X-Device-Fingerprint': fingerprint } : {}),
-            ...(deviceName ? { 'X-Device-Name': deviceName } : {}),
-        };
         return config;
     },
     (error) => Promise.reject(error)
@@ -43,13 +34,17 @@ api.interceptors.response.use(
             originalRequest._retry = true;
 
             try {
-                // gọi API refresh; refresh token stored as HttpOnly cookie, so no body needed
-                const response = await axios.post(`${baseURL}/api/auth/refresh`, {}, { withCredentials: true });
+                const refreshToken = localStorage.getItem('refreshToken');
+                if (!refreshToken) throw new Error('No refresh token');
 
-                const { accessToken } = response.data;
+                // gọi API refresh
+                const response = await axios.post(`${baseURL}/auth/refresh`, { refreshToken });
+
+                const { accessToken, refreshToken: newRefreshToken } = response.data;
 
                 // Lưu token mới
                 localStorage.setItem('accessToken', accessToken);
+                localStorage.setItem('refreshToken', newRefreshToken);
 
                 // Gắn token mới vào request cũ
                 originalRequest.headers.Authorization = `Bearer ${accessToken}`;

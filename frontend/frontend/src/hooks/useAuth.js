@@ -1,15 +1,95 @@
-// Hook giả lập để lấy thông tin người dùng.
-// Trong thực tế, bạn sẽ thay thế nó bằng logic gọi API hoặc lấy từ context/redux.
+// hooks/useAuth.js
+import { useState, useEffect, useCallback } from 'react';
+import api from '@/services/api.js';
+import { ensureDeviceIdentity } from '@/utils/device.js';
 
-const useAuth = () => {
-  // Giả sử người dùng đã đăng nhập với vai trò ADMIN.
-  // Bạn có thể thay đổi 'ADMIN' thành 'USER' để kiểm tra.
-  const user = {
-    name: 'Current Admin',
-    role: 'ADMIN', // 'ADMIN' or 'USER'
-  };
+export const useAuth = () => {
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-  return { user };
+    // Kiểm tra authentication state khi component mount
+    useEffect(() => {
+        const token = localStorage.getItem('accessToken');
+        const userData = localStorage.getItem('user');
+
+        if (token && userData) {
+            try {
+                const parsedUser = JSON.parse(userData);
+                setUser(parsedUser);
+            } catch (error) {
+                console.error('Error parsing user data:', error);
+                localStorage.removeItem('user');
+                localStorage.removeItem('accessToken');
+            }
+        }
+
+        setLoading(false);
+    }, []);
+
+    // Hàm login
+    const login = useCallback(async (email, password) => {
+        try {
+            await ensureDeviceIdentity();
+            const response = await api.post('/api/auth/login', { email, password });
+
+            const { accessToken, refreshToken, ...userData } = response.data;
+
+            // Lưu tokens và user data
+            localStorage.setItem('accessToken', accessToken);
+            localStorage.setItem('refreshToken', refreshToken);
+            localStorage.setItem('user', JSON.stringify(userData));
+
+            setUser(userData);
+
+            return { success: true };
+        } catch (error) {
+            console.error('Login error:', error);
+            return {
+                success: false,
+                error: error.response?.data?.error || 'Đăng nhập thất bại',
+            };
+        }
+    }, []);
+
+    // Hàm logout
+    const logout = useCallback(async () => {
+        try {
+            // gọi backend để blacklist access + xóa refresh (nếu có)
+            await api.post('/api/auth/logout', {
+                refreshToken: localStorage.getItem('refreshToken') || undefined,
+            });
+        } catch (e) {
+            // bỏ qua lỗi logout để đảm bảo client cleanup
+        }
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        setUser(null);
+    }, []);
+
+    // Kiểm tra đã đăng nhập hay chưa
+    const isAuthenticated = useCallback(() => {
+        return !!user;
+    }, [user]);
+
+    // Kiểm tra role
+    const hasRole = (roleName) => {
+        if (!user || !user.roles) return false;
+
+        // Kiểm tra cả hai định dạng role
+        return user.roles.some(role =>
+            role.includes(roleName) ||
+            role.includes(`ROLE_${roleName}`)
+        );
+    };
+
+    return {
+        user,
+        loading,
+        login,
+        logout,
+        isAuthenticated,
+        hasRole,
+    };
 };
 
-export default useAuth;

@@ -19,10 +19,16 @@ import { subjectDisplayMap } from "@/utils/displayMaps";
 import Login from "@/components/auth/Login";
 import Register from "@/components/auth/Register";
 import ConfirmEmail from "@/components/auth/ConfirmEmail";
+import ForgotPassword from "@/components/auth/ForgotPassword";
+import ResetPassword from "@/components/auth/ResetPassword";
+import ChangePassword from "@/components/auth/ChangePassword";
+import OAuth2Success from "@/components/auth/OAuth2Success";
+import OAuth2Error from "@/components/auth/OAuth2Error";
 import Logout from "@/components/auth/Logout";
 import NotFoundPage from "@/components/common/NotFoundPage";
 import UserDashboard from "@/components/user/UserDashboard";
 import AdminDashboard from "@/components/admin/AdminDashboard";
+import UserView from "@/components/admin/UserView";
 
 /**
  * Layout chung cho toàn bộ ứng dụng, bao gồm Sidebar và khu vực nội dung chính.
@@ -412,6 +418,11 @@ function AppRoutes() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/confirm" element={<ConfirmEmail />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/change-password" element={<ChangePassword />} />
+            <Route path="/oauth2/success" element={<OAuth2Success />} />
+            <Route path="/oauth2/error" element={<OAuth2Error />} />
             <Route path="/logout" element={<Logout />} />
 
             {/* App routes (dùng layout chung: sidebar, header, etc.) */}
@@ -430,6 +441,7 @@ function AppRoutes() {
                 <Route path="dashboard" element={<AdminDashboard />} />
                 <Route path="moderation" element={<ModerationPanel />} />
                 <Route path="management" element={<AllSubmissionsTable />} />
+                <Route path="user-view" element={<UserView />} />
                 <Route path="management/edit/:submissionId" element={
                     <QuizSubmissionForm onSuccess={() => navigate("/admin/management")} />
                 } />

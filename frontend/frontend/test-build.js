@@ -1,38 +1,26 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import path from 'path'
+// Test script to verify build works correctly
+import { build } from 'vite';
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
 
-// https://vitejs.dev/config/
-export default defineConfig({
+const config = defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'), // dùng @ thay cho ./src
-    },
-  },
-  server: {
-    port: 3000,          // đổi port dev
-    open: true,          // tự mở trình duyệt khi chạy
-    proxy: {
-      '/api': {
-        target: 'http://localhost:8080', // BE Spring Boot chẳng hạn
-        changeOrigin: true,
-        secure: false,
-      },
+      '@': path.resolve(process.cwd(), './src'),
     },
   },
   build: {
-    outDir: 'dist', // thư mục build
+    outDir: 'dist',
     rollupOptions: {
       output: {
         manualChunks: {
-          // Vendor chunks
           'react-vendor': ['react', 'react-dom'],
           'router-vendor': ['react-router-dom'],
           'ui-vendor': ['lucide-react'],
           'toast-vendor': ['react-toastify'],
           'axios-vendor': ['axios'],
-          // App chunks
           'auth': [
             './src/components/auth/Login.jsx',
             './src/components/auth/Register.jsx',
@@ -53,4 +41,17 @@ export default defineConfig({
       }
     }
   },
-})
+});
+
+async function testBuild() {
+  try {
+    console.log('🔨 Testing build with code splitting...');
+    await build(config);
+    console.log('✅ Build successful! Code splitting should work correctly.');
+  } catch (error) {
+    console.error('❌ Build failed:', error.message);
+    process.exit(1);
+  }
+}
+
+testBuild();

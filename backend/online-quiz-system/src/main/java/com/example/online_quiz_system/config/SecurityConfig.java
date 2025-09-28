@@ -5,6 +5,7 @@ import com.example.online_quiz_system.service.CustomUserDetailsService;
 import com.example.online_quiz_system.service.JwtService;
 import com.example.online_quiz_system.service.CustomOAuth2UserService;
 import com.example.online_quiz_system.service.OAuth2AuthenticationSuccessHandler;
+import com.example.online_quiz_system.service.OAuth2AuthenticationFailureHandler;
 import com.example.online_quiz_system.security.HttpCookieOAuth2AuthorizationRequestRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -75,13 +76,15 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
                                            CustomOAuth2UserService customOAuth2UserService,
-                                           OAuth2AuthenticationSuccessHandler oauth2AuthenticationSuccessHandler) throws Exception {
+                                           OAuth2AuthenticationSuccessHandler oauth2AuthenticationSuccessHandler,
+                                           OAuth2AuthenticationFailureHandler oauth2AuthenticationFailureHandler) throws Exception {
         http
                 .cors(c -> c.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/oauth2/test/**").permitAll() // OAuth2 test endpoints
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/user/**").hasRole("USER")
                         .requestMatchers("/api/quiz-submissions/public").permitAll()
@@ -98,6 +101,7 @@ public class SecurityConfig {
                                 .userService(customOAuth2UserService)
                         )
                         .successHandler(oauth2AuthenticationSuccessHandler)
+                        .failureHandler(oauth2AuthenticationFailureHandler)
                 )
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 

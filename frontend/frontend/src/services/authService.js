@@ -1,5 +1,5 @@
 // src/services/authService.js
-import api from './api';
+import api from './api.js';
 
 export const authService = {
     login: (credentials) => {

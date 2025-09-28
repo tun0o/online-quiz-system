@@ -3,11 +3,15 @@ package com.example.online_quiz_system.controller;
 import com.example.online_quiz_system.dto.JwtResponseDTO;
 import com.example.online_quiz_system.dto.LoginDTO;
 import com.example.online_quiz_system.dto.RegisterDto;
+import com.example.online_quiz_system.dto.ForgotPasswordDTO;
+import com.example.online_quiz_system.dto.ResetPasswordDTO;
+import com.example.online_quiz_system.dto.ChangePasswordDTO;
 import com.example.online_quiz_system.exception.BusinessException;
 import com.example.online_quiz_system.entity.User;
 import com.example.online_quiz_system.repository.UserRepository;
 import com.example.online_quiz_system.service.UserService;
 import com.example.online_quiz_system.service.VerificationService;
+import com.example.online_quiz_system.service.PasswordResetService;
 import com.example.online_quiz_system.service.JwtService;
 import com.example.online_quiz_system.service.CustomUserDetailsService;
 import jakarta.validation.Valid;
@@ -41,6 +45,7 @@ public class AuthController {
 
     private final UserService userService;
     private final VerificationService verificationService;
+    private final PasswordResetService passwordResetService;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final UserRepository userRepository;
@@ -48,12 +53,14 @@ public class AuthController {
 
     public AuthController(UserService userService,
                           VerificationService verificationService,
+                          PasswordResetService passwordResetService,
                           AuthenticationManager authenticationManager,
                           JwtService jwtService,
                           UserRepository userRepository,
                           CustomUserDetailsService customUserDetailsService) {
         this.userService = userService;
         this.verificationService = verificationService;
+        this.passwordResetService = passwordResetService;
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.userRepository = userRepository;
@@ -238,5 +245,72 @@ public class AuthController {
             logger.error("Error while resending verification for {}: {}", email, e.getMessage(), e);
         }
         return ResponseEntity.ok().body(Map.of("message", "Nếu email tồn tại, một liên kết xác thực mới đã được gửi"));
+    }
+
+    // ---------------- Forgot Password ----------------
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordDTO forgotPasswordDTO) {
+        try {
+            passwordResetService.sendPasswordResetEmail(forgotPasswordDTO.getEmail());
+            return ResponseEntity.ok().body(Map.of("message", "Nếu email tồn tại, một liên kết đặt lại mật khẩu đã được gửi"));
+        } catch (BusinessException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Forgot password error: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Có lỗi xảy ra khi xử lý yêu cầu"));
+        }
+    }
+
+    // ---------------- Reset Password ----------------
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordDTO resetPasswordDTO) {
+        try {
+            boolean success = passwordResetService.resetPassword(
+                    resetPasswordDTO.getToken(), 
+                    resetPasswordDTO.getNewPassword()
+            );
+            
+            if (success) {
+                return ResponseEntity.ok().body(Map.of("message", "Đặt lại mật khẩu thành công"));
+            } else {
+                return ResponseEntity.badRequest().body(Map.of("error", "Token không hợp lệ hoặc đã hết hạn"));
+            }
+        } catch (Exception e) {
+            logger.error("Reset password error: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Có lỗi xảy ra khi đặt lại mật khẩu"));
+        }
+    }
+
+    // ---------------- Change Password ----------------
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(@Valid @RequestBody ChangePasswordDTO changePasswordDTO) {
+        try {
+            // Lấy user hiện tại từ SecurityContext
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "Bạn cần đăng nhập để thay đổi mật khẩu"));
+            }
+
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            User user = userRepository.findByEmail(userDetails.getUsername())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            passwordResetService.changePassword(
+                    user.getId(),
+                    changePasswordDTO.getCurrentPassword(),
+                    changePasswordDTO.getNewPassword()
+            );
+
+            return ResponseEntity.ok().body(Map.of("message", "Đổi mật khẩu thành công"));
+        } catch (BusinessException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Change password error: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Có lỗi xảy ra khi đổi mật khẩu"));
+        }
     }
 }

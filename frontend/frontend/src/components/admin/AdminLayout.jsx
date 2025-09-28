@@ -1,6 +1,7 @@
 import { NavLink, Outlet, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { ShieldCheck, ListChecks, LogOut, BarChart3, Home } from 'lucide-react';
+import { ShieldCheck, ListChecks, LogOut, BarChart3, Home, User, Eye } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useAdminView } from '@/contexts/AdminViewContext';
 
 const adminMenu = [
     { to: '/admin/dashboard', label: 'Tổng quan', icon: <BarChart3 size={20} /> },
@@ -21,6 +22,7 @@ const DefaultLoader = () => (
 
 export default function AdminLayout() {
     const { user, loading, isAuthenticated, logout } = useAuth();
+    const { isAdminView, switchToUserView, canToggle } = useAdminView();
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -54,6 +56,15 @@ export default function AdminLayout() {
                     ))}
                 </nav>
                 <div className="p-4 border-t border-gray-700 space-y-2">
+                    {canToggle && (
+                        <button
+                            onClick={() => navigate('/admin/user-view')}
+                            className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
+                        >
+                            <User size={20} />
+                            <span>Xem giao diện User</span>
+                        </button>
+                    )}
                     <a
                         href="/"
                         className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"

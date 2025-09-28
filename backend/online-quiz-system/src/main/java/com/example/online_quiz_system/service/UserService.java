@@ -3,6 +3,7 @@ package com.example.online_quiz_system.service;
 import com.example.online_quiz_system.entity.Role;
 import com.example.online_quiz_system.entity.User;
 import com.example.online_quiz_system.exception.BusinessException;
+import com.example.online_quiz_system.util.OAuth2Validation;
 import com.example.online_quiz_system.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -62,38 +64,118 @@ public class UserService {
         logger.info("Registered new user: {}", normalizedEmail);
     }
 
+    /**
+     * Processes OAuth2 post-login by finding existing user or creating new one.
+     * Handles linking social accounts to existing users and creates new users when needed.
+     * 
+     * @param provider The OAuth2 provider (google, facebook)
+     * @param userInfo User information from OAuth2 provider
+     * @return User entity (existing or newly created)
+     * @throws BusinessException if there are conflicts with existing accounts
+     */
     public User processOAuthPostLogin(String provider, OAuth2UserInfo userInfo) {
+        Objects.requireNonNull(provider, "Provider cannot be null");
+        Objects.requireNonNull(userInfo, "UserInfo cannot be null");
+        
         String providerId = userInfo.getId();
-        String email = userInfo.getEmail() != null ?
-                userInfo.getEmail().trim().toLowerCase() : null;
+        String email = normalizeEmail(userInfo.getEmail());
+        String name = userInfo.getName();
 
-        // 1. Tìm theo provider info
-        Optional<User> byProvider = userRepository.findByProviderAndProviderId(provider, providerId);
-        if (byProvider.isPresent()) {
-            return byProvider.get();
+        // Validate OAuth2 data
+        OAuth2Validation.validateOAuth2UserData(provider, providerId, email, name);
+
+        logger.info("Processing OAuth2 post-login for provider: {}, email: {}", provider, email);
+
+        // 1. Find existing user by provider and provider ID
+        Optional<User> existingByProvider = userRepository.findByProviderAndProviderId(provider, providerId);
+        if (existingByProvider.isPresent()) {
+            User user = existingByProvider.get();
+            logger.info("Found existing user by provider: {}", user.getEmail());
+            return updateUserFromOAuth2(user, userInfo);
         }
 
-        // 2. Nếu có email -> tìm user theo email
+        // 2. If email exists, find user by email and link social account
         if (email != null) {
-            Optional<User> byEmail = userRepository.findByEmail(email);
-            if (byEmail.isPresent()) {
-                User existing = byEmail.get();
-                existing.setProvider(provider);
-                existing.setProviderId(providerId);
-                existing.setVerified(existing.isVerified() || userInfo.isEmailVerified());
-                if (existing.getName() == null && userInfo.getName() != null) {
-                    existing.setName(userInfo.getName());
-                }
-                userRepository.save(existing);
-                return existing;
+            Optional<User> existingByEmail = userRepository.findByEmail(email);
+            if (existingByEmail.isPresent()) {
+                User user = existingByEmail.get();
+                logger.info("Found existing user by email, linking social account: {}", user.getEmail());
+                return linkSocialAccountToUser(user, provider, providerId, userInfo);
             }
         }
 
-        // 3. Tạo user mới
+        // 3. Create new user
+        logger.info("Creating new user for OAuth2 login: {}", email);
+        return createNewOAuth2User(provider, providerId, email, name, userInfo);
+    }
+
+    /**
+     * Updates existing user with fresh OAuth2 data.
+     */
+    private User updateUserFromOAuth2(User user, OAuth2UserInfo userInfo) {
+        boolean updated = false;
+        
+        // Update verification status
+        if (userInfo.isEmailVerified() && !user.isVerified()) {
+            user.setVerified(true);
+            updated = true;
+        }
+        
+        // Update name if not set or if OAuth2 provides better name
+        if (user.getName() == null || user.getName().trim().isEmpty()) {
+            if (userInfo.getName() != null && !userInfo.getName().trim().isEmpty()) {
+                user.setName(userInfo.getName());
+                updated = true;
+            }
+        }
+        
+        if (updated) {
+            userRepository.save(user);
+            logger.info("Updated user from OAuth2: {}", user.getEmail());
+        }
+        
+        return user;
+    }
+
+    /**
+     * Links social account to existing user.
+     */
+    private User linkSocialAccountToUser(User user, String provider, String providerId, OAuth2UserInfo userInfo) {
+        // Check if user already has a different provider
+        if (user.getProvider() != null && !user.getProvider().equals(provider)) {
+            throw new BusinessException(
+                String.format("Email đã được đăng ký với %s. Vui lòng đăng nhập bằng %s hoặc sử dụng email khác.", 
+                    user.getProvider(), user.getProvider())
+            );
+        }
+        
+        // Link the social account
+        user.setProvider(provider);
+        user.setProviderId(providerId);
+        user.setVerified(user.isVerified() || userInfo.isEmailVerified());
+        
+        // Update name if not set
+        if ((user.getName() == null || user.getName().trim().isEmpty()) && 
+            userInfo.getName() != null && !userInfo.getName().trim().isEmpty()) {
+            user.setName(userInfo.getName());
+        }
+        
+        userRepository.save(user);
+        logger.info("Linked social account {} to user: {}", provider, user.getEmail());
+        return user;
+    }
+
+    /**
+     * Creates new user from OAuth2 data.
+     */
+    private User createNewOAuth2User(String provider, String providerId, String email, String name, OAuth2UserInfo userInfo) {
+        // Generate fallback email if none provided
+        String finalEmail = email != null ? email : generateFallbackEmail(provider, providerId);
+        
         User newUser = User.builder()
-                .email(email != null ? email : "no-email-" + provider + "-" + providerId + "@example.com")
+                .email(finalEmail)
                 .passwordHash(passwordEncoder.encode(UUID.randomUUID().toString()))
-                .name(userInfo.getName())
+                .name(name)
                 .isVerified(userInfo.isEmailVerified())
                 .provider(provider)
                 .providerId(providerId)
@@ -101,7 +183,23 @@ public class UserService {
                 .build();
 
         userRepository.save(newUser);
+        logger.info("Created new OAuth2 user: {} with provider: {}", finalEmail, provider);
         return newUser;
+    }
+
+    /**
+     * Normalizes email address.
+     */
+    private String normalizeEmail(String email) {
+        if (email == null) return null;
+        return email.trim().toLowerCase();
+    }
+
+    /**
+     * Generates fallback email for users without email from OAuth2.
+     */
+    private String generateFallbackEmail(String provider, String providerId) {
+        return String.format("no-email-%s-%s@example.com", provider, providerId);
     }
 
     private void validateBusinessRules(String email, String password, String grade) {

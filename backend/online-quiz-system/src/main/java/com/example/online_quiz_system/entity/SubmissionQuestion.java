@@ -1,11 +1,15 @@
 package com.example.online_quiz_system.entity;
 
+import com.example.online_quiz_system.enums.QuestionType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,13 +31,21 @@ public class SubmissionQuestion {
     @Column(name = "question_text", nullable = false, columnDefinition = "TEXT")
     private String questionText;
 
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "question_type")
-    private String questionType = "MULTIPLE_CHOICE";
+    private QuestionType questionType;
 
     private String explanation;
 
     @Column(name = "difficulty_level")
     private Integer difficultyLevel = 1;
+
+    @Column(name = "max_score")
+    private BigDecimal maxScore = BigDecimal.valueOf(10.0);
+
+    @Column(name = "essay_guidelines", columnDefinition = "TEXT")
+    private String essayGuidelines;
 
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private List<SubmissionAnswerOption> answerOptions = new ArrayList<>();

@@ -1,7 +1,7 @@
 package com.example.online_quiz_system.repository;
 
 import com.example.online_quiz_system.entity.QuizSubmission;
-import com.example.online_quiz_system.entity.SubmissionStatus;
+import com.example.online_quiz_system.enums.SubmissionStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

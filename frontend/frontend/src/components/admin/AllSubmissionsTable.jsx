@@ -3,13 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { quizService } from '@/services/quizService';
 import { Edit, Trash2, BookOpen } from 'lucide-react';
-import { subjectDisplayMap } from '@/utils/displayMaps';
+import { subjectDisplayMap, difficultyDisplayMap, getDifficultyColor } from '@/utils/displayMaps';
 import ConfirmationModal from '@/components/common/ConfirmationModal';
 
 export default function AllSubmissionsTable() {
   const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({ subject: '' });
+  const [filters, setFilters] = useState({ subject: '', difficulty: '' });
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [pagination, setPagination] = useState({ page: 0, size: 10, totalPages: 0 });
@@ -33,6 +33,7 @@ export default function AllSubmissionsTable() {
         size: pagination.size,
         keyword: debouncedSearchTerm,
         subject: filters.subject,
+        difficulty: filters.difficulty,
         status: 'APPROVED' // Chỉ tìm các đề đã duyệt
         // Đã loại bỏ logic sắp xếp
       };
@@ -119,6 +120,17 @@ export default function AllSubmissionsTable() {
           <option value="LITERATURE">Ngữ văn</option>
           <option value="ENGLISH">Tiếng Anh</option>
         </select>
+        <select
+          name="difficulty"
+          value={filters.difficulty}
+          onChange={handleFilterChange}
+          className="p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800"
+        >
+          <option value="">Tất cả độ khó</option>
+          <option value="EASY">Dễ</option>
+          <option value="MEDIUM">Trung bình</option>
+          <option value="HARD">Khó</option>
+        </select>
       </div>
 
       <div className="overflow-x-auto">
@@ -127,6 +139,7 @@ export default function AllSubmissionsTable() {
             <tr>
               <th className="py-3 px-4 border-b text-left font-medium text-gray-600">Tiêu đề</th>
               <th className="py-3 px-4 border-b text-left font-medium text-gray-600">Môn học</th>
+              <th className="py-3 px-4 border-b text-left font-medium text-gray-600">Độ khó</th>
               <th className="py-3 px-4 border-b text-left font-medium text-gray-600">Người đóng góp</th>
               <th className="py-3 px-4 border-b text-center font-medium text-gray-600">Số câu</th>
               <th className="py-3 px-4 border-b text-center font-medium text-gray-600">Thời gian</th>
@@ -144,6 +157,11 @@ export default function AllSubmissionsTable() {
                   <td className="py-3 px-4 border-b">
                     <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                       <BookOpen size={14} /> {subjectDisplayMap[quiz.subject] || quiz.subject}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 border-b">
+                    <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(quiz.difficultyLevel)}`}>
+                      {difficultyDisplayMap[quiz.difficultyLevel]}
                     </span>
                   </td>
                   <td className="py-3 px-4 border-b text-gray-600">{quiz.contributor?.name || 'N/A'}</td>

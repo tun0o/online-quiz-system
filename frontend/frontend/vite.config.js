@@ -23,5 +23,34 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist', // thư mục build
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Vendor chunks
+          'react-vendor': ['react', 'react-dom'],
+          'router-vendor': ['react-router-dom'],
+          'ui-vendor': ['lucide-react'],
+          'toast-vendor': ['react-toastify'],
+          'axios-vendor': ['axios'],
+          // App chunks
+          'auth': [
+            './src/components/auth/Login.jsx',
+            './src/components/auth/Register.jsx',
+            './src/components/auth/OAuth2Success.jsx',
+            './src/components/auth/OAuth2Error.jsx'
+          ],
+          'admin': [
+            './src/components/admin/AdminDashboard.jsx',
+            './src/components/admin/ModerationPanel.jsx',
+            './src/components/admin/AllSubmissionsTable.jsx'
+          ],
+          'services': [
+            './src/services/api.js',
+            './src/services/authService.js',
+            './src/services/quizService.js'
+          ]
+        }
+      }
+    }
   },
 })

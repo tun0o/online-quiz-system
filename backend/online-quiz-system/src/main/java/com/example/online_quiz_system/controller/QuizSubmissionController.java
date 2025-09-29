@@ -1,8 +1,8 @@
 package com.example.online_quiz_system.controller;
 
 import com.example.online_quiz_system.dto.QuizSubmissionDTO;
-import com.example.online_quiz_system.dto.RejectSubmissionDTO;
 import com.example.online_quiz_system.entity.QuizSubmission;
+import com.example.online_quiz_system.security.UserPrincipal;
 import com.example.online_quiz_system.service.QuizSubmissionService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +10,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,12 +24,25 @@ public class QuizSubmissionController {
     @Autowired
     private QuizSubmissionService submissionService;
 
-    private static final Long MOCK_CONTRIBUTOR_ID = 1L;
-    private static final Long MOCK_ADMIN_ID = 2L;
+    // Helper để lấy userId từ SecurityContext
+    private Long getCurrentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) return null;
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof UserPrincipal) {
+            return ((UserPrincipal) principal).getId();
+        }
+        return null;
+    }
 
     @PostMapping
     public ResponseEntity<QuizSubmission> submitQuiz(@Valid @RequestBody QuizSubmissionDTO dto) {
-        QuizSubmission submission = submissionService.submitQuiz(dto, MOCK_CONTRIBUTOR_ID);
+        Long userId = getCurrentUserId();
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        QuizSubmission submission = submissionService.submitQuiz(dto, userId);
         return ResponseEntity.ok(submission);
     }
 
@@ -45,18 +61,10 @@ public class QuizSubmissionController {
 
     @GetMapping("/contributor/{contributorId}")
     public ResponseEntity<Page<QuizSubmission>> getSubmissionsByContributor(@PathVariable Long contributorId,
-                                                                           @RequestParam(defaultValue = "0") int page,
-                                                                           @RequestParam(defaultValue = "10") int size) {
+                                                                            @RequestParam(defaultValue = "0") int page,
+                                                                            @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<QuizSubmission> submissions = submissionService.getSubmissionsByContributor(contributorId, pageable);
-        return ResponseEntity.ok(submissions);
-    }
-
-    @GetMapping("/pending")
-    public ResponseEntity<Page<QuizSubmission>> getPendingSubmissions(@RequestParam(defaultValue = "0") int page,
-                                                                      @RequestParam(defaultValue = "10") int size){
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<QuizSubmission> submissions = submissionService.getPendingSubmissions(pageable);
         return ResponseEntity.ok(submissions);
     }
 
@@ -70,27 +78,24 @@ public class QuizSubmissionController {
     @PutMapping("/{id}")
     public ResponseEntity<QuizSubmission> updateSubmission(@PathVariable Long id,
                                                            @Valid @RequestBody QuizSubmissionDTO dto){
-        QuizSubmission submission = submissionService.updateSubmission(id, dto, MOCK_CONTRIBUTOR_ID);
+        Long userId = getCurrentUserId();
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        QuizSubmission submission = submissionService.updateSubmission(id, dto, userId);
         return ResponseEntity.ok(submission);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSubmission(@PathVariable Long id){
-        submissionService.deleteSubmission(id, MOCK_CONTRIBUTOR_ID);
+        Long userId = getCurrentUserId();
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        submissionService.deleteSubmission(id, userId);
         return ResponseEntity.noContent().build();
-    }
-
-    @PutMapping("/{id}/approve")
-    public ResponseEntity<QuizSubmission> approveSubmission(@PathVariable Long id){
-        QuizSubmission submission = submissionService.approveSubmission(id, MOCK_ADMIN_ID);
-        return ResponseEntity.ok(submission);
-    }
-
-    @PutMapping("/{id}/reject")
-    public ResponseEntity<QuizSubmission> rejectSubmission(@PathVariable Long id,
-                                                           @Valid @RequestBody RejectSubmissionDTO dto){
-        QuizSubmission submission = submissionService.rejectSubmission(id, dto.getReason(), MOCK_ADMIN_ID);
-        return ResponseEntity.ok(submission);
     }
 
     @GetMapping("/stats/pending-count")

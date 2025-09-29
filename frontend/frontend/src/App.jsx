@@ -1,12 +1,15 @@
-import { Routes, Route, NavLink, Outlet, useLocation, Navigate, useNavigate, Link, useParams } from "react-router-dom";
-import { useState, useEffect, useCallback } from "react";
-import { Home, Star, Shield, ClipboardList, User, Settings, UserPlus, LogIn, TrophyIcon, TargetIcon, ServerCrash } from "lucide-react";
+// App.jsx
+import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Home, Star, Shield, ClipboardList, User, Settings, UserPlus, LogIn, TrophyIcon, TargetIcon, ServerCrash, LogOut } from "lucide-react";
 import { QuizProvider } from "@/contexts/QuizContext";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+
+// Import components
 import ContributorDashboard from "@/components/contributor/ContributorDashboard";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import useAuth from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import AdminLayout from "@/components/admin/AdminLayout";
 import ModerationPanel from "@/components/admin/ModerationPanel";
 import AllSubmissionsTable from "@/components/admin/AllSubmissionsTable";
@@ -19,14 +22,27 @@ import TasksPage from "@/components/tasks/TasksPage";
 import RankingPage from "@/components/ranking/RankingPage";
 import GradingListPage from "@/components/admin/GradingListPage";
 import GradingDetailPage from "@/components/admin/GradingDetailPage";
+import Login from "@/components/auth/Login";
+import Register from "@/components/auth/Register";
+import ConfirmEmail from "@/components/auth/ConfirmEmail";
+import ForgotPassword from "@/components/auth/ForgotPassword";
+import ResetPassword from "@/components/auth/ResetPassword";
+import ChangePassword from "@/components/auth/ChangePassword";
+import OAuth2Success from "@/components/auth/OAuth2Success";
+import OAuth2Error from "@/components/auth/OAuth2Error";
+import Logout from "@/components/auth/Logout";
+import NotFoundPage from "@/components/common/NotFoundPage";
+import UserDashboard from "@/components/user/UserDashboard";
+import AdminDashboard from "@/components/admin/AdminDashboard";
+import UserView from "@/components/admin/UserView";
 
 /**
  * Layout chung cho toàn bộ ứng dụng, bao gồm Sidebar và khu vực nội dung chính.
- * <Outlet /> là một placeholder từ react-router-dom, nơi các component của route con sẽ được render.
  */
 function AppLayout() {
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, logout, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const showRightSidebar = !['/contribute'].includes(location.pathname);
 
   // State cho challenges và rankings thật
@@ -65,6 +81,16 @@ function AppLayout() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate("/login");
+      toast.success("Đã đăng xuất thành công");
+    } catch {
+      toast.error("Đăng xuất thất bại");
+    }
+  };
+
   const baseMenu = [
     { icon: <Home size={20} />, label: "HỌC", path: "/" },
     { icon: <Star size={20} />, label: "ĐÓNG GÓP", path: "/contribute" },
@@ -98,6 +124,17 @@ function AppLayout() {
             </NavLink>
           ))}
         </nav>
+
+        {/* Logout button (xuống dưới cùng) */}
+        {isAuthenticated() && (
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-red-50 hover:text-red-600 transition"
+          >
+            <LogOut size={20} />
+            Đăng xuất
+          </button>
+        )}
       </aside>
 
       {/* Main content area */}
@@ -110,17 +147,49 @@ function AppLayout() {
         {showRightSidebar && (
           <aside className="w-80 bg-white border-l border-gray-200 shadow-sm min-h-screen flex-shrink-0">
             <div className="w-80 p-6 space-y-6">
-              {/* Login/Register buttons */}
-              <div className="flex gap-3">
-                <button className="flex-1 flex justify-center items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition shadow-sm">
-                  <UserPlus size={16} />
-                  Đăng ký
-                </button>
-                <button className="flex-1 flex justify-center items-center gap-2 px-4 py-2 bg-white text-green-600 border border-green-600 rounded-lg hover:bg-green-50 transition shadow-sm">
-                  <LogIn size={16} />
-                  Đăng nhập
-                </button>
-              </div>
+              {/* Login/Register buttons hoặc User info */}
+              {!isAuthenticated() ? (
+                <div className="flex gap-3">
+                  {/* Đăng ký */}
+                  <button
+                    onClick={() => navigate("/register")}
+                    className="flex-1 flex justify-center items-center gap-2 px-5 py-2
+               bg-gray-100 text-gray-800 rounded-lg
+               hover:bg-gray-200 transition shadow-sm whitespace-nowrap"
+                  >
+                    <UserPlus size={16} />
+                    Đăng ký
+                  </button>
+
+                  {/* Đăng nhập */}
+                  <button
+                    onClick={() => navigate("/login")}
+                    disabled={false} // test trước để chắc chắn không bị disable
+                    className="flex-1 flex justify-center items-center gap-2 px-5 py-2
+               !bg-green-600 !text-white rounded-lg font-medium
+               hover:!bg-green-700 active:!bg-green-800
+               transition shadow-sm whitespace-nowrap"
+                  >
+                    <LogIn size={16} />
+                    Đăng nhập
+                  </button>
+                </div>
+
+              ) : (
+                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center text-white font-bold">
+                      {user?.email?.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-800">{user?.email}</p>
+                      <p className="text-sm text-gray-600">
+                        {user?.roles?.includes('ADMIN') ? 'Quản trị viên' : 'Người dùng'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Ranking với dữ liệu thật */}
               <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-5 border border-yellow-200">
@@ -174,10 +243,9 @@ function AppLayout() {
                           <span className="text-xs text-green-600 font-medium">+{challenge.rewardPoints} điểm</span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-                          <div 
-                            className={`h-2 rounded-full transition-all duration-300 ${
-                              challenge.isCompleted ? 'bg-green-500' : 'bg-green-400'
-                            }`}
+                          <div
+                            className={`h-2 rounded-full transition-all duration-300 ${challenge.isCompleted ? 'bg-green-500' : 'bg-green-400'
+                              }`}
                             style={{ width: `${challenge.progressPercentage}%` }}
                           />
                         </div>
@@ -206,26 +274,20 @@ function AppLayout() {
 
 // Component cho trang chủ
 function HomePage() {
+  const navigate = useNavigate();
   const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // A single state object for all query parameters
   const [query, setQuery] = useState({
     keyword: '',
     subject: '',
     difficulty: '',
     page: 0,
   });
-
-  // Separate state for the search input to allow for debouncing
   const [searchTerm, setSearchTerm] = useState('');
-
   const [pagination, setPagination] = useState({ size: 12, totalPages: 0 });
 
-  // Debounce the search term and update the main query state
   useEffect(() => {
     const handler = setTimeout(() => {
-      // Reset to page 0 on a new search
       setQuery(q => ({ ...q, keyword: searchTerm, page: 0 }));
     }, 500);
     return () => clearTimeout(handler);
@@ -256,7 +318,7 @@ function HomePage() {
     };
 
     fetchQuizzes();
-  }, [query, pagination.size]); // Dependency on the single query object
+  }, [query, pagination.size]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -363,11 +425,10 @@ function HomePage() {
                   <button
                     key={i}
                     onClick={() => handlePageChange(i)}
-                    className={`px-3 py-1 rounded ${
-                      i === query.page
+                    className={`px-3 py-1 rounded ${i === query.page
                         ? 'bg-green-600 text-white'
                         : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
-                    }`}
+                      }`}
                   >
                     {i + 1}
                   </button>
@@ -383,59 +444,85 @@ function HomePage() {
   );
 }
 
-// Component cho trang Login (giả)
-function LoginPage() {
-  return (
-    <div className="text-center p-10">
-      <h1 className="text-2xl font-bold">Trang Đăng Nhập</h1>
-      <p className="mt-4">Đây là nơi form đăng nhập sẽ xuất hiện.</p>
-      <p>Hiện tại, bạn đang được giả lập là có vai trò `ADMIN` trong `useAuth.js`.</p>
-      <p>Nếu bạn đổi vai trò thành `USER`, bạn sẽ bị chuyển hướng về đây khi cố truy cập `/admin`.</p>
-    </div>
-  );
-}
-
-// Component cho trang 404
-function NotFoundPage() {
-  return (
-    <div className="text-center p-10 flex flex-col items-center">
-      <ServerCrash size={64} className="text-red-500 mb-4" />
-      <h1 className="text-4xl font-bold">404 - Không tìm thấy trang</h1>
-      <p className="mt-4">Rất tiếc, trang bạn đang tìm kiếm không tồn tại.</p>
-    </div>
-  );
-}
-
-
 function AppRoutes() {
-  const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
+
+  // Điều hướng mặc định theo role
+  const getDefaultRedirect = () => {
+    if (!isAuthenticated) return <HomePage />;
+
+    // Kiểm tra role với cả hai định dạng
+    const isAdmin = user?.roles?.some(role =>
+      role.includes('ADMIN') || role.includes('ROLE_ADMIN')
+    );
+
+    return isAdmin
+      ? <Navigate to="/admin/dashboard" replace />
+      : <Navigate to="/user/dashboard" replace />;
+  };
 
   return (
     <Routes>
-      {/* Các trang có layout chung (sidebar, etc.) */}
-      <Route path="/" element={<AppLayout />}>
+      {/* Default route */}
+      <Route path="/" element={getDefaultRedirect()} />
+
+      {/* Public auth routes (không dùng layout chung) */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/confirm" element={<ConfirmEmail />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/change-password" element={<ChangePassword />} />
+      <Route path="/oauth2/success" element={<OAuth2Success />} />
+      <Route path="/oauth2/error" element={<OAuth2Error />} />
+      <Route path="/logout" element={<Logout />} />
+
+      {/* App routes (dùng layout chung: sidebar, header, etc.) */}
+      <Route path="/*" element={<AppLayout />}>
         <Route index element={<HomePage />} />
         <Route path="contribute" element={<ContributorDashboard />} />
         <Route path="ranking" element={<RankingPage />} />
         <Route path="tasks" element={<TasksPage />} />
-        <Route path="profile" element={<div>Trang Hồ sơ</div>} />
+        <Route path="profile" element={<ProfilePage />} />
       </Route>
 
       {/* Trang làm bài thi - không có sidebar để người dùng tập trung */}
       <Route path="quiz/:quizId" element={<div className="min-h-screen bg-gray-50 p-6"><QuizTakingPage /></div>} />
 
-      {/* Admin Routes - Hoàn toàn riêng biệt */}
-      <Route path="/admin" element={<ProtectedRoute allowedRole="ADMIN"><AdminLayout /></ProtectedRoute>}>
-        <Route index element={<Navigate to="moderation" replace />} />
+      {/* Admin routes */}
+      <Route
+        path="/admin/*"
+        element={
+          <ProtectedRoute requiredRole="ADMIN">
+            <AdminLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="moderation" element={<ModerationPanel />} />
         <Route path="management" element={<AllSubmissionsTable />} />
+        <Route path="user-view" element={<UserView />} />
         <Route path="grading" element={<GradingListPage />} />
-        <Route path="grading/attempt/:attemptId" element={<GradingDetailPage />} />
-        <Route path="management/edit/:submissionId" element={<QuizSubmissionForm onSuccess={() => navigate('/admin/management')} />} />
+        <Route path="grading/:submissionId" element={<GradingDetailPage />} />
+        <Route path="management/edit/:submissionId" element={
+          <QuizSubmissionForm onSuccess={() => navigate("/admin/management")} />
+        } />
       </Route>
 
-      {/* Các trang không có layout chung */}
-      <Route path="/login" element={<LoginPage />} />
+      {/* User dashboard route */}
+      <Route
+        path="/user/dashboard"
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <UserDashboard />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* 404 fallback */}
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
@@ -444,7 +531,7 @@ function AppRoutes() {
 function App() {
   return (
     <QuizProvider>
-      <ToastContainer autoClose={3000} hideProgressBar={false} position="bottom-right" />
+      <ToastContainer position="bottom-right" autoClose={3000} hideProgressBar={false} newestOnTop closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
       <AppRoutes />
     </QuizProvider>
   );

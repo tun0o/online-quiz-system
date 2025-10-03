@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getRolesFromToken, getUserFromToken } from '../utils/jwtUtils';
+import { getUserFromToken } from '../utils/jwtUtils';
 
 const AuthContext = createContext();
 
@@ -18,7 +18,9 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (token) {
-            const userData = getUserFromToken(token);
+            // Lấy thông tin đầy đủ từ local storage nếu có
+            const storedUser = localStorage.getItem('user');
+            const userData = storedUser ? JSON.parse(storedUser) : getUserFromToken(token);
             setUser(userData);
         }
         setIsLoading(false);

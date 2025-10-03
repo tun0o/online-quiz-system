@@ -132,17 +132,17 @@ const OAuth2Success = () => {
                                 <div className="flex items-center text-sm">
                                     <User className="h-4 w-4 text-gray-400 mr-2" />
                                     <span className="text-gray-600">Tên:</span>
-                                    <span className="ml-2 font-medium">{userData.name || 'Chưa cập nhật'}</span>
+                                    <span className="ml-2 font-medium text-gray-900">{userData.name || 'Chưa cập nhật'}</span>
                                 </div>
                                 <div className="flex items-center text-sm">
                                     <Mail className="h-4 w-4 text-gray-400 mr-2" />
                                     <span className="text-gray-600">Email:</span>
-                                    <span className="ml-2 font-medium">{userData.email}</span>
+                                    <span className="ml-2 font-medium text-gray-900">{userData.email}</span>
                                 </div>
                                 <div className="flex items-center text-sm">
                                     <Shield className="h-4 w-4 text-gray-400 mr-2" />
                                     <span className="text-gray-600">Đăng nhập bằng:</span>
-                                    <span className="ml-2 font-medium capitalize">{userData.provider || 'OAuth2'}</span>
+                                    <span className="ml-2 font-medium capitalize text-gray-900">{userData.provider || 'OAuth2'}</span>
                                 </div>
                             </div>
                         </div>

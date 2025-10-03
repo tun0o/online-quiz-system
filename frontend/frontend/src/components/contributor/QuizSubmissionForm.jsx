@@ -79,10 +79,10 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
       maxScore: 10.0,
       essayGuidelines: '',
       answerOptions: [
-        { optionText: '', isCorrect: false },
-        { optionText: '', isCorrect: false },
-        { optionText: '', isCorrect: false },
-        { optionText: '', isCorrect: false }
+        { id: null, optionText: '', isCorrect: false },
+        { id: null, optionText: '', isCorrect: false },
+        { id: null, optionText: '', isCorrect: false },
+        { id: null, optionText: '', isCorrect: false }
       ]
     };
   }
@@ -150,13 +150,22 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
       return;
     }
 
+    // Chuẩn bị dữ liệu để gửi đi: loại bỏ các trường chỉ dùng ở client (như clientKey)
+    const payload = {
+      ...formData,
+      questions: formData.questions.map(q => {
+        const { clientKey, ...questionData } = q; // Loại bỏ clientKey
+        return questionData;
+      })
+    };
+
     try {
       if (formData.id) {
-        await quizService.updateSubmission(formData.id, formData);
+        await quizService.updateSubmission(formData.id, payload);
         toast.success('Đề thi đã được cập nhật thành công!');
         onSuccess?.();
       } else {
-        await quizService.createSubmission(formData);
+        await quizService.createSubmission(payload);
         toast.success('Đề thi đã được gửi thành công!');
         onSuccess?.();
 
@@ -304,17 +313,17 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
                         // Cập nhật answerOptions dựa trên loại câu hỏi
                         if (newType === 'TRUE_FALSE') {
                           newOptions = [
-                            { optionText: 'Đúng', isCorrect: false },
-                            { optionText: 'Sai', isCorrect: false }
+                            { id: null, optionText: 'Đúng', isCorrect: false, clientKey: `ans_${Date.now()}_1` },
+                            { id: null, optionText: 'Sai', isCorrect: false, clientKey: `ans_${Date.now()}_2` }
                           ];
                         } else if (newType === 'ESSAY') {
                           newOptions = [];
                         } else if (newType === 'MULTIPLE_CHOICE' && question.answerOptions.length < 4) {
                           newOptions = [
-                            { optionText: '', isCorrect: false },
-                            { optionText: '', isCorrect: false },
-                            { optionText: '', isCorrect: false },
-                            { optionText: '', isCorrect: false }
+                            { id: null, optionText: '', isCorrect: false, clientKey: `ans_${Date.now()}_3` },
+                            { id: null, optionText: '', isCorrect: false, clientKey: `ans_${Date.now()}_4` },
+                            { id: null, optionText: '', isCorrect: false, clientKey: `ans_${Date.now()}_5` },
+                            { id: null, optionText: '', isCorrect: false, clientKey: `ans_${Date.now()}_6` }
                           ];
                         }
                         
@@ -386,7 +395,7 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
                       Các đáp án
                     </label>
                     {question.answerOptions.map((option, oIndex) => (
-                      <div key={oIndex} className="flex items-center gap-3 mb-2">
+                      <div key={option.id || option.clientKey || oIndex} className="flex items-center gap-3 mb-2">
                         <input
                           type="radio"
                           name={`correct-${qIndex}`}

@@ -43,8 +43,8 @@ public class QuizSubmissionService {
                 .average()
                 .orElse(1.0);
 
-        if (avgDifficulty <= 1.5) return DifficultyLevel.EASY;
-        if (avgDifficulty <= 2.5) return DifficultyLevel.MEDIUM;
+        if (avgDifficulty <= 1.3) return DifficultyLevel.EASY;
+        if (avgDifficulty <= 2.3) return DifficultyLevel.MEDIUM;
         return DifficultyLevel.HARD;
     }
 

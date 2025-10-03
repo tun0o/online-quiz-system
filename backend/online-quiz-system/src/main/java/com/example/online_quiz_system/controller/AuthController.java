@@ -28,8 +28,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -69,15 +67,7 @@ public class AuthController {
 
     // ---------------- Register ----------------
     @PostMapping("/register")
-    public ResponseEntity<?> register(@Valid @RequestBody RegisterDto registerDto, BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            Map<String, String> errors = new HashMap<>();
-            for (FieldError error : bindingResult.getFieldErrors()) {
-                errors.put(error.getField(), error.getDefaultMessage());
-            }
-            return ResponseEntity.badRequest().body(Map.of("errors", errors));
-        }
-
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterDto registerDto) {
         try {
             userService.registerUser(
                     registerDto.getEmail(),
@@ -126,20 +116,7 @@ public class AuthController {
             String accessToken = jwtService.generateAccessToken(userPrincipal);
             String refreshToken = jwtService.generateRefreshToken(userPrincipal);
 
-            // Extract roles
-            List<String> roles = userPrincipal.getAuthorities().stream()
-                    .map(GrantedAuthority::getAuthority)
-                    .collect(Collectors.toList());
-
-            JwtResponseDTO jwtResponse = new JwtResponseDTO(
-                    accessToken,
-                    refreshToken,
-                    user.getId(),
-                    user.getEmail(),
-                    roles,
-                    user.isVerified()
-            );
-
+            JwtResponseDTO jwtResponse = createJwtResponse(accessToken, refreshToken, user, userPrincipal);
             return ResponseEntity.ok(jwtResponse);
 
         } catch (BadCredentialsException e) {
@@ -189,19 +166,7 @@ public class AuthController {
             String newAccessToken = jwtService.generateAccessToken(userPrincipal);
             String newRefreshToken = jwtService.generateRefreshToken(userPrincipal);
 
-            List<String> roles = userPrincipal.getAuthorities().stream()
-                    .map(GrantedAuthority::getAuthority)
-                    .collect(Collectors.toList());
-
-            JwtResponseDTO jwtResponse = new JwtResponseDTO(
-                    newAccessToken,
-                    newRefreshToken,
-                    user.getId(),
-                    user.getEmail(),
-                    roles,
-                    user.isVerified()
-            );
-
+            JwtResponseDTO jwtResponse = createJwtResponse(newAccessToken, newRefreshToken, user, userPrincipal);
             return ResponseEntity.ok(jwtResponse);
 
         } catch (Exception e) {
@@ -211,13 +176,9 @@ public class AuthController {
         }
     }
 
-    // ---------------- Verify email ----------------
-    @GetMapping("/verify")
-    public ResponseEntity<?> verifyEmail(@RequestParam("token") String token) {
-        if (token == null || token.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Token là bắt buộc"));
-        }
-
+    @PostMapping("/verify")
+    public ResponseEntity<?> verifyEmail(@RequestBody Map<String, String> request) {
+        String token = request.get("token");
         boolean isVerified = verificationService.verifyToken(token);
         if (isVerified) {
             return ResponseEntity.ok().body(Map.of("message", "Xác thực email thành công"));
@@ -312,5 +273,21 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Có lỗi xảy ra khi đổi mật khẩu"));
         }
+    }
+
+    private JwtResponseDTO createJwtResponse(String accessToken, String refreshToken, User user, UserPrincipal userPrincipal) {
+        List<String> roles = userPrincipal.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
+
+        return new JwtResponseDTO(
+                accessToken,
+                refreshToken,
+                user.getId(),
+                user.getEmail(),
+                user.getName(), // Thêm tên người dùng
+                roles,
+                user.isVerified()
+        );
     }
 }

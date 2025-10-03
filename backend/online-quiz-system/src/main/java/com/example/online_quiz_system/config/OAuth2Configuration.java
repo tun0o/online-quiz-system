@@ -78,13 +78,14 @@ public class OAuth2Configuration {
     /**
      * Gets the full OAuth2 authorization URL for a provider.
      * 
+     * @param backendBaseUrl The base URL of the backend server (e.g., "http://localhost:8080")
      * @param provider The OAuth2 provider (google, facebook)
      * @return Full authorization URL
      */
-    public String getAuthorizationUrl(String provider) {
+    public String getAuthorizationUrl(String backendBaseUrl, String provider) {
         return switch (provider.toLowerCase()) {
-            case "google" -> frontendUrl + GOOGLE_AUTHORIZATION_URL;
-            case "facebook" -> frontendUrl + FACEBOOK_AUTHORIZATION_URL;
+            case "google" -> backendBaseUrl + GOOGLE_AUTHORIZATION_URL;
+            case "facebook" -> backendBaseUrl + FACEBOOK_AUTHORIZATION_URL;
             default -> throw new IllegalArgumentException("Unsupported provider: " + provider);
         };
     }
@@ -107,4 +108,3 @@ public class OAuth2Configuration {
         return frontendUrl + OAUTH2_ERROR_URL;
     }
 }
-

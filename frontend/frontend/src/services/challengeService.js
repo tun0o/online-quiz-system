@@ -1,4 +1,4 @@
-import api from './api.js'; // Import axios instance
+import api from "./api";
 
 export const challengeService = {
   getTodayChallenges: async () => {

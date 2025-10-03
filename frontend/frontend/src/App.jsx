@@ -200,10 +200,10 @@ function AppLayout() {
                 <div className="bg-green-50 p-4 rounded-lg border border-green-200">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center text-white font-bold">
-                      {user?.email?.charAt(0).toUpperCase()}
+                      {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <p className="font-medium text-gray-800">{user?.email}</p>
+                      <p className="font-medium text-gray-800">{user?.name || user?.email}</p>
                       <p className="text-sm text-gray-600">
                         {user?.roles?.includes('ADMIN') ? 'Quản trị viên' : 'Người dùng'}
                       </p>

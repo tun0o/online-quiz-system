@@ -17,8 +17,8 @@ public class OAuth2Validation {
     );
 
     // Name validation pattern (allows international characters)
-    private static final Pattern NAME_PATTERN = Pattern.compile(
-        "^[\\p{L}\\p{M}\\p{Zs}\\p{Pd}']{1,50}$"
+    private static final Pattern NAME_PATTERN = Pattern.compile( // Allows letters, numbers, spaces, underscores, dashes, apostrophes
+        "^[\\p{L}\\p{M}\\p{Zs}\\p{Pd}'\\p{N}_]{1,50}$"
     );
 
     // Provider ID validation pattern
@@ -238,4 +238,3 @@ public class OAuth2Validation {
         return false;
     }
 }
-

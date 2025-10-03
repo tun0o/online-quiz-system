@@ -5,7 +5,7 @@ import { gradingService } from '@/services/gradingService';
 import { Loader2, CheckCircle, ArrowLeft } from 'lucide-react';
 
 export default function GradingDetailPage() {
-  const { attemptId } = useParams();
+  const { submissionId : attemptId } = useParams();
   const navigate = useNavigate();
 
   const [details, setDetails] = useState(null);

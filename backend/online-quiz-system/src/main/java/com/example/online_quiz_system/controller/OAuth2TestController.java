@@ -2,10 +2,12 @@ package com.example.online_quiz_system.controller;
 
 import com.example.online_quiz_system.config.OAuth2Configuration;
 import com.example.online_quiz_system.util.OAuth2Validation;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -99,12 +101,16 @@ public class OAuth2TestController {
      * Tests OAuth2 URL generation.
      */
     @GetMapping("/urls")
-    public ResponseEntity<Map<String, Object>> testUrls() {
+    public ResponseEntity<Map<String, Object>> testUrls(HttpServletRequest request) {
         Map<String, Object> result = new HashMap<>();
         
         try {
-            result.put("googleAuthUrl", oauth2Config.getAuthorizationUrl("google"));
-            result.put("facebookAuthUrl", oauth2Config.getAuthorizationUrl("facebook"));
+            // Dynamically construct the base URL from the request
+            String backendBaseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
+
+            result.put("backendBaseUrl", backendBaseUrl);
+            result.put("googleAuthUrl", oauth2Config.getAuthorizationUrl(backendBaseUrl, "google"));
+            result.put("facebookAuthUrl", oauth2Config.getAuthorizationUrl(backendBaseUrl, "facebook"));
             result.put("successUrl", oauth2Config.getSuccessUrl());
             result.put("errorUrl", oauth2Config.getErrorUrl());
             

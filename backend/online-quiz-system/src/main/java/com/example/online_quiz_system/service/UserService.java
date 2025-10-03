@@ -39,6 +39,7 @@ public class UserService {
         if (email == null) throw new BusinessException("Email là bắt buộc");
 
         String normalizedEmail = email.trim().toLowerCase();
+        String name = email.trim().split("@")[0];
 
         if (userRepository.existsByEmail(normalizedEmail)) {
             throw new BusinessException("Email đã được đăng ký");
@@ -48,6 +49,7 @@ public class UserService {
 
         User user = User.builder()
                 .email(normalizedEmail)
+                .name(name)
                 .passwordHash(passwordEncoder.encode(password))
                 .grade(grade)
                 .goal(goal)

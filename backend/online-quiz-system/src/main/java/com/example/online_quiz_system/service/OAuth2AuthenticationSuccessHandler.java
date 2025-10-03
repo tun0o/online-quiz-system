@@ -18,6 +18,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 /**
@@ -141,8 +143,8 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     private void handleError(HttpServletRequest request, HttpServletResponse response, 
                            String errorCode, String message) throws IOException {
         String errorUrl = UriComponentsBuilder.fromUriString(frontendUrl + OAUTH2_ERROR_ROUTE)
-                .queryParam("error", errorCode)
-                .queryParam("message", message)
+                .queryParam("error", URLEncoder.encode(errorCode, StandardCharsets.UTF_8))
+                .queryParam("message", URLEncoder.encode(message, StandardCharsets.UTF_8))
                 .build().toUriString();
 
         logger.warn("OAuth2 error redirect: {} - {}", errorCode, message);

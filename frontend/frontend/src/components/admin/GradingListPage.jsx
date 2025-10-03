@@ -62,7 +62,7 @@ export default function GradingListPage() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(req.requestedAt)}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">{req.totalEssayQuestions}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <Link to={`/admin/grading/attempt/${req.attemptId}`} className="text-indigo-600 hover:text-indigo-900">
+                    <Link to={`/admin/grading/${req.attemptId}`} className="text-indigo-600 hover:text-indigo-900">
                       Chấm bài
                     </Link>
                   </td>

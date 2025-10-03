@@ -35,6 +35,9 @@ public class ChallengeService {
     @Autowired
     private DailyPointHistoryRepository pointHistoryRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
     public List<DailyChallengeDTO> getTodayChallenges(Long userId) {
         LocalDate today = LocalDate.now();
 
@@ -178,10 +181,11 @@ public class ChallengeService {
         return IntStream.range(0, rankings.size())
                 .mapToObj(i -> {
                     UserRanking ranking = rankings.get(i);
+                    String userName = userRepository.findById(ranking.getUserId()).get().getName();
                     LeaderBoardEntryDTO dto = new LeaderBoardEntryDTO();
                     dto.setRank(i + 1);
                     dto.setUserId(ranking.getUserId());
-                    dto.setUserName("User " + ranking.getUserId());
+                    dto.setUserName(userName);
                     dto.setTotalPoints(ranking.getTotalPoints());
                     dto.setWeeklyPoints(ranking.getWeeklyPoints());
                     dto.setCurrentStreak(ranking.getCurrentStreak());

@@ -1,6 +1,6 @@
 // App.jsx
-import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { Routes, Route, NavLink, Outlet, useLocation, Navigate, useNavigate, Link, useParams } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
 import { Home, Star, Shield, ClipboardList, User, Settings, UserPlus, LogIn, TrophyIcon, TargetIcon, ServerCrash, LogOut } from "lucide-react";
 import { QuizProvider } from "@/contexts/QuizContext";
 import { ToastContainer, toast } from 'react-toastify';
@@ -54,17 +54,21 @@ function AppLayout() {
   // Load dữ liệu thật từ API
   useEffect(() => {
     if (showRightSidebar) {
-      loadChallenges();
-      loadRankings();
+      loadRankings(); // Bảng xếp hạng có thể tải bất kể đăng nhập
+      // Phụ thuộc vào `user` thay vì `isAuthenticated` để đảm bảo `user` đã được set
+      if (user) {
+        loadChallenges();
+      }
     }
-  }, [showRightSidebar]);
+  }, [showRightSidebar, user]); // Thay isAuthenticated bằng user
 
   const loadChallenges = async () => {
+    if (!user) return; // Kiểm tra trực tiếp user
     try {
       const data = await challengeService.getTodayChallenges();
       setChallenges(data);
     } catch (error) {
-      console.error('Error loading challenges:', error);
+      console.error('Error loading challenges (user might not be logged in):', error);
     } finally {
       setLoadingChallenges(false);
     }
@@ -91,15 +95,32 @@ function AppLayout() {
     }
   };
 
-  const baseMenu = [
-    { icon: <Home size={20} />, label: "HỌC", path: "/" },
-    { icon: <Star size={20} />, label: "ĐÓNG GÓP", path: "/contribute" },
-    { icon: <Shield size={20} />, label: "BẢNG XẾP HẠNG", path: "/ranking" },
-    { icon: <ClipboardList size={20} />, label: "NHIỆM VỤ", path: "/tasks" },
-    { icon: <User size={20} />, label: "HỒ SƠ", path: "/profile" },
-  ];
+  // Xây dựng menu động dựa trên vai trò và trạng thái đăng nhập
+  const buildMenu = () => {
+    const publicItems = [
+      { icon: <Home size={20} />, label: "HỌC", path: "/" },
+      { icon: <Shield size={20} />, label: "BẢNG XẾP HẠNG", path: "/ranking" },
+    ];
 
-  const menu = baseMenu;
+    const userItems = [
+      { icon: <ClipboardList size={20} />, label: "NHIỆM VỤ", path: "/tasks" },
+      { icon: <Star size={20} />, label: "ĐÓNG GÓP", path: "/contribute" },
+      { icon: <User size={20} />, label: "HỒ SƠ", path: "/user/dashboard" },
+    ];
+
+    const adminItem = { icon: <Settings size={20} />, label: "QUẢN TRỊ", path: "/admin" };
+
+    let menu = [...publicItems];
+    if (isAuthenticated()) {
+      menu.push(...userItems);
+      if (user?.roles?.some(role => role.includes('ADMIN'))) {
+        menu.push(adminItem);
+      }
+    }
+    return menu;
+  };
+
+  const menu = buildMenu();
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800 flex">
@@ -126,10 +147,10 @@ function AppLayout() {
         </nav>
 
         {/* Logout button (xuống dưới cùng) */}
-        {isAuthenticated() && (
+        {isAuthenticated() && ( // Chỉ hiển thị nút Đăng xuất khi đã đăng nhập
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-red-50 hover:text-red-600 transition"
+            className="flex items-center gap-3 p-4 space-y-2 py-2 rounded-lg text-gray-700 hover:bg-red-50 hover:text-red-600 transition"
           >
             <LogOut size={20} />
             Đăng xuất
@@ -445,53 +466,23 @@ function HomePage() {
 }
 
 function AppRoutes() {
-  const { user, isAuthenticated } = useAuth();
-
-  // Điều hướng mặc định theo role
-  const getDefaultRedirect = () => {
-    if (!isAuthenticated) return <HomePage />;
-
-    // Kiểm tra role với cả hai định dạng
-    const isAdmin = user?.roles?.some(role =>
-      role.includes('ADMIN') || role.includes('ROLE_ADMIN')
-    );
-
-    return isAdmin
-      ? <Navigate to="/admin/dashboard" replace />
-      : <Navigate to="/user/dashboard" replace />;
-  };
+  const navigate = useNavigate();
 
   return (
     <Routes>
-      {/* Default route */}
-      <Route path="/" element={getDefaultRedirect()} />
-
-      {/* Public auth routes (không dùng layout chung) */}
+      {/* === PUBLIC ROUTES: Không yêu cầu đăng nhập và không có layout chung === */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/confirm" element={<ConfirmEmail />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/change-password" element={<ChangePassword />} />
       <Route path="/oauth2/success" element={<OAuth2Success />} />
       <Route path="/oauth2/error" element={<OAuth2Error />} />
       <Route path="/logout" element={<Logout />} />
 
-      {/* App routes (dùng layout chung: sidebar, header, etc.) */}
-      <Route path="/*" element={<AppLayout />}>
-        <Route index element={<HomePage />} />
-        <Route path="contribute" element={<ContributorDashboard />} />
-        <Route path="ranking" element={<RankingPage />} />
-        <Route path="tasks" element={<TasksPage />} />
-        <Route path="profile" element={<ProfilePage />} />
-      </Route>
-
-      {/* Trang làm bài thi - không có sidebar để người dùng tập trung */}
-      <Route path="quiz/:quizId" element={<div className="min-h-screen bg-gray-50 p-6"><QuizTakingPage /></div>} />
-
-      {/* Admin routes */}
+      {/* === ADMIN ROUTES: Yêu cầu quyền ADMIN, có layout riêng === */}
       <Route
-        path="/admin/*"
+        path="/admin"
         element={
           <ProtectedRoute requiredRole="ADMIN">
             <AdminLayout />
@@ -502,27 +493,30 @@ function AppRoutes() {
         <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="moderation" element={<ModerationPanel />} />
         <Route path="management" element={<AllSubmissionsTable />} />
+        <Route path="management/edit/:submissionId" element={<QuizSubmissionForm onSuccess={() => navigate("/admin/management")} />} />
         <Route path="user-view" element={<UserView />} />
         <Route path="grading" element={<GradingListPage />} />
         <Route path="grading/:submissionId" element={<GradingDetailPage />} />
-        <Route path="management/edit/:submissionId" element={
-          <QuizSubmissionForm onSuccess={() => navigate("/admin/management")} />
-        } />
       </Route>
 
-      {/* User dashboard route */}
-      <Route
-        path="/user/dashboard"
-        element={
-          <ProtectedRoute>
-            <AppLayout>
-              <UserDashboard />
-            </AppLayout>
-          </ProtectedRoute>
-        }
-      />
+      {/* === GENERAL APP ROUTES: Dùng layout chung (AppLayout) === */}
+      <Route path="/" element={<AppLayout />}>
+        {/* Routes công khai, ai cũng xem được */}
+        <Route index element={<HomePage />} />
+        <Route path="ranking" element={<RankingPage />} />
 
-      {/* 404 fallback */}
+        {/* Routes cần đăng nhập */}
+        <Route path="contribute" element={<ProtectedRoute><ContributorDashboard /></ProtectedRoute>} />
+        <Route path="tasks" element={<ProtectedRoute><TasksPage /></ProtectedRoute>} />
+        <Route path="user/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
+        <Route path="change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
+        {/* <Route path="profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} /> */}
+      </Route>
+
+      {/* === SPECIAL LAYOUT ROUTES: Route không có layout chung === */}
+      <Route path="quiz/:quizId" element={<div className="min-h-screen bg-gray-50 p-6"><QuizTakingPage /></div>} />
+
+      {/* === FALLBACK ROUTE === */}
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );

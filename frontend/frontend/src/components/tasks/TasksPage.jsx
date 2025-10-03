@@ -1,14 +1,20 @@
 import { useState, useEffect } from 'react';
 import { TargetIcon, Trophy, Clock, CheckCircle } from 'lucide-react';
 import { challengeService } from '@/services/challengeService';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function TasksPage() {
   const [challenges, setChallenges] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
-    loadChallenges();
-  }, []);
+    if (isAuthenticated()) {
+      loadChallenges();
+    } else {
+      setLoading(false); // Dừng loading nếu chưa đăng nhập
+    }
+  }, [isAuthenticated]);
 
   const loadChallenges = async () => {
     try {
@@ -118,7 +124,7 @@ export default function TasksPage() {
                     <CheckCircle className="text-green-500" size={20} />
                   )}
                 </div>
-                <p className="text-gray-600 mb-3">{challenge.description}</p>
+                <p className="text-gray-600 mb-3">{challenge.description || challenge.title}</p>
               </div>
               <div className="text-right">
                 <div className="text-lg font-bold text-green-600">+{challenge.rewardPoints}</div>

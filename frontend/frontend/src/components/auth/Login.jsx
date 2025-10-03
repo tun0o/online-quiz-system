@@ -279,59 +279,28 @@ const Login = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
+
         try {
-            const payload = { email: formData.email?.trim().toLowerCase(), password: formData.password };
-            const { data } = await api.post('/api/auth/login', payload);
+            // Sử dụng hàm login từ useAuth hook
+            const result = await authLogin(formData.email, formData.password);
 
-            const accessToken = data.accessToken || data.access_token || data.token || data.accessToken;
-            const refreshToken = data.refreshToken || data.refresh_token || data.refreshToken || null;
-            const rolesRaw = data.roles ?? data.role ?? [];
-
-            const userObj = {
-                id: data.id ?? data.userId ?? null,
-                email: data.email ?? data.user?.email ?? payload.email,
-                roles: rolesRaw,
-                isVerified: data.verified ?? data.isVerified ?? data.user?.verified ?? false,
-            };
-
-            if (accessToken) localStorage.setItem('accessToken', accessToken);
-            if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
-            localStorage.setItem('user', JSON.stringify(userObj));
-
-            if (accessToken) {
-                api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
-            }
-
-            if (typeof authLogin === 'function') {
-                try {
-                    const maybe = authLogin(accessToken, { roles: rolesRaw });
-                    if (maybe && typeof maybe.then === 'function') await maybe;
-                } catch (errToken) {
-                    try {
-                        const maybe2 = authLogin(userObj);
-                        if (maybe2 && typeof maybe2.then === 'function') await maybe2;
-                    } catch (errUser) {
-                        console.warn('auth.login failed with token and user object', errToken, errUser);
-                    }
+            if (result.success) {
+                toast.success('Đăng nhập thành công!');
+                
+                // Điều hướng sau khi đăng nhập thành công
+                if (from) {
+                    navigate(from, { replace: true });
+                } else {
+                    const roles = normalizeRoles(result.user.roles);
+                    const isAdmin = roles.some(r => r.includes('ADMIN'));
+                    navigate(isAdmin ? '/admin/dashboard' : '/', { replace: true });
                 }
-            }
-
-            toast.success('Đăng nhập thành công!');
-
-            if (from) {
-                navigate(from, { replace: true });
-                return;
-            }
-
-            const roles = normalizeRoles(userObj.roles);
-            const isAdmin = roles.some(r => r.includes('ADMIN'));
-
-            if (isAdmin) {
-                navigate('/admin/dashboard', { replace: true });
             } else {
-                navigate('/user/dashboard', { replace: true });
+                // Hiển thị lỗi từ hook nếu đăng nhập thất bại
+                toast.error(result.error);
             }
         } catch (error) {
+            // Bắt các lỗi không mong muốn khác
             console.error('Login error:', error);
             const errMsg = error.response?.data?.error
                 || (error.response?.data?.errors ? Object.values(error.response.data.errors || {}).join(', ') : null)
@@ -341,6 +310,7 @@ const Login = () => {
             setLoading(false);
         }
     };
+
 
     // Hàm xử lý đăng nhập bằng Google
     const handleGoogleLogin = () => {

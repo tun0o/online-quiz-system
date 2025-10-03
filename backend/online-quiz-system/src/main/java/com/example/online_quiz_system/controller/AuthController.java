@@ -9,6 +9,7 @@ import com.example.online_quiz_system.dto.ChangePasswordDTO;
 import com.example.online_quiz_system.exception.BusinessException;
 import com.example.online_quiz_system.entity.User;
 import com.example.online_quiz_system.repository.UserRepository;
+import com.example.online_quiz_system.security.UserPrincipal;
 import com.example.online_quiz_system.service.UserService;
 import com.example.online_quiz_system.service.VerificationService;
 import com.example.online_quiz_system.service.PasswordResetService;
@@ -37,7 +38,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "${app.frontend.origin}", maxAge = 3600)
 @Validated
 public class AuthController {
 
@@ -110,12 +110,11 @@ public class AuthController {
             // Set SecurityContext
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            // Principal as UserDetails
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
 
-            // Find User entity for extra fields (id, verified)
-            User user = userRepository.findByEmail(userDetails.getUsername())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+            // Tải thông tin User đầy đủ từ DB bằng ID có trong Principal
+            User user = userRepository.findById(userPrincipal.getId())
+                    .orElseThrow(() -> new RuntimeException("User not found with ID: " + userPrincipal.getId()));
 
             // Check email verified
             if (!user.isVerified()) {
@@ -124,11 +123,11 @@ public class AuthController {
             }
 
             // Generate tokens (using userDetails)
-            String accessToken = jwtService.generateAccessToken(userDetails);
-            String refreshToken = jwtService.generateRefreshToken(userDetails);
+            String accessToken = jwtService.generateAccessToken(userPrincipal);
+            String refreshToken = jwtService.generateRefreshToken(userPrincipal);
 
             // Extract roles
-            List<String> roles = userDetails.getAuthorities().stream()
+            List<String> roles = userPrincipal.getAuthorities().stream()
                     .map(GrantedAuthority::getAuthority)
                     .collect(Collectors.toList());
 
@@ -179,17 +178,18 @@ public class AuthController {
                         .body(Map.of("error", "Refresh token không hợp lệ"));
             }
 
-            UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
+            // Lấy UserPrincipal đầy đủ (có cả ID)
+            UserPrincipal userPrincipal = (UserPrincipal) customUserDetailsService.loadUserByUsername(username);
 
-            // Build new tokens
-            String newAccessToken = jwtService.generateAccessToken(userDetails);
-            String newRefreshToken = jwtService.generateRefreshToken(userDetails);
-
-            // Get User entity for id and verified flag
+            // Find User entity để đảm bảo dữ liệu mới nhất
             User user = userRepository.findByEmail(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
-            List<String> roles = userDetails.getAuthorities().stream()
+            // Build new tokens
+            String newAccessToken = jwtService.generateAccessToken(userPrincipal);
+            String newRefreshToken = jwtService.generateRefreshToken(userPrincipal);
+
+            List<String> roles = userPrincipal.getAuthorities().stream()
                     .map(GrantedAuthority::getAuthority)
                     .collect(Collectors.toList());
 

@@ -12,7 +12,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("api/admin/grading")
-@CrossOrigin(origins = "https://localhost:5173")
 public class GradingController {
 
     @Autowired

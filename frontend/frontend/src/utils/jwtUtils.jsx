@@ -1,8 +1,16 @@
 export const decodeToken = (token) => {
     try {
         const payload = token.split('.')[1];
-        const decodedPayload = atob(payload);
-        return JSON.parse(decodedPayload);
+        // Chuẩn hóa chuỗi Base64URL về Base64 chuẩn
+        let base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+        // Thêm padding nếu cần thiết
+        const padding = base64.length % 4;
+        if (padding) {
+            base64 += '='.repeat(4 - padding);
+        }
+        // Giải mã chuỗi đã được chuẩn hóa
+        const decodedPayload = atob(base64);
+        return JSON.parse(decodeURIComponent(escape(decodedPayload)));
     } catch (e) {
         console.error('Error decoding token:', e);
         return null;

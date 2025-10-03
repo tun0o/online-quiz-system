@@ -28,6 +28,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                         new UsernameNotFoundException("Không tìm thấy người dùng với email: " + normalized)
                 );
 
+        // Phương thức create này bây giờ sẽ tự động gán đối tượng User vào UserPrincipal
         return UserPrincipal.create(user);
     }
 }

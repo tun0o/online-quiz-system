@@ -4,8 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import java.util.Map;
-
 /**
  * Utility class for structured OAuth2 logging.
  * Provides consistent logging format and context for OAuth2 operations.

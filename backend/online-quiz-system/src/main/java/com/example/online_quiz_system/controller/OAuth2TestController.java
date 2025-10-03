@@ -16,7 +16,6 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/oauth2/test")
-@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173"})
 public class OAuth2TestController {
 
     @Autowired
@@ -183,4 +182,3 @@ public class OAuth2TestController {
         }
     }
 }
-

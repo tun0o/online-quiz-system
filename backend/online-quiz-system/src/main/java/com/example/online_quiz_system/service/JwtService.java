@@ -34,44 +34,39 @@ public class JwtService {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes());
     }
 
-    // --- CHỈNH SỬA: thêm roles vào token khi generate bằng UserDetails ---
-    public String generateAccessToken(UserDetails userDetails) {
+    private Map<String, Object> getClaimsFromUserDetails(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
-
-        // Thêm roles vào claims
         List<String> roles = userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
         claims.put("roles", roles);
 
         if (userDetails instanceof UserPrincipal) {
-            claims.put("userId", ((UserPrincipal) userDetails).getId());
+            Long userId = ((UserPrincipal) userDetails).getId();
+            if (userId != null) {
+                claims.put("userId", userId);
+            }
         }
+        return claims;
+    }
+
+    public String generateAccessToken(UserDetails userDetails) {
+        Map<String, Object> claims = getClaimsFromUserDetails(userDetails);
         return buildToken(claims, userDetails.getUsername(), jwtExpirationMs);
     }
 
     public String generateRefreshToken(UserDetails userDetails) {
-        return buildToken(new HashMap<>(), userDetails.getUsername(), refreshExpirationMs);
+        // Refresh token cũng cần claims để có thể tạo lại access token đầy đủ
+        Map<String, Object> claims = getClaimsFromUserDetails(userDetails);
+        return buildToken(claims, userDetails.getUsername(), refreshExpirationMs);
     }
 
     public String generateAccessToken(Authentication authentication) {
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        List<String> roles = authentication.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.toList());
-
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("roles", roles);
-        if (userDetails instanceof UserPrincipal) {
-            claims.put("userId", ((UserPrincipal) userDetails).getId());
-        }
-
-        return buildToken(claims, userDetails.getUsername(), jwtExpirationMs);
+        return generateAccessToken((UserDetails) authentication.getPrincipal());
     }
 
     public String generateRefreshToken(Authentication authentication) {
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        return buildToken(new HashMap<>(), userDetails.getUsername(), refreshExpirationMs);
+        return generateRefreshToken((UserDetails) authentication.getPrincipal());
     }
 
     private String buildToken(Map<String, Object> extraClaims, String subject, long expiration) {

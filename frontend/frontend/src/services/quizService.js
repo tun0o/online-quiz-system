@@ -1,5 +1,4 @@
-// Use Vite proxy in development and allow overriding via env
-const API_BASE = (import.meta?.env?.VITE_API_BASE) || '/api';
+import api from './api.js'; // Import axios instance
 
 export const quizService = {
   // Public APIs
@@ -13,123 +12,124 @@ export const quizService = {
    * @returns {Promise<any>} A promise that resolves to the paginated quiz data.
    */
   getPublicQuizzes: async (params) => {
-    // Lọc ra các tham số có giá trị (không phải null, undefined, hoặc chuỗi rỗng)
-    const cleanParams = Object.fromEntries(
-      Object.entries(params).filter(([_, v]) => v != null && v !== '')
-    );
-    const query = new URLSearchParams(cleanParams).toString();
-    const response = await fetch(`${API_BASE}/quiz-submissions/public?${query}`);
-    if (!response.ok) throw new Error('Failed to fetch public quizzes');
-    return response.json();
+    try {
+      const response = await api.get('/api/quiz-submissions/public', { params });
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Không thể tải danh sách đề thi công khai.');
+    }
   },
 
   // Contributor APIs
   createSubmission: async (quizData) => {
-    const response = await fetch(`${API_BASE}/quiz-submissions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(quizData)
-    });
-    if (!response.ok) throw new Error('Failed to create quiz submission');
-    return response.json();
+    try {
+      const response = await api.post('/api/quiz-submissions', quizData);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Không thể tạo đề thi mới.');
+    }
   },
 
   // Quiz Taking APIs
   getQuizForTaking: async (quizId) => {
-    const response = await fetch(`${API_BASE}/quizzes/${quizId}/take`);
-    if (!response.ok) throw new Error('Failed to fetch quiz for taking');
-    return response.json();
+    try {
+      const response = await api.get(`/api/quizzes/${quizId}/take`);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Không thể tải đề thi để làm bài.');
+    }
   },
 
   submitAttempt: async (attemptData) => {
-    const response = await fetch(`${API_BASE}/quizzes/submit`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(attemptData)
-    });
-    if (!response.ok) throw new Error('Failed to submit quiz attempt');
-    return response.json();
+    try {
+      const response = await api.post('/api/quizzes/submit', attemptData);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Không thể nộp bài làm.');
+    }
   },
 
 
-  getMySubmissions: async (contributorId = 1, page = 0, size = 10) => {
-    const response = await fetch(
-      `${API_BASE}/quiz-submissions/contributor/${contributorId}?page=${page}&size=${size}`
-    );
-    if (!response.ok) throw new Error('Failed to fetch submissions');
-    return response.json();
+  getMySubmissions: async (page = 0, size = 10) => {
+    try {
+      const response = await api.get('/api/quiz-submissions/my-submissions', { params: { page, size } });
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Không thể tải danh sách đề thi của bạn.');
+    }
   },
 
   // Admin APIs
   getPendingSubmissions: async (page = 0, size = 10) => {
-    const response = await fetch(
-      `${API_BASE}/quiz-submissions/pending?page=${page}&size=${size}`
-    );
-    if (!response.ok) throw new Error('Failed to fetch pending submissions');
-    return response.json();
+    try {
+      const response = await api.get('/api/quiz-submissions/pending', { params: { page, size } });
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Không thể tải danh sách đề thi chờ duyệt.');
+    }
   },
 
   getSubmissionDetail: async (id) => {
-    const response = await fetch(`${API_BASE}/quiz-submissions/${id}`);
-    if (!response.ok) throw new Error('Failed to fetch submission detail');
-    return response.json();
+    try {
+      const response = await api.get(`/api/quiz-submissions/${id}`);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Không thể tải chi tiết đề thi.');
+    }
   },
 
   // API for admin to search all submissions with filters
   searchSubmissions: async (params) => {
-    // Lọc ra các tham số có giá trị (không phải null, undefined, hoặc chuỗi rỗng)
-    const cleanParams = Object.fromEntries(
-      Object.entries(params).filter(([_, v]) => v != null && v !== '')
-    );
-    const query = new URLSearchParams(cleanParams).toString();
-    const response = await fetch(`${API_BASE}/quiz-submissions/public?${query}`);
-    if (!response.ok) {
-      // Try to parse error message from backend
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Failed to search submissions');
+    try {
+      const response = await api.get('/api/quiz-submissions/public', { params });
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Không thể tìm kiếm đề thi.');
     }
-    return response.json();
   },
 
   updateSubmission: async (id, quizData) => {
-    const response = await fetch(`${API_BASE}/quiz-submissions/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(quizData)
-    });
-    if (!response.ok) throw new Error('Failed to update submission');
-    return response.json();
+    try {
+      const response = await api.put(`/api/quiz-submissions/${id}`, quizData);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Không thể cập nhật đề thi.');
+    }
   },
 
   deleteSubmission: async (id) => {
-    const response = await fetch(`${API_BASE}/quiz-submissions/${id}`, {
-      method: 'DELETE'
-    });
-    if (!response.ok) throw new Error('Failed to delete submission');
-    return response.ok;
+    try {
+      await api.delete(`/api/quiz-submissions/${id}`);
+      return true;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Không thể xóa đề thi.');
+    }
   },
 
   approveSubmission: async (id) => {
-    const response = await fetch(`${API_BASE}/quiz-submissions/${id}/approve`, {
-      method: 'PUT'
-    });
-    if (!response.ok) throw new Error('Failed to approve submission');
-    return response.json();
+    try {
+      const response = await api.put(`/api/quiz-submissions/${id}/approve`);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Không thể duyệt đề thi.');
+    }
   },
 
   rejectSubmission: async (id, reason) => {
-    const response = await fetch(`${API_BASE}/quiz-submissions/${id}/reject`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ reason })
-    });
-    if (!response.ok) throw new Error('Failed to reject submission');
-    return response.json();
+    try {
+      const response = await api.put(`/api/quiz-submissions/${id}/reject`, { reason });
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Không thể từ chối đề thi.');
+    }
   },
 
   getPendingCount: async () => {
-    const response = await fetch(`${API_BASE}/quiz-submissions/stats/pending-count`);
-    if (!response.ok) throw new Error('Failed to fetch pending count');
-    return response.json();
+    try {
+      const response = await api.get('/api/quiz-submissions/stats/pending-count');
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Không thể lấy số lượng đề chờ duyệt.');
+    }
   }
 };

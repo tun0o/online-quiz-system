@@ -15,6 +15,7 @@ export const useAuth = () => {
             try {
                 const parsedUser = JSON.parse(userData);
                 setUser(parsedUser);
+                api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
             } catch (error) {
                 console.error('Error parsing user data:', error);
                 localStorage.removeItem('user');
@@ -37,9 +38,12 @@ export const useAuth = () => {
             localStorage.setItem('refreshToken', refreshToken);
             localStorage.setItem('user', JSON.stringify(userData));
 
+            // Cập nhật header cho các request sau này
+            api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+
             setUser(userData);
 
-            return { success: true };
+            return { success: true, user: userData };
         } catch (error) {
             console.error('Login error:', error);
             return {
@@ -54,6 +58,8 @@ export const useAuth = () => {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
+        // Xóa header Authorization
+        delete api.defaults.headers.common['Authorization'];
         setUser(null);
 
         return Promise.resolve();
@@ -84,4 +90,3 @@ export const useAuth = () => {
         hasRole,
     };
 };
-

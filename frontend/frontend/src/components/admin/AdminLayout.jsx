@@ -1,14 +1,6 @@
-<<<<<<< HEAD
-import { NavLink, Outlet } from 'react-router-dom';
-import { ShieldCheck, ListChecks, LogOut, Edit3 } from 'lucide-react';
 
-const adminMenu = [
-  { to: '/admin/moderation', label: 'Kiểm duyệt', icon: <ShieldCheck size={20} /> },
-  { to: '/admin/management', label: 'Quản lý Đề thi', icon: <ListChecks size={20} /> },
-  { to: '/admin/grading', label: 'Chấm bài', icon: <Edit3 size={20} /> },
-=======
 import { NavLink, Outlet, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { ShieldCheck, ListChecks, LogOut, BarChart3, Home, User, Eye } from 'lucide-react';
+import { ShieldCheck, ListChecks, LogOut, BarChart3, Home, User, Inbox } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminView } from '@/contexts/AdminViewContext';
 
@@ -16,7 +8,7 @@ const adminMenu = [
     { to: '/admin/dashboard', label: 'Tổng quan', icon: <BarChart3 size={20} /> },
     { to: '/admin/moderation', label: 'Kiểm duyệt', icon: <ShieldCheck size={20} /> },
     { to: '/admin/management', label: 'Quản lý Đề thi', icon: <ListChecks size={20} /> },
->>>>>>> feature-quiz
+    { to: '/admin/grading', label: 'Chấm bài', icon: <Inbox size={20} /> },
 ];
 
 const navLinkClasses = ({ isActive }) =>

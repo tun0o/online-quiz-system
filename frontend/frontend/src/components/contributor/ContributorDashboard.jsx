@@ -118,7 +118,7 @@ export default function ContributorDashboard() {
   const loadSubmissions = async (page = 0) => {
     setLoading(true);
     try {
-      const response = await quizService.getMySubmissions(1, page, 10);
+      const response = await quizService.getMySubmissions(page, 10);
       setSubmissions(response.content || []);
       setPagination({
         page: response.number || 0,
@@ -487,5 +487,3 @@ export default function ContributorDashboard() {
     </div>
   );
 }
-
-

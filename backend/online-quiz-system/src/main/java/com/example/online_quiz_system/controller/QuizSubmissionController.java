@@ -1,6 +1,7 @@
 package com.example.online_quiz_system.controller;
 
 import com.example.online_quiz_system.dto.QuizSubmissionDTO;
+import com.example.online_quiz_system.dto.RejectSubmissionDTO;
 import com.example.online_quiz_system.entity.QuizSubmission;
 import com.example.online_quiz_system.security.UserPrincipal;
 import com.example.online_quiz_system.service.QuizSubmissionService;
@@ -18,7 +19,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("api/quiz-submissions")
-@CrossOrigin(origins = "http://localhost:5173")
 public class QuizSubmissionController {
 
     @Autowired
@@ -59,12 +59,23 @@ public class QuizSubmissionController {
         return ResponseEntity.ok(quizzes);
     }
 
-    @GetMapping("/contributor/{contributorId}")
-    public ResponseEntity<Page<QuizSubmission>> getSubmissionsByContributor(@PathVariable Long contributorId,
+    @GetMapping("/my-submissions")
+    public ResponseEntity<Page<QuizSubmission>> getSubmissionsByContributor(
                                                                             @RequestParam(defaultValue = "0") int page,
                                                                             @RequestParam(defaultValue = "10") int size) {
+        Long userId = getCurrentUserId();
+        if(userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<QuizSubmission> submissions = submissionService.getSubmissionsByContributor(contributorId, pageable);
+        Page<QuizSubmission> submissions = submissionService.getSubmissionsByContributor(userId, pageable);
+        return ResponseEntity.ok(submissions);
+    }
+
+    @GetMapping("/pending")
+    public ResponseEntity<Page<QuizSubmission>> getPendingSubmissions(@RequestParam(defaultValue = "0") int page,
+                                                                      @RequestParam(defaultValue = "10") int size){
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<QuizSubmission> submissions = submissionService.getPendingSubmissions(pageable);
         return ResponseEntity.ok(submissions);
     }
 
@@ -96,6 +107,29 @@ public class QuizSubmissionController {
 
         submissionService.deleteSubmission(id, userId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}/approve")
+    public ResponseEntity<QuizSubmission> approveSubmission(@PathVariable Long id){
+        Long adminId = getCurrentUserId();
+        if (adminId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        QuizSubmission submission = submissionService.approveSubmission(id, adminId);
+        return ResponseEntity.ok(submission);
+    }
+
+    @PutMapping("/{id}/reject")
+    public ResponseEntity<QuizSubmission> rejectSubmission(@PathVariable Long id,
+                                                           @Valid @RequestBody RejectSubmissionDTO dto){
+        Long adminId = getCurrentUserId();
+        if (adminId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        QuizSubmission submission = submissionService.rejectSubmission(id, dto.getReason(), adminId);
+        return ResponseEntity.ok(submission);
     }
 
     @GetMapping("/stats/pending-count")

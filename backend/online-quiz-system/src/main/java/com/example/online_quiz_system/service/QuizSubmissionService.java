@@ -34,13 +34,18 @@ public class QuizSubmissionService {
         }
 
         double avgDifficulty = questions.stream()
-                .mapToInt(SubmissionQuestion::getDifficultyLevel)
+                .map(SubmissionQuestion::getDifficultyLevel)
+                .mapToInt(level -> switch (level) {
+                    case EASY -> 1;
+                    case MEDIUM -> 2;
+                    case HARD -> 3;
+                })
                 .average()
                 .orElse(1.0);
 
-        if(avgDifficulty <= 1.3) return DifficultyLevel.EASY;
-        else if (avgDifficulty <= 2.3) return DifficultyLevel.MEDIUM;
-        else return DifficultyLevel.HARD;
+        if (avgDifficulty <= 1.5) return DifficultyLevel.EASY;
+        if (avgDifficulty <= 2.5) return DifficultyLevel.MEDIUM;
+        return DifficultyLevel.HARD;
     }
 
     public QuizSubmission submitQuiz(QuizSubmissionDTO dto, Long contributorId){

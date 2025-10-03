@@ -1,6 +1,5 @@
 package com.example.online_quiz_system.config;
 
-import com.example.online_quiz_system.config.JwtAuthenticationFilter;
 import com.example.online_quiz_system.service.CustomUserDetailsService;
 import com.example.online_quiz_system.service.JwtService;
 import com.example.online_quiz_system.service.CustomOAuth2UserService;
@@ -88,13 +87,16 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/user/**").hasRole("USER")
                         .requestMatchers("/api/quiz-submissions/public").permitAll()
-                        .requestMatchers("/api/quiz-submissions/**").authenticated()
+                        .requestMatchers("/api/challenges/leaderboard").permitAll() // Cho phép xem bảng xếp hạng công khai
+                        .requestMatchers("/api/quiz-submissions/**", "/api/challenges/**", "/api/quizzes/**").authenticated() // Các API còn lại cần đăng nhập
                         .requestMatchers("/oauth2/**", "/login/**", "/oauth2/authorization/**", "/login/oauth2/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())
                 .oauth2Login(oauth2 -> oauth2
                         .authorizationEndpoint(authz -> authz
+                                // Sử dụng đường dẫn mặc định của Spring Security để tránh xung đột
+                                .baseUri("/oauth2/authorization")
                                 .authorizationRequestRepository(cookieAuthorizationRequestRepository())
                         )
                         .userInfoEndpoint(userInfo -> userInfo
@@ -112,8 +114,8 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         // When allowCredentials(true) is set, use specific allowed origins instead of "*". Adjust as needed.
-        config.setAllowedOriginPatterns(List.of("http://localhost:3000", "http://localhost:5173"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedOriginPatterns(List.of("http://localhost:3000", "http://localhost:5173")); // Đảm bảo port 3000 có ở đây
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
 

@@ -7,7 +7,6 @@ import org.springframework.security.oauth2.client.web.AuthorizationRequestReposi
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.util.SerializationUtils;
 
 import java.io.IOException;
 import java.util.Base64;

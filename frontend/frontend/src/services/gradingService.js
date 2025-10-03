@@ -1,34 +1,43 @@
-const API_BASE = (import.meta?.env?.VITE_API_BASE) || '/api';
+import api from './api.js'; // Import axios instance
 
 export const gradingService = {
+  /**
+   * Fetches pending essay grading requests.
+   * @returns {Promise<Array<any>>} A promise that resolves to the list of pending requests.
+   */
   getPendingRequests: async () => {
-    const response = await fetch(`${API_BASE}/admin/grading/requests`);
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Failed to fetch pending requests');
+    try {
+      const response = await api.get('/api/admin/grading/requests');
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Không thể tải danh sách bài cần chấm.');
     }
-    return response.json();
   },
 
+  /**
+   * Fetches the details of a quiz attempt for grading.
+   * @param {number} attemptId - The ID of the quiz attempt.
+   * @returns {Promise<any>} A promise that resolves to the attempt details.
+   */
   getAttemptDetails: async (attemptId) => {
-    const response = await fetch(`${API_BASE}/admin/grading/attempts/${attemptId}`);
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Failed to fetch attempt details');
+    try {
+      const response = await api.get(`/api/admin/grading/attempts/${attemptId}`);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Không thể tải chi tiết bài làm.');
     }
-    return response.json();
   },
 
-  submitGrades: async (payload) => {
-    const response = await fetch(`${API_BASE}/admin/grading/submit`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Failed to submit grades');
+  /**
+   * Submits the grades for essay questions.
+   * @param {object} submissionDTO - The DTO containing the grades.
+   * @returns {Promise<void>} A promise that resolves when the submission is successful.
+   */
+  submitGrades: async (submissionDTO) => {
+    try {
+      await api.post('/api/admin/grading/submit', submissionDTO);
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Không thể nộp điểm chấm.');
     }
-    // Successful response has no body, so we don't return anything.
   },
 };

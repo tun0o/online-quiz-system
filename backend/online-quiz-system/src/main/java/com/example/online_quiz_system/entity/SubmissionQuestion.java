@@ -1,5 +1,6 @@
 package com.example.online_quiz_system.entity;
 
+import com.example.online_quiz_system.enums.DifficultyLevel;
 import com.example.online_quiz_system.enums.QuestionType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -38,8 +39,10 @@ public class SubmissionQuestion {
 
     private String explanation;
 
-    @Column(name = "difficulty_level")
-    private Integer difficultyLevel = 1;
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "difficulty_level", columnDefinition = "difficulty_level")
+    private DifficultyLevel difficultyLevel;
 
     @Column(name = "max_score")
     private BigDecimal maxScore = BigDecimal.valueOf(10.0);

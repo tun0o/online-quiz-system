@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+  # Database with environment variables
+  db:
+    environment:
+      POSTGRES_DB: quizdb
+      POSTGRES_USER: quizuser
+      POSTGRES_PASSWORD: quizpass
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./initdb/01-init-schema.sql:/docker-entrypoint-initdb.d/01-init-schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U quizuser -d quizdb"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis Cache
+  redis:
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # MinIO Object Storage
+  minio:
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    ports:
+      - "9000:9000"   # API
+      - "9001:9001"   # Console UI
+    volumes:
+      - minio_data:/data
+
+volumes:
+  db_data:
+  redis_data:
+  minio_data:

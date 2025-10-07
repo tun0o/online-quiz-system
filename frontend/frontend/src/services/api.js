@@ -3,31 +3,30 @@ import axios from 'axios';
 // Lấy baseURL từ .env, fallback localhost
 const baseURL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
 
+// OAuth2 URLs - ENABLED
+export const OAUTH2_URLS = {
+    GOOGLE: `${baseURL}/oauth2/authorization/google`,
+    FACEBOOK: `${baseURL}/oauth2/authorization/facebook`,
+    SUCCESS: '/oauth2/success',
+    ERROR: '/oauth2/error'
+};
+
 // Tạo instance axios
 const api = axios.create({
     baseURL,
     headers: { 'Content-Type': 'application/json' },
-    withCredentials: true, // send cookies (httpOnly refresh token)
 });
 
 // Request interceptor: tự động gắn token
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('accessToken');
-        // Device headers
-        const fingerprint = localStorage.getItem('deviceFingerprint');
-        const deviceName = localStorage.getItem('deviceName');
         if (token) {
             config.headers = {
                 ...config.headers,
                 Authorization: `Bearer ${token}`,
             };
         }
-        config.headers = {
-            ...config.headers,
-            ...(fingerprint ? { 'X-Device-Fingerprint': fingerprint } : {}),
-            ...(deviceName ? { 'X-Device-Name': deviceName } : {}),
-        };
         return config;
     },
     (error) => Promise.reject(error)
@@ -39,27 +38,50 @@ api.interceptors.response.use(
     async (error) => {
         const originalRequest = error.config;
 
+        // Kiểm tra lỗi network trước
+        if (error.code === 'ERR_TOO_MANY_REDIRECTS' || error.code === 'ERR_NETWORK') {
+            console.error('Network error detected:', error.code);
+            // Clear tokens và redirect để tránh vòng lặp
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('user');
+            // Không retry, trả về lỗi ngay
+            return Promise.reject(error);
+        }
+
         if (error.response?.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true;
 
             try {
-                // gọi API refresh; refresh token stored as HttpOnly cookie, so no body needed
-                const response = await axios.post(`${baseURL}/api/auth/refresh`, {}, { withCredentials: true });
+                const refreshToken = localStorage.getItem('refreshToken');
+                if (!refreshToken) {
+                    console.log('No refresh token available');
+                    throw new Error('No refresh token');
+                }
 
-                const { accessToken } = response.data;
+                console.log('Attempting to refresh token...');
+                // gọi API refresh
+                const response = await axios.post(`${baseURL}/auth/refresh`, { refreshToken });
+
+                const { accessToken, refreshToken: newRefreshToken } = response.data;
 
                 // Lưu token mới
                 localStorage.setItem('accessToken', accessToken);
+                localStorage.setItem('refreshToken', newRefreshToken);
 
                 // Gắn token mới vào request cũ
                 originalRequest.headers.Authorization = `Bearer ${accessToken}`;
                 return api(originalRequest);
             } catch (refreshError) {
+                console.error('Token refresh failed:', refreshError);
                 // Refresh token thất bại => logout
                 localStorage.removeItem('accessToken');
                 localStorage.removeItem('refreshToken');
                 localStorage.removeItem('user');
-                window.location.href = '/login';
+                // Tránh vòng lặp redirect
+                if (window.location.pathname !== '/login') {
+                    window.location.href = '/login';
+                }
                 return Promise.reject(refreshError);
             }
         }

@@ -2,7 +2,6 @@ package com.example.online_quiz_system.config;
 
 import com.example.online_quiz_system.service.CustomUserDetailsService;
 import com.example.online_quiz_system.service.JwtService;
-import com.example.online_quiz_system.service.RedisService;
 import io.micrometer.common.lang.NonNull;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -27,13 +26,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final CustomUserDetailsService customUserDetailsService;
-    private final RedisService redisService;
 
     @Autowired
-    public JwtAuthenticationFilter(JwtService jwtService, CustomUserDetailsService customUserDetailsService, RedisService redisService) {
+    public JwtAuthenticationFilter(JwtService jwtService, CustomUserDetailsService customUserDetailsService) {
         this.jwtService = jwtService;
         this.customUserDetailsService = customUserDetailsService;
-        this.redisService = redisService;
     }
 
     @Override
@@ -41,32 +38,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
         try {
+            logger.info("🔥 JWT Filter: Processing request to {}", request.getRequestURI());
             String jwt = parseJwt(request);
+            logger.info("🔥 JWT Filter: JWT token found: {}", jwt != null ? "YES" : "NO");
 
             if (jwt != null && jwtService.validateToken(jwt)) {
-                // Do not authenticate using refresh tokens
-                try {
-                    // Use JwtService helper to extract 'typ' claim safely
-                    String typ = jwtService.extractClaim(jwt, claims -> claims.get("typ", String.class));
-                    if ("refresh".equalsIgnoreCase(typ)) {
-                        // Skip authenticating refresh tokens
-                        filterChain.doFilter(request, response);
-                        return;
-                    }
-                } catch (Exception ignore) {
-                    // If extraction fails, continue (token validity already checked above)
-                }
-                // Check blacklist by JWT signature part
-                try {
-                    String[] parts = jwt.split("\\.");
-                    if (parts.length == 3) {
-                        String sig = parts[2];
-                        if (redisService.isBlacklisted(sig)) {
-                            filterChain.doFilter(request, response);
-                            return;
-                        }
-                    }
-                } catch (Exception ignored) {}
+                logger.info("🔥 JWT Filter: Token is valid, setting authentication");
                 String username = jwtService.getUsernameFromToken(jwt);
                 if (username != null && !username.isBlank()) {
                     UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
@@ -77,10 +54,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                     SecurityContextHolder.getContext().setAuthentication(authentication);
+                    logger.info("🔥 JWT Filter: Authentication set successfully for user: {}", username);
                 }
+            } else {
+                logger.warn("🔥 JWT Filter: Token is invalid or null");
             }
         } catch (Exception e) {
-            logger.error("Cannot set user authentication: {}", e.getMessage(), e);
+            logger.error("🔥 JWT Filter: Cannot set user authentication: {}", e.getMessage(), e);
         }
 
         filterChain.doFilter(request, response);

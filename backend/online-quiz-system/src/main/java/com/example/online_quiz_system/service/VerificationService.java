@@ -2,11 +2,14 @@ package com.example.online_quiz_system.service;
 
 import com.example.online_quiz_system.entity.User;
 import com.example.online_quiz_system.entity.VerificationToken;
+import com.example.online_quiz_system.event.UserCreatedEvent;
 import com.example.online_quiz_system.exception.BusinessException;
 import com.example.online_quiz_system.repository.UserRepository;
 import com.example.online_quiz_system.repository.VerificationTokenRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,16 +30,22 @@ public class VerificationService {
     private final VerificationTokenRepository tokenRepository;
     private final UserRepository userRepository;
     private final EmailService emailService;
+    private final ApplicationEventPublisher eventPublisher;
     private static final Logger logger = LoggerFactory.getLogger(VerificationService.class);
     private static final int TOKEN_EXPIRY_HOURS = 24;
     private static final int RESEND_RATE_MINUTES = 5;
+    
+    @Value("${app.frontend.origin:http://localhost:3000}")
+    private String frontendOrigin;
 
     public VerificationService(VerificationTokenRepository tokenRepository,
                                UserRepository userRepository,
-                               EmailService emailService) {
+                               EmailService emailService,
+                               ApplicationEventPublisher eventPublisher) {
         this.tokenRepository = tokenRepository;
         this.userRepository = userRepository;
         this.emailService = emailService;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -92,8 +101,8 @@ public class VerificationService {
         tokenRepository.deleteByUser(user);
         String rawToken = createTokenForUser(user);
 
-        String frontendBaseUrl = System.getProperty("app.frontend.url", System.getenv().getOrDefault("APP_FRONTEND_URL", "http://localhost:3000"));
-        String verificationLink = frontendBaseUrl + "/confirm?token=" + rawToken;
+        // FIXED: Use configurable frontend origin instead of hardcoded URL
+        String verificationLink = frontendOrigin + "/confirm?token=" + rawToken;
         logger.info("Sending verification email to {} with link {}", user.getEmail(), verificationLink);
         emailService.sendVerificationEmail(user.getEmail(), verificationLink);
         logger.info("Resend verification email sent to {}", user.getEmail());
@@ -130,8 +139,12 @@ public class VerificationService {
         logger.info("Token marked as used for user: {}", user.getEmail());
 
         user.setVerified(true);
-        userRepository.save(user);
+        User savedUser = userRepository.save(user);
         logger.info("User {} verified successfully", user.getEmail());
+
+        // Publish event để tạo UserProfile tự động khi email được xác thực
+        eventPublisher.publishEvent(new UserCreatedEvent(savedUser.getId()));
+        logger.info("Published UserCreatedEvent for verified user: {}", user.getEmail());
 
         return true;
     }

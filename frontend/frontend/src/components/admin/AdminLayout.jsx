@@ -1,5 +1,5 @@
-import { NavLink, Outlet, Navigate, useLocation, Link } from 'react-router-dom';
-import { ShieldCheck, ListChecks, LogOut, BarChart3 } from 'lucide-react';
+import { NavLink, Outlet, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { ShieldCheck, ListChecks, BarChart3, Home } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 const adminMenu = [
@@ -22,6 +22,7 @@ const DefaultLoader = () => (
 export default function AdminLayout() {
     const { user, loading, isAuthenticated } = useAuth();
     const location = useLocation();
+    const navigate = useNavigate();
 
     if (loading) return <DefaultLoader />;
 
@@ -47,14 +48,14 @@ export default function AdminLayout() {
                         </NavLink>
                     ))}
                 </nav>
-                <div className="p-4 border-t border-gray-700">
-                    <Link
-                        to="/user/dashboard"
-                        className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white"
+                <div className="p-4 border-t border-gray-700 space-y-2">
+                    <button
+                        onClick={() => navigate('/user/dashboard')}
+                        className="flex items-center gap-3 w-full px-4 py-3 rounded-lg transition-colors text-gray-300 hover:bg-gray-700 hover:text-white"
                     >
-                        <LogOut size={20} className="transform rotate-180" />
-                        <span>Về trang chính</span>
-                    </Link>
+                        <Home size={20} />
+                        <span>Về trang chủ</span>
+                    </button>
                 </div>
             </aside>
             <main className="flex-1 p-6 overflow-y-auto">

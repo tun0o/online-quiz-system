@@ -1,7 +1,10 @@
 package com.example.online_quiz_system.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -18,24 +21,21 @@ public class PasswordResetToken {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @Column(nullable = false, unique = true)
+    private String tokenHash;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(name = "token_hash", nullable = false, unique = true, length = 128)
-    private String tokenHash;
-
-    @Column(name = "expires_at", nullable = false)
+    @Column(nullable = false)
     private LocalDateTime expiresAt;
 
-    @Column(name = "used", nullable = false)
-    private boolean used;
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean used = false;
 
     @CreationTimestamp
-    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 }
-
-
-
 

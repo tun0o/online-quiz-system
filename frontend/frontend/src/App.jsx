@@ -19,12 +19,18 @@ import { subjectDisplayMap } from "@/utils/displayMaps";
 import Login from "@/components/auth/Login";
 import Register from "@/components/auth/Register";
 import ConfirmEmail from "@/components/auth/ConfirmEmail";
-import Logout from "@/components/auth/Logout";
 import ForgotPassword from "@/components/auth/ForgotPassword";
 import ResetPassword from "@/components/auth/ResetPassword";
+import ChangePassword from "@/components/auth/ChangePassword";
+// OAuth2 components - ENABLED
+import OAuth2Success from "@/components/auth/OAuth2Success";
+import OAuth2Error from "@/components/auth/OAuth2Error";
+import Logout from "@/components/auth/Logout";
 import NotFoundPage from "@/components/common/NotFoundPage";
 import UserDashboard from "@/components/user/UserDashboard";
 import AdminDashboard from "@/components/admin/AdminDashboard";
+import AvatarFallback from "@/components/common/AvatarFallback";
+import ProfilePage from "@/components/user/ProfilePage";
 
 /**
  * Layout chung cho toàn bộ ứng dụng, bao gồm Sidebar và khu vực nội dung chính.
@@ -68,6 +74,7 @@ function AppLayout() {
 
     return (
         <div className="min-h-screen bg-gray-50 text-gray-800 flex">
+
             {/* Sidebar */}
             <aside className="w-64 bg-white flex flex-col justify-between p-6 border-r border-gray-200 shadow-sm flex-shrink-0">
                 {/* Logo + Menu */}
@@ -115,7 +122,7 @@ function AppLayout() {
                         <Route path="tasks" element={<div>Trang Nhiệm vụ</div>} />
                         <Route path="profile" element={
                             <ProtectedRoute>
-                                <div>Trang Hồ sơ</div>
+                                <ProfilePage />
                             </ProtectedRoute>
                         } />
                     </Routes>
@@ -155,19 +162,7 @@ function AppLayout() {
 
 
                             ) : (
-                                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center text-white font-bold">
-                                            {user?.email?.charAt(0).toUpperCase()}
-                                        </div>
-                                        <div>
-                                            <p className="font-medium text-gray-800">{user?.email}</p>
-                                            <p className="text-sm text-gray-600">
-                                                {user?.roles?.includes('ADMIN') ? 'Quản trị viên' : 'Người dùng'}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
+                                <AvatarFallback user={user} size={40} showDetails={true} maxEmailLength={20} />
                             )}
 
                             {/* Ranking */}
@@ -182,7 +177,7 @@ function AppLayout() {
                                             <div className="flex items-center gap-3">
                                                 <span className="text-lg">{user.medal || `${user.rank}.`}</span>
                                                 <div>
-                                                    <p className="font-medium text-gray-800">{user.name}</p>
+                                                    <p className="font-medium text-gray-800">{user.email}</p>
                                                     <p className="text-sm text-gray-600">{user.score.toLocaleString()} điểm</p>
                                                 </div>
                                             </div>
@@ -414,9 +409,13 @@ function AppRoutes() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/confirm" element={<ConfirmEmail />} />
-            <Route path="/logout" element={<Logout />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/change-password" element={<ChangePassword />} />
+            {/* OAuth2 routes - ENABLED */}
+            <Route path="/oauth2/success" element={<OAuth2Success />} />
+            <Route path="/oauth2/error" element={<OAuth2Error />} />
+            <Route path="/logout" element={<Logout />} />
 
             {/* App routes (dùng layout chung: sidebar, header, etc.) */}
             <Route path="/*" element={<AppLayout />} />
@@ -441,7 +440,7 @@ function AppRoutes() {
 
             {/* User dashboard route */}
             <Route
-                path="/user/dashboard"
+                path="/user/dashboard/*"
                 element={
                     <ProtectedRoute>
                         <AppLayout>

@@ -1,13 +1,29 @@
 // src/components/user/UserDashboard.jsx
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 
 const UserDashboard = () => {
-    const { user } = useAuth();
+    const { user, hasRole } = useAuth();
+    const navigate = useNavigate();
+
+    const isAdmin = hasRole('ROLE_ADMIN') || hasRole('ADMIN');
 
     return (
         <div className="p-6">
-            <h1 className="text-2xl font-bold mb-4">Dashboard Người dùng</h1>
+            <div className="flex items-center justify-between mb-4">
+                <h1 className="text-2xl font-bold">Dashboard Người dùng</h1>
+                {isAdmin && (
+                    <button
+                        onClick={() => navigate('/admin/dashboard')}
+                        className="flex items-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                    >
+                        <ArrowLeft size={16} />
+                        Quay lại Admin
+                    </button>
+                )}
+            </div>
             <div className="bg-white rounded-lg shadow-sm p-6">
                 <p className="text-lg mb-4">Xin chào, {user?.email}!</p>
 

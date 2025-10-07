@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="XmlSchemaCatalog">
+    <catalog name="Maven Surefire Test Report Schema" url="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd">
+      <file pattern="surefire-reports/*.xml" />
+    </catalog>
+  </component>
+</project>
+

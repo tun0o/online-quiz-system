@@ -1,7 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { mapApiError } from '@/utils/errorCodes.js';
 import { UserPlus, LogIn, ArrowLeft } from 'lucide-react';
 import api from '@/services/api.js';
 
@@ -91,11 +90,37 @@ const Register = () => {
             navigate('/login');
         } catch (error) {
             console.error('Register error:', error);
-            const msg = mapApiError(error) || 'Đăng ký thất bại. Vui lòng thử lại sau.';
-            // Nếu có chi tiết field errors dạng chuẩn, cũng đổ vào state
-            const details = error?.response?.data?.details;
-            if (details && typeof details === 'object') setFieldErrors(details);
-            toast.error(msg);
+
+            const status = error.response?.status;
+            const responseData = error.response?.data;
+
+            if (status === 400 && responseData) {
+                const { errors, error: singleError } = responseData;
+                let errorsObj = {};
+
+                if (errors) {
+                    if (typeof errors === 'string') {
+                        toast.error(errors);
+                    } else if (Array.isArray(errors)) {
+                        toast.error(errors.join(', '));
+                    } else if (typeof errors === 'object') {
+                        errorsObj = errors;
+                        toast.error(Object.values(errorsObj).join(', '));
+                    } else {
+                        toast.error('Dữ liệu lỗi không hợp lệ');
+                    }
+
+                    if (Object.keys(errorsObj).length) {
+                        setFieldErrors(errorsObj);
+                    }
+                } else if (singleError) {
+                    toast.error(singleError);
+                } else {
+                    toast.error('Yêu cầu không hợp lệ (400). Vui lòng kiểm tra dữ liệu.');
+                }
+            } else {
+                toast.error('Đăng ký thất bại. Vui lòng thử lại sau.');
+            }
         }
         finally {
             setLoading(false);

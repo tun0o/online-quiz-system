@@ -31,3 +31,87 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# =============================================
+# SECURITY & SECRETS PROTECTION
+# =============================================
+# Environment variables and secrets
+.env
+.env.local
+.env.development
+.env.production
+.env.staging
+.env.test
+*.env
+
+# Configuration files with secrets
+application-secret.properties
+application-prod.properties
+application-local.properties
+
+# Database credentials
+database.properties
+db.properties
+
+# OAuth2 credentials
+oauth2.properties
+google-credentials.json
+facebook-credentials.json
+
+# JWT secrets
+jwt.properties
+jwt-secret.txt
+
+# Mail configuration
+mail.properties
+smtp.properties
+
+# Redis configuration
+redis.properties
+
+# Logs that might contain sensitive information
+logs/
+*.log
+application.log
+security.log
+
+# Backup files that might contain secrets
+*.backup
+*.bak
+*.old
+
+# Temporary files
+*.tmp
+*.temp
+
+# IDE specific files that might contain secrets
+.idea/workspace.xml
+.idea/workspace.xml
+.vscode/settings.json
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# =============================================
+# ADDITIONAL SECURITY PATTERNS
+# =============================================
+# Common secret patterns
+*secret*
+*password*
+*key*
+*credential*
+*token*
+*api-key*
+*client-secret*
+
+# Configuration files with potential secrets
+config/secrets/
+secrets/
+credentials/
+keys/

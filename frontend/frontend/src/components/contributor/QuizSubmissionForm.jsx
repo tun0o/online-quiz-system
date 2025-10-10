@@ -75,7 +75,7 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
       questionText: '',
       questionType: 'MULTIPLE_CHOICE',
       explanation: '',
-      difficultyLevel: 1,
+      difficultyLevel: 'EASY', // Sửa giá trị mặc định từ số 1 thành chuỗi 'EASY'
       maxScore: 10.0,
       essayGuidelines: '',
       answerOptions: [
@@ -343,13 +343,13 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
                       Độ khó
                     </label>
                     <select
-                      value={question.difficultyLevel}
-                      onChange={(e) => updateQuestion(qIndex, 'difficultyLevel', parseInt(e.target.value))}
+                      value={question.difficultyLevel || 'EASY'} // Mặc định là EASY nếu chưa có giá trị
+                      onChange={(e) => updateQuestion(qIndex, 'difficultyLevel', e.target.value)}
                       className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800"
                     >
-                      <option value={1}>Dễ</option>
-                      <option value={2}>Trung bình</option>
-                      <option value={3}>Khó</option>
+                      <option value="EASY">Dễ</option>
+                      <option value="MEDIUM">Trung bình</option>
+                      <option value="HARD">Khó</option>
                     </select>
                   </div>
                 </div>

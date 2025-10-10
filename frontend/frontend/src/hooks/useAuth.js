@@ -1,92 +1,123 @@
-// hooks/useAuth.js
-import { useState, useEffect, useCallback } from 'react';
+import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { useEffect, useState } from 'react';
 import api from '@/services/api.js';
 
-export const useAuth = () => {
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
+const useAuthStore = create(
+    persist(
+        (set, get) => ({
+            user: null,
+            accessToken: null,
+            refreshToken: null,
+            loading: true,
 
-    // Kiểm tra authentication state khi component mount
-    useEffect(() => {
-        const token = localStorage.getItem('accessToken');
-        const userData = localStorage.getItem('user');
+            // --- ACTIONS ---
 
-        if (token && userData) {
-            try {
-                const parsedUser = JSON.parse(userData);
-                setUser(parsedUser);
-                api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-            } catch (error) {
-                console.error('Error parsing user data:', error);
-                localStorage.removeItem('user');
-                localStorage.removeItem('accessToken');
+            // Đăng nhập bằng email/password
+            login: async (email, password) => {
+                try {
+                    const response = await api.post('/api/auth/login', { email, password });
+                    const { accessToken, refreshToken, user } = response.data;
+
+                    set({ user, accessToken, refreshToken });
+                    // Interceptor sẽ tự động xử lý việc thêm header
+
+                    return { success: true, user: user }; // Trả về đối tượng user đã được làm phẳng
+                } catch (error) {
+                    console.error('Login error:', error);
+                    return {
+                        success: false,
+                        error: error.response?.data?.error || 'Đăng nhập thất bại',
+                    };
+                }
+            },
+
+            // Đăng nhập bằng token (dùng cho OAuth2 và xác thực email)
+            loginWithTokens: (accessToken, refreshToken, user) => {
+                // Chỉ cần cập nhật state. Middleware `persist` sẽ tự động lưu vào localStorage.
+                // Cơ chế isHydrated trong AppLayout sẽ xử lý việc chờ đợi khi tải lại trang.
+                set({ user, accessToken, refreshToken });
+            },
+
+            // Đăng ký
+            register: async (formData) => {
+                try {
+                    const response = await api.post('/api/auth/register', formData);
+                    return { success: true, message: response.data.message };
+                } catch (error) {
+                    return {
+                        success: false,
+                        error: error.response?.data?.error || 'Đăng ký thất bại',
+                    };
+                }
+            },
+
+            // Đăng xuất
+            logout: () => {
+                set({ user: null, accessToken: null, refreshToken: null });
+                delete api.defaults.headers.common['Authorization'];
+                // Middleware `persist` sẽ tự động xóa khỏi localStorage
+            },
+
+            // Làm mới token
+            refresh: async () => {
+                const currentRefreshToken = get().refreshToken;
+                if (!currentRefreshToken) {
+                    get().logout();
+                    throw new Error("No refresh token available");
+                }
+                try {
+                    const response = await api.post('/api/auth/refresh', { refreshToken: currentRefreshToken });
+                    const { accessToken, refreshToken, user } = response.data;
+                    
+                    set({ user, accessToken, refreshToken });
+                    api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+                    
+                    return accessToken;
+                } catch (error) {
+                    console.error('Refresh token failed:', error);
+                    get().logout(); // Đăng xuất nếu refresh thất bại
+                    throw error;
+                }
+            },
+
+            // --- GETTERS / HELPERS ---
+
+            isAuthenticated: () => !!get().user,
+
+            hasRole: (roleName) => {
+                const user = get().user;
+                if (!user || !user.roles) return false;
+                const upperRoleName = roleName.toUpperCase();
+                return user.roles.some(role =>
+                    role.toUpperCase().includes(upperRoleName)
+                );
+            },
+
+            // Hàm này được gọi khi store được khởi tạo lại từ localStorage
+            rehydrate: () => {
+                const state = get();
+                if (state.accessToken) {
+                    api.defaults.headers.common['Authorization'] = `Bearer ${state.accessToken}`;
+                }
+                set({ loading: false });
             }
+        }),
+        {
+            name: 'auth-storage', // Tên key trong localStorage
+            storage: createJSONStorage(() => localStorage),
+            // Chỉ lưu những field này vào localStorage
+            partialize: (state) => ({
+                user: state.user,
+                accessToken: state.accessToken,
+                refreshToken: state.refreshToken,
+            }),
+            // Hàm được gọi sau khi state được lấy lại từ storage
+            // onRehydrateStorage đã được chứng minh là không đáng tin cậy cho việc set state.
+            // Chúng ta sẽ sử dụng một hook riêng để xử lý việc này.
         }
+    )
+);
 
-        setLoading(false);
-    }, []);
-
-    // Hàm login
-    const login = useCallback(async (email, password) => {
-        try {
-            const response = await api.post('/api/auth/login', { email, password });
-
-            const { accessToken, refreshToken, ...userData } = response.data;
-
-            // Lưu tokens và user data
-            localStorage.setItem('accessToken', accessToken);
-            localStorage.setItem('refreshToken', refreshToken);
-            localStorage.setItem('user', JSON.stringify(userData));
-
-            // Cập nhật header cho các request sau này
-            api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
-
-            setUser(userData);
-
-            return { success: true, user: userData };
-        } catch (error) {
-            console.error('Login error:', error);
-            return {
-                success: false,
-                error: error.response?.data?.error || 'Đăng nhập thất bại',
-            };
-        }
-    }, []);
-
-    // Hàm logout
-    const logout = useCallback(() => {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        // Xóa header Authorization
-        delete api.defaults.headers.common['Authorization'];
-        setUser(null);
-
-        return Promise.resolve();
-    }, []);
-
-    // Kiểm tra đã đăng nhập hay chưa
-    const isAuthenticated = useCallback(() => {
-        return !!user;
-    }, [user]);
-
-    // Kiểm tra role
-    const hasRole = (roleName) => {
-        if (!user || !user.roles) return false;
-
-        // Kiểm tra cả hai định dạng role
-        return user.roles.some(role =>
-            role.includes(roleName) ||
-            role.includes(`ROLE_${roleName}`)
-        );
-    };
-
-    return {
-        user,
-        loading,
-        login,
-        logout,
-        isAuthenticated,
-        hasRole,
-    };
-};
+export { useAuthStore };
+export const useAuth = useAuthStore;

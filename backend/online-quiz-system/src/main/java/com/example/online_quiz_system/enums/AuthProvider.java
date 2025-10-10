@@ -1,4 +1,4 @@
-package com.example.online_quiz_system.entity;
+package com.example.online_quiz_system.enums;
 
 public enum AuthProvider {
     LOCAL,

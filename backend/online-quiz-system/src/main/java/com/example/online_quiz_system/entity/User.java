@@ -1,5 +1,6 @@
 package com.example.online_quiz_system.entity;
 
+import com.example.online_quiz_system.enums.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

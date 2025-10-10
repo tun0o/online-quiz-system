@@ -136,6 +136,28 @@ public class VerificationService {
     }
 
     @Transactional
+    public User verifyTokenAndGetUser(String rawToken) {
+        String hashedTOken = hashToken(rawToken);
+
+        VerificationToken token = tokenRepository.findByTokenHash(hashedTOken)
+                .orElseThrow(() -> new BusinessException("Token không hợp lệ hoặc đã hết hạn"));
+
+        User user = token.getUser();
+
+        if (token.isUsed()) {
+            throw new BusinessException("Token đã được sử dụng");
+        }
+
+        if (token.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new BusinessException("Token đã hết hạn");
+        }
+
+        token.setUsed(true);
+        user.setVerified(true);
+        return userRepository.save(user);
+    }
+
+    @Transactional
     public void removeAllTokensForUser(Long userId) {
         logger.info("Removing all tokens for userId={}", userId);
         tokenRepository.deleteByUser_Id(userId);

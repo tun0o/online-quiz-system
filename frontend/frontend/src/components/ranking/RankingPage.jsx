@@ -54,7 +54,6 @@ export default function RankingPage() {
         <Trophy className="text-yellow-600" size={32} />
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Bảng xếp hạng</h1>
-          <p className="text-gray-600">Top người dùng có điểm số cao nhất</p>
         </div>
       </div>
 

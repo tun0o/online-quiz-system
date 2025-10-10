@@ -3,12 +3,14 @@ import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import api from '@/services/api.js';
 import { toast } from 'react-toastify';
 import { CheckCircle, XCircle, ArrowLeft, Mail } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 const ConfirmEmail = () => {
     const [loading] = useState(false);
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const [status, setStatus] = useState('verifying');
+    const { loginWithTokens } = useAuth(); // Lấy hàm để đăng nhập bằng token
     const [email, setEmail] = useState('');
 
     useEffect(() => {
@@ -23,30 +25,25 @@ const ConfirmEmail = () => {
 
         const verifyEmail = async () => {
             try {
-                // POST token
-                await api.post('/api/auth/verify', { token });
+                // POST token và nhận lại JWTs
+                const response = await api.post('/api/auth/verify', { token });
 
                 if (isMounted) {
+                    // Dùng hàm từ useAuth và chờ cho đến khi state được lưu xong
+                    await loginWithTokens(response.data.accessToken, response.data.refreshToken, response.data.user);
+
                     setStatus('success');
-                    toast.success('Xác thực email thành công!');
+                    toast.success('Xác thực thành công! Chào mừng bạn đến với Practizz.');
+
+                    // Chuyển hướng về trang chủ sau khi đăng nhập
                     setTimeout(() => {
-                        if (isMounted) navigate('/login');
+                        if (isMounted) navigate('/');
                     }, 3000);
                 }
-            } catch /*(error)*/ {
-                if (!isMounted) return;
-
-                // fallback GET nếu POST fail
-                try {
-                    await api.get(`/api/auth/verify?token=${token}`);
-                    setStatus('success');
-                    toast.success('Xác thực email thành công!');
-                    setTimeout(() => {
-                        if (isMounted) navigate('/login');
-                    }, 3000);
-                } catch (err) {
+            } catch (err) {
+                if (isMounted) {
                     setStatus('error');
-                    toast.error(err.response?.data?.error || 'Xác thực thất bại');
+                    toast.error(err.response?.data?.error || 'Xác thực thất bại. Token có thể đã hết hạn hoặc không hợp lệ.');
                 }
             }
         };
@@ -56,7 +53,7 @@ const ConfirmEmail = () => {
         return () => {
             isMounted = false;
         };
-    }, [searchParams, navigate]);
+    }, [searchParams, navigate, loginWithTokens]);
 
     const handleResend = async () => {
         if (!email) {
@@ -103,14 +100,19 @@ const ConfirmEmail = () => {
                     {status === 'success' && (
                         <div className="text-center py-6">
                             <CheckCircle className="mx-auto h-12 w-12 text-green-500" />
-                            <h3 className="mt-4 text-lg font-medium text-gray-900">Xác thực thành công!</h3>
-                            <p className="mt-2 text-gray-600">Bạn sẽ được chuyển đến trang đăng nhập trong giây lát</p>
+                            <h3 className="mt-4 text-lg font-medium text-gray-900">Đăng nhập thành công!</h3>
+                            <p className="mt-2 text-gray-600">Bạn sẽ được chuyển đến trang chủ trong giây lát.</p>
                         </div>
                     )}
 
                     {status === 'error' && (
                         <div className="py-6">
-                            <button
+                            <div className="text-center mb-6">
+                                <XCircle className="mx-auto h-12 w-12 text-red-500" />
+                                <h3 className="mt-4 text-lg font-medium text-gray-900">Xác thực thất bại</h3>
+                                <p className="mt-2 text-gray-600">Link xác thực có thể đã hết hạn hoặc không hợp lệ. Vui lòng thử gửi lại.</p>
+                            </div>
+                            {/* <button
                                 type="submit"
                                 disabled={loading}
                                 className="w-full flex justify-center items-center py-3 px-4 rounded-md
@@ -125,7 +127,7 @@ const ConfirmEmail = () => {
                                         Đăng nhập
                                     </>
                                 )}
-                            </button>
+                            </button> */}
 
                             <div className="mt-6">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">

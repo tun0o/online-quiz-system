@@ -9,12 +9,13 @@ export default function TasksPage() {
   const { isAuthenticated } = useAuth();
 
   useEffect(() => {
-    if (isAuthenticated()) {
-      loadChallenges();
-    } else {
-      setLoading(false); // Dừng loading nếu chưa đăng nhập
-    }
-  }, [isAuthenticated]);
+    const loadData = async () => {
+      if (isAuthenticated()) {
+        await loadChallenges();
+      }
+    };
+    loadData();
+  }, [isAuthenticated]); // Vẫn giữ dependency để load lại khi đăng nhập/đăng xuất
 
   const loadChallenges = async () => {
     try {
@@ -60,7 +61,6 @@ export default function TasksPage() {
         <TargetIcon className="text-green-600" size={32} />
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Nhiệm vụ hằng ngày</h1>
-          <p className="text-gray-600">Hoàn thành các nhiệm vụ để nhận điểm thưởng</p>
         </div>
       </div>
 

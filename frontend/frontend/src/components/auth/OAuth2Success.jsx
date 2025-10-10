@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { CheckCircle, User, Mail, Shield, ArrowRight } from 'lucide-react';
-import { useAuth } from '../../hooks/useAuth';
+import { CheckCircle, User, Mail, Shield, ArrowRight, Loader2 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 import api from '@/services/api.js';
 
 /**
@@ -12,7 +12,7 @@ import api from '@/services/api.js';
 const OAuth2Success = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const { login } = useAuth();
+    const { loginWithTokens } = useAuth();
     const [isProcessing, setIsProcessing] = useState(true);
     const [userData, setUserData] = useState(null);
 
@@ -20,15 +20,15 @@ const OAuth2Success = () => {
         const processOAuth2Success = async () => {
             try {
                 // Extract parameters from URL
-                const token = searchParams.get('token');
+                const accessToken = searchParams.get('accessToken');
+                const refreshToken = searchParams.get('refreshToken');
                 const userId = searchParams.get('userId');
                 const email = searchParams.get('email');
                 const name = searchParams.get('name');
-                const provider = searchParams.get('provider');
 
                 // Validate required parameters
-                if (!token) {
-                    throw new Error('Token không được cung cấp');
+                if (!accessToken || !refreshToken) {
+                    throw new Error('Token xác thực không được cung cấp');
                 }
 
                 if (!email) {
@@ -40,31 +40,21 @@ const OAuth2Success = () => {
                     id: userId,
                     email: email,
                     name: name,
-                    provider: provider,
-                    roles: ['ROLE_USER'], // OAuth2 users default to USER role
-                    isVerified: true // OAuth2 users are pre-verified
+                    roles: JSON.parse(searchParams.get('roles') || '["ROLE_USER"]'),
+                    isVerified: searchParams.get('verified') === 'true'
                 };
 
                 setUserData(user);
 
-                // Store authentication data
-                localStorage.setItem('accessToken', token);
-                localStorage.setItem('user', JSON.stringify(user));
-                localStorage.setItem('authProvider', provider || 'oauth2');
-
-                // Set default API authorization header
-                api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-
                 // Update auth context
-                if (login) {
-                    await login(token);
-                }
+                loginWithTokens(accessToken, refreshToken, user);
 
-                toast.success(`Đăng nhập thành công với ${provider || 'OAuth2'}!`);
+                toast.success(`Đăng nhập thành công với ${searchParams.get('provider') || 'OAuth2'}!`);
 
                 // Redirect based on role (for now, all OAuth2 users go to user dashboard)
                 setTimeout(() => {
-                    navigate('/user/dashboard', { replace: true });
+                    const isAdmin = user.roles.some(r => r.includes('ADMIN'));
+                    navigate(isAdmin ? '/admin' : '/', { replace: true });
                 }, 2000);
 
             } catch (error) {
@@ -79,7 +69,7 @@ const OAuth2Success = () => {
         };
 
         processOAuth2Success();
-    }, [searchParams, navigate, login]);
+    }, [searchParams, navigate, loginWithTokens]);
 
     if (isProcessing) {
         return (
@@ -93,10 +83,7 @@ const OAuth2Success = () => {
 
                     <div className="px-8 py-6 text-center">
                         <div className="flex justify-center mb-4">
-                            <svg className="animate-spin h-12 w-12 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
+                            <Loader2 className="animate-spin h-12 w-12 text-green-600" />
                         </div>
                         <p className="text-gray-600">Đang xử lý thông tin đăng nhập...</p>
                     </div>
@@ -142,7 +129,7 @@ const OAuth2Success = () => {
                                 <div className="flex items-center text-sm">
                                     <Shield className="h-4 w-4 text-gray-400 mr-2" />
                                     <span className="text-gray-600">Đăng nhập bằng:</span>
-                                    <span className="ml-2 font-medium capitalize text-gray-900">{userData.provider || 'OAuth2'}</span>
+                                    <span className="ml-2 font-medium capitalize text-gray-900">{searchParams.get('provider') || 'OAuth2'}</span>
                                 </div>
                             </div>
                         </div>
@@ -159,4 +146,3 @@ const OAuth2Success = () => {
 };
 
 export default OAuth2Success;
-

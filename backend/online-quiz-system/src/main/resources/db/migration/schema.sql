@@ -177,22 +177,6 @@ INSERT INTO challenge_templates (title, description, challenge_type, difficulty_
 ('Học 30 phút', 'Dành 30 phút để làm bài tập', 'STUDY_TIME_MINUTES', 'HARD', 30, 50),
 ('Hoàn thành 5 đề thi', 'Hoàn thành 5 đề thi bất kỳ', 'COMPLETE_QUIZZES', 'HARD', 5, 60);
 
--- Bảng lưu câu trả lời essay của người dùng
-CREATE TABLE user_essay_answers (
-    id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    question_id BIGINT NOT NULL,
-    quiz_attempt_id BIGINT,
-    answer_text TEXT NOT NULL,
-    score DECIMAL(5,2), -- Điểm số do admin chấm (null = chưa chấm)
-    max_score DECIMAL(5,2) DEFAULT 10.0, -- Điểm tối đa
-    graded_by BIGINT REFERENCES users(id) ON DELETE SET NULL, -- Admin ID người chấm
-    graded_at TIMESTAMP,
-    admin_feedback TEXT,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
 -- Bảng yêu cầu chấm điểm essay
 CREATE TABLE essay_grading_requests (
     id BIGSERIAL PRIMARY KEY,
@@ -296,7 +280,6 @@ CREATE INDEX IF NOT EXISTS idx_user_rankings_total_points ON user_rankings(total
 CREATE INDEX IF NOT EXISTS idx_user_rankings_weekly_points ON user_rankings(weekly_points DESC);
 CREATE INDEX IF NOT EXISTS idx_daily_point_history_user_date ON daily_point_history(user_id, activity_date);
 
-CREATE INDEX IF NOT EXISTS idx_user_essay_answers_user_question ON user_essay_answers(user_id, question_id);
 CREATE INDEX IF NOT EXISTS idx_essay_grading_requests_status ON essay_grading_requests(status);
 CREATE INDEX IF NOT EXISTS idx_essay_grading_requests_assigned ON essay_grading_requests(assigned_to);
 

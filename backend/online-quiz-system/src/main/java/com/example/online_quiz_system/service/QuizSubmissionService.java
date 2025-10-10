@@ -34,17 +34,20 @@ public class QuizSubmissionService {
         }
 
         double avgDifficulty = questions.stream()
-                .map(SubmissionQuestion::getDifficultyLevel)
-                .mapToInt(level -> switch (level) {
-                    case EASY -> 1;
-                    case MEDIUM -> 2;
-                    case HARD -> 3;
+                .mapToInt(q -> {
+                    DifficultyLevel level = q.getDifficultyLevel();
+                    if (level == null) return 1; // Mặc định là Dễ nếu null
+                    return switch (level) {
+                        case EASY -> 1;
+                        case MEDIUM -> 2;
+                        case HARD -> 3;
+                    };
                 })
                 .average()
                 .orElse(1.0);
 
-        if (avgDifficulty <= 1.3) return DifficultyLevel.EASY;
-        if (avgDifficulty <= 2.3) return DifficultyLevel.MEDIUM;
+        if (avgDifficulty <= 1.6) return DifficultyLevel.EASY;
+        if (avgDifficulty <= 2.4) return DifficultyLevel.MEDIUM;
         return DifficultyLevel.HARD;
     }
 

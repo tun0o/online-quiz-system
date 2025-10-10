@@ -9,12 +9,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import jakarta.servlet.ServletException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.example.online_quiz_system.security.UserPrincipal;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -90,12 +93,13 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             // Process user login/registration
             User user = userService.processOAuthPostLogin(registrationId, userInfo);
             
-            // Generate JWT token
-            UserDetails userDetails = customUserDetailsService.loadUserByUsername(user.getEmail());
-            String jwt = jwtService.generateAccessToken(userDetails);
+            // Generate JWT tokens
+            UserPrincipal userPrincipal = (UserPrincipal) customUserDetailsService.loadUserByUsername(user.getEmail());
+            String accessToken = jwtService.generateAccessToken(userPrincipal);
+            String refreshToken = jwtService.generateRefreshToken(userPrincipal);
 
-            // Redirect to success page with token
-            redirectToSuccess(request, response, jwt, user);
+            // Redirect to success page with tokens and user info
+            redirectToSuccess(request, response, accessToken, refreshToken, user, userPrincipal);
 
         } catch (BusinessException e) {
             OAuth2Logger.logAuthFailure(registrationId, userInfo != null ? userInfo.getEmail() : null, 
@@ -122,13 +126,25 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
      * Redirects to OAuth2 success page with authentication data.
      */
     private void redirectToSuccess(HttpServletRequest request, HttpServletResponse response, 
-                                  String jwt, User user) throws IOException {
+                                  String accessToken, String refreshToken, User user, UserPrincipal userPrincipal) throws IOException {
+        
+        // Serialize roles to JSON string
+        String rolesJson = "[]";
+        try {
+            rolesJson = new ObjectMapper().writeValueAsString(userPrincipal.getAuthoritiesAsString());
+        } catch (Exception e) {
+            logger.error("Failed to serialize user roles to JSON", e);
+        }
+
         String targetUrl = UriComponentsBuilder.fromUriString(frontendUrl + OAUTH2_SUCCESS_ROUTE)
-                .queryParam("token", jwt)
+                .queryParam("accessToken", accessToken)
+                .queryParam("refreshToken", refreshToken)
                 .queryParam("userId", user.getId())
                 .queryParam("email", user.getEmail())
-                .queryParam("name", user.getName())
+                .queryParam("name", URLEncoder.encode(user.getName(), StandardCharsets.UTF_8))
                 .queryParam("provider", user.getProvider())
+                .queryParam("roles", URLEncoder.encode(rolesJson, StandardCharsets.UTF_8))
+                .queryParam("verified", String.valueOf(user.isVerified()))
                 .build().toUriString();
 
         OAuth2Logger.logAuthSuccess(user.getProvider(), user.getEmail(), user.getId().toString());

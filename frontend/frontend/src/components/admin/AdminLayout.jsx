@@ -23,7 +23,7 @@ const DefaultLoader = () => (
 );
 
 export default function AdminLayout() {
-    const { user, loading, isAuthenticated, logout } = useAuth();
+    const { user, isAuthenticated, logout } = useAuth();
     const { isAdminView, switchToUserView, canToggle } = useAdminView();
     const location = useLocation();
     const navigate = useNavigate();
@@ -33,9 +33,7 @@ export default function AdminLayout() {
         navigate('/login');
     };
 
-    if (loading) return <DefaultLoader />;
-
-    if (!isAuthenticated) return <Navigate to="/login" state={{ from: location }} replace />;
+    if (!isAuthenticated()) return <Navigate to="/login" state={{ from: location }} replace />;
 
     const isAdmin = user?.roles?.some(role =>
         role === 'ADMIN' || role === 'ROLE_ADMIN'

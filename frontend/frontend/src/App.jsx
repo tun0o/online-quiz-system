@@ -9,7 +9,7 @@ import 'react-toastify/dist/ReactToastify.css';
 // Import components
 import ContributorDashboard from "@/components/contributor/ContributorDashboard";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, useAuthStore } from "@/hooks/useAuth";
 import AdminLayout from "@/components/admin/AdminLayout";
 import ModerationPanel from "@/components/admin/ModerationPanel";
 import AllSubmissionsTable from "@/components/admin/AllSubmissionsTable";
@@ -29,6 +29,7 @@ import ForgotPassword from "@/components/auth/ForgotPassword";
 import ResetPassword from "@/components/auth/ResetPassword";
 import ChangePassword from "@/components/auth/ChangePassword";
 import OAuth2Success from "@/components/auth/OAuth2Success";
+import PendingVerification from "@/components/auth/PendingVerification";
 import OAuth2Error from "@/components/auth/OAuth2Error";
 import Logout from "@/components/auth/Logout";
 import NotFoundPage from "@/components/common/NotFoundPage";
@@ -41,9 +42,22 @@ import UserView from "@/components/admin/UserView";
  */
 function AppLayout() {
   const location = useLocation();
-  const { user, logout, isAuthenticated } = useAuth();
+  const { user, logout, isAuthenticated, hasRole } = useAuth();
   const navigate = useNavigate();
   const showRightSidebar = !['/contribute'].includes(location.pathname);
+
+  // State để theo dõi quá trình rehydration của Zustand store
+  const [isHydrated, setIsHydrated] = useState(useAuthStore.persist.hasHydrated);
+
+  useEffect(() => {
+    // Đăng ký một listener để biết khi nào việc rehydration hoàn tất.
+    const unsub = useAuthStore.persist.onFinishHydration(() => setIsHydrated(true));
+
+    // Cập nhật lại state phòng trường hợp nó đã hoàn tất trước khi effect chạy.
+    setIsHydrated(useAuthStore.persist.hasHydrated());
+
+    return () => unsub(); // Hủy đăng ký listener khi component unmount.
+  }, []);
 
   // State cho challenges và rankings thật
   const [challenges, setChallenges] = useState([]);
@@ -53,17 +67,19 @@ function AppLayout() {
 
   // Load dữ liệu thật từ API
   useEffect(() => {
+    // Chỉ tải dữ liệu sidebar khi sidebar được hiển thị
     if (showRightSidebar) {
-      loadRankings(); // Bảng xếp hạng có thể tải bất kể đăng nhập
-      // Phụ thuộc vào `user` thay vì `isAuthenticated` để đảm bảo `user` đã được set
-      if (user) {
+      loadRankings();
+      if (isAuthenticated()) {
         loadChallenges();
+      } else {
+        setLoadingChallenges(false); // Nếu chưa đăng nhập, dừng loading challenges
       }
     }
-  }, [showRightSidebar, user]); // Thay isAuthenticated bằng user
+  }, [showRightSidebar, isAuthenticated]); // Phụ thuộc vào isAuthenticated để load lại khi đăng nhập/đăng xuất
 
   const loadChallenges = async () => {
-    if (!user) return; // Kiểm tra trực tiếp user
+    if (!isAuthenticated()) return; // Thêm kiểm tra để chắc chắn
     try {
       const data = await challengeService.getTodayChallenges();
       setChallenges(data);
@@ -122,6 +138,33 @@ function AppLayout() {
 
   const menu = buildMenu();
 
+  // Kiểm tra đồng bộ xem có state đã lưu trong localStorage không.
+  // Điều này giúp tránh hiển thị màn hình loading không cần thiết cho người dùng mới.
+  const checkPersistedState = () => {
+    try {
+      const persistedState = localStorage.getItem('auth-storage');
+      if (!persistedState) return false;
+      const state = JSON.parse(persistedState).state;
+      // Chỉ coi là có state nếu có accessToken
+      return !!state.accessToken;
+    } catch (e) {
+      return false;
+    }
+  };
+  const hasPersistedState = checkPersistedState();
+
+  // Chỉ hiển thị màn hình loading nếu:
+  // 1. Store chưa được rehydrate (isHydrated = false)
+  // 2. VÀ có vẻ như người dùng đã đăng nhập (có dữ liệu trong localStorage)
+  if (!isHydrated && hasPersistedState) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <p className="text-gray-600">Đang tải ứng dụng...</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800 flex">
       {/* Sidebar */}
@@ -149,8 +192,8 @@ function AppLayout() {
         {/* Logout button (xuống dưới cùng) */}
         {isAuthenticated() && ( // Chỉ hiển thị nút Đăng xuất khi đã đăng nhập
           <button
-            onClick={handleLogout}
-            className="flex items-center gap-3 p-4 space-y-2 py-2 rounded-lg text-gray-700 hover:bg-red-50 hover:text-red-600 transition"
+            onClick={handleLogout} // Thêm mt-auto để đẩy nút xuống dưới cùng
+            className="mt-auto flex items-center gap-3 p-4 py-2 rounded-lg text-white hover:bg-red-50 hover:text-red-600 transition"
           >
             <LogOut size={20} />
             Đăng xuất
@@ -175,7 +218,7 @@ function AppLayout() {
                   <button
                     onClick={() => navigate("/register")}
                     className="flex-1 flex justify-center items-center gap-2 px-5 py-2
-               bg-gray-100 text-gray-800 rounded-lg
+               bg-gray-100 text-white rounded-lg
                hover:bg-gray-200 transition shadow-sm whitespace-nowrap"
                   >
                     <UserPlus size={16} />
@@ -205,7 +248,7 @@ function AppLayout() {
                     <div>
                       <p className="font-medium text-gray-800">{user?.name || user?.email}</p>
                       <p className="text-sm text-gray-600">
-                        {user?.roles?.includes('ADMIN') ? 'Quản trị viên' : 'Người dùng'}
+                        {user?.roles?.includes('ROLE_ADMIN') ? 'Quản trị viên' : 'Người dùng'}
                       </p>
                     </div>
                   </div>
@@ -251,35 +294,43 @@ function AppLayout() {
                     <TargetIcon className="text-green-600" size={20} />
                     <h3 className="font-bold text-gray-800">Nhiệm vụ hằng ngày</h3>
                   </div>
+                  {isAuthenticated() ? (
                   <Link to="/tasks" className="text-blue-600 text-sm font-medium hover:text-blue-700">XEM TẤT CẢ</Link>
+                ) : (
+                  <></>
+                  )}
                 </div>
                 <div className="space-y-4">
-                  {loadingChallenges ? (
-                    <div className="text-center text-gray-500">Đang tải...</div>
+                  {!isAuthenticated() ? (
+                    <div className="text-center text-gray-500 p-4">
+                      <Link to="/login" className="font-medium text-green-600 hover:text-green-700">Đăng nhập</Link> để xem nhiệm vụ.
+                    </div>
+                  ) : loadingChallenges ? (
+                      <div className="text-center text-gray-500">Đang tải...</div>
                   ) : challenges.length > 0 ? (
-                    challenges.map((challenge) => (
-                      <div key={challenge.id} className="p-3 bg-white rounded-lg shadow-sm border border-green-100">
-                        <div className="flex justify-between items-center mb-2">
-                          <p className="text-sm font-medium text-gray-800">{challenge.title}</p>
-                          <span className="text-xs text-green-600 font-medium">+{challenge.rewardPoints} điểm</span>
+                      challenges.map((challenge) => (
+                        <div key={challenge.id} className="p-3 bg-white rounded-lg shadow-sm border border-green-100">
+                          <div className="flex justify-between items-center mb-2">
+                            <p className="text-sm font-medium text-gray-800">{challenge.title}</p>
+                            <span className="text-xs text-green-600 font-medium">+{challenge.rewardPoints} điểm</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                            <div
+                              className={`h-2 rounded-full transition-all duration-300 ${challenge.isCompleted ? 'bg-green-500' : 'bg-green-400'
+                                }`}
+                              style={{ width: `${challenge.progressPercentage}%` }}
+                            />
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <p className="text-xs text-gray-600">
+                              {challenge.currentProgress}/{challenge.targetValue}
+                            </p>
+                            {challenge.isCompleted && (
+                              <span className="text-xs text-green-600 font-medium">✓ Hoàn thành</span>
+                            )}
+                          </div>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-                          <div
-                            className={`h-2 rounded-full transition-all duration-300 ${challenge.isCompleted ? 'bg-green-500' : 'bg-green-400'
-                              }`}
-                            style={{ width: `${challenge.progressPercentage}%` }}
-                          />
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <p className="text-xs text-gray-600">
-                            {challenge.currentProgress}/{challenge.targetValue}
-                          </p>
-                          {challenge.isCompleted && (
-                            <span className="text-xs text-green-600 font-medium">✓ Hoàn thành</span>
-                          )}
-                        </div>
-                      </div>
-                    ))
+                      ))
                   ) : (
                     <div className="text-center text-gray-500">Chưa có nhiệm vụ</div>
                   )}
@@ -474,6 +525,7 @@ function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/confirm" element={<ConfirmEmail />} />
+      <Route path="/pending-verification" element={<PendingVerification />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/oauth2/success" element={<OAuth2Success />} />

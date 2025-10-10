@@ -1,6 +1,6 @@
 package com.example.online_quiz_system.service;
 
-import com.example.online_quiz_system.entity.Role;
+import com.example.online_quiz_system.enums.Role;
 import com.example.online_quiz_system.entity.User;
 import com.example.online_quiz_system.repository.UserRepository;
 import org.slf4j.Logger;

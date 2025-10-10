@@ -1,28 +1,32 @@
 package com.example.online_quiz_system.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 
 @Getter
+@Setter
 public class JwtResponseDTO {
     private final String accessToken;
     private final String refreshToken;
-    private final String type = "Bearer";
-    private final Long id;
-    private final String email;
-    private final String name;
-    private final List<String> roles;
-    private final boolean verified;
+    private final UserDTO user;
 
-    public JwtResponseDTO(String accessToken, String refreshToken, Long id,
-                          String email, String name, List<String> roles, boolean verified) {
+    public JwtResponseDTO(String accessToken, String refreshToken, UserDTO user) {
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
-        this.id = id;
-        this.email = email;
-        this.name = name;
-        this.roles = roles;
-        this.verified = verified;
+        this.user = user;
+    }
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    public static class UserDTO {
+        private final Long id;
+        private final String email;
+        private final String name;
+        private final List<String> roles;
+        private final boolean verified;
     }
 }

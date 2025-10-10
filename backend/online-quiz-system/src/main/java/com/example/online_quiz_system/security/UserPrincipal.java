@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -112,5 +113,15 @@ public class UserPrincipal implements UserDetails, OAuth2User {
                 .map(GrantedAuthority::getAuthority)
                 .filter(Objects::nonNull)
                 .anyMatch(a -> a.equals(expected));
+    }
+
+    // Helper method to get authorities as a list of strings
+    public List<String> getAuthoritiesAsString() {
+        if (authorities == null) {
+            return Collections.emptyList();
+        }
+        return authorities.stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
     }
 }

@@ -23,6 +23,14 @@ const getColorByPercent = (p) => {
     return '#ef4444';
 };
 
+const requirementLabels = {
+    length: 'Ít nhất 8 ký tự',
+    lower: 'Ít nhất một chữ thường',
+    upper: 'Ít nhất một chữ HOA',
+    digit: 'Ít nhất một chữ số',
+    special: 'Ít nhất một ký tự đặc biệt',
+};
+
 const ChangePassword = () => {
     const [formData, setFormData] = useState({
         currentPassword: '',
@@ -201,6 +209,30 @@ const ChangePassword = () => {
                                 </div>
                             </div>
                         </div>
+
+                        {/* Chỉ dẫn mật khẩu */}
+                        {formData.password && (
+                            <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                <div className="w-full bg-gray-200 rounded-full h-2 mb-3 overflow-hidden">
+                                    <div
+                                        className="h-2 rounded-full"
+                                        style={{
+                                            width: `${pwdValidation.strengthPercent}%`,
+                                            background: barColor,
+                                            transition: 'width 250ms ease-in-out, background-color 250ms ease-in-out'
+                                        }}
+                                    />
+                                </div>
+                                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                                    {Object.entries(requirementLabels).map(([key, label]) => (
+                                        <li key={key} className={`flex items-center ${pwdValidation.checks[key] ? 'text-green-600' : 'text-gray-500'}`}>
+                                            {pwdValidation.checks[key] ? <Check size={14} className="mr-1.5" /> : <X size={14} className="mr-1.5" />}
+                                            {label}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">

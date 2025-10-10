@@ -177,13 +177,25 @@ public class AuthController {
     }
 
     @PostMapping("/verify")
-    public ResponseEntity<?> verifyEmail(@RequestBody Map<String, String> request) {
+    public ResponseEntity<?> verifyEmailAndLogin(@RequestBody Map<String, String> request) {
         String token = request.get("token");
-        boolean isVerified = verificationService.verifyToken(token);
-        if (isVerified) {
-            return ResponseEntity.ok().body(Map.of("message", "Xác thực email thành công"));
-        } else {
-            return ResponseEntity.badRequest().body(Map.of("error", "Token không hợp lệ hoặc đã hết hạn"));
+        if (token == null || token.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Token là bắt buộc"));
+        }
+
+        try {
+            User user = verificationService.verifyTokenAndGetUser(token);
+
+            // Tạo UserPrincipal để sinh token
+            UserPrincipal userPrincipal = UserPrincipal.create(user);
+
+            // Sinh access và refresh token
+            String accessToken = jwtService.generateAccessToken(userPrincipal);
+            String refreshToken = jwtService.generateRefreshToken(userPrincipal);
+
+            return ResponseEntity.ok(createJwtResponse(accessToken, refreshToken, user, userPrincipal));
+        } catch (BusinessException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -280,14 +292,15 @@ public class AuthController {
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
 
-        return new JwtResponseDTO(
-                accessToken,
-                refreshToken,
+        // Tạo một đối tượng UserDTO lồng nhau để phù hợp với cấu trúc frontend mong đợi
+        JwtResponseDTO.UserDTO userDTO = new JwtResponseDTO.UserDTO(
                 user.getId(),
                 user.getEmail(),
                 user.getName(), // Thêm tên người dùng
                 roles,
                 user.isVerified()
         );
+
+        return new JwtResponseDTO(accessToken, refreshToken, userDTO);
     }
 }

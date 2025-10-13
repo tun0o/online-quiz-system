@@ -7,8 +7,6 @@ import java.util.List;
 
 @Data
 public class QuizAttemptRequestDTO {
-    @NotNull
-    private Long quizId;
     private List<UserAnswerRequestDTO> answers;
     private boolean requestEssayGrading;
 }

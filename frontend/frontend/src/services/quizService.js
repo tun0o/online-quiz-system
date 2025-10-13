@@ -30,19 +30,29 @@ export const quizService = {
     }
   },
 
-  // Quiz Taking APIs
-  getQuizForTaking: async (quizId) => {
+  /**
+   * Starts a new quiz attempt.
+   * @param {number|string} quizId The ID of the quiz to start.
+   * @returns {Promise<{attemptId: number, quizData: object}>} A promise that resolves to the attempt ID and quiz data.
+   */
+  startAttempt: async (quizId) => {
     try {
-      const response = await api.get(`/api/quizzes/${quizId}/take`);
+      const response = await api.post(`/api/quizzes/${quizId}/start`);
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.message || 'Không thể tải đề thi để làm bài.');
+      throw new Error(error.response?.data?.message || 'Không thể bắt đầu làm bài.');
     }
   },
 
-  submitAttempt: async (attemptData) => {
+  /**
+   * Submits the answers for a specific quiz attempt.
+   * @param {number|string} attemptId The ID of the attempt being submitted.
+   * @param {object} payload The submission payload containing answers.
+   * @returns {Promise<any>} A promise that resolves to the quiz result.
+   */
+  submitAttempt: async (attemptId, payload) => {
     try {
-      const response = await api.post('/api/quizzes/submit', attemptData);
+      const response = await api.post(`/api/quizzes/submit/${attemptId}`, payload);
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Không thể nộp bài làm.');

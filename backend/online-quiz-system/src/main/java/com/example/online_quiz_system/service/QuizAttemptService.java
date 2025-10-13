@@ -79,18 +79,23 @@ public class QuizAttemptService {
     }
 
     @Transactional
-    public QuizResultDTO submitAndGradeQuiz(QuizAttemptRequestDTO attemptDTO, Long userId){
-        QuizSubmission quiz = quizSubmissionRepository.findById(attemptDTO.getQuizId())
-                .orElseThrow(() -> new EntityNotFoundException("Quiz ot found with id: " + attemptDTO.getQuizId()));
-
+    public QuizAttempt startQuizAttempt(Long quizId, Long userId) {
+        QuizSubmission quiz = quizSubmissionRepository.findById(quizId)
+                .orElseThrow(() -> new EntityNotFoundException("Quiz not found with id: " + quizId));
+        
         QuizAttempt attempt = new QuizAttempt();
         attempt.setUserId(userId);
         attempt.setQuizSubmission(quiz);
         attempt.setStartTime(LocalDateTime.now());
         attempt.setTotalQuestions(quiz.getQuestions().size());
         attempt.setStatus("IN_PROGRESS");
-        QuizAttempt savedAttempt = quizAttemptRepository.save(attempt);
+        return quizAttemptRepository.save(attempt);
+    }
 
+    @Transactional
+    public QuizResultDTO submitAndGradeQuiz(Long attemptId, QuizAttemptRequestDTO attemptDTO, Long userId){
+        QuizAttempt savedAttempt = quizAttemptRepository.findById(attemptId)
+                .orElseThrow(() -> new EntityNotFoundException("Quiz Attempt not found with id: " + attemptId));        QuizSubmission quiz = savedAttempt.getQuizSubmission();
         List<SubmissionQuestion> allQuestions = quiz.getQuestions();
         BigDecimal totalEssayMaxScore = allQuestions.stream()
                 .filter(q -> q.getQuestionType() == QuestionType.ESSAY)
@@ -172,17 +177,17 @@ public class QuizAttemptService {
         savedAttempt.setCorrectAnswers(correctAnswersCount);
         savedAttempt.setScore(calculatedScore);
         savedAttempt.setStatus("COMPLETED");
-        quizAttemptRepository.save(savedAttempt);
+        QuizAttempt finalAttempt = quizAttemptRepository.save(savedAttempt);
 
         int pointsEarned = correctAnswersCount;
-        long studyTimeMinutes = Duration.between(savedAttempt.getStartTime(), attempt.getEndTime()).toMinutes();
+        long studyTimeMinutes = Duration.between(savedAttempt.getStartTime(), savedAttempt.getEndTime()).toMinutes();
 
         challengeService.updateQuizCompletionProgress(
                 userId,
                 correctAnswersCount,
                 (int) studyTimeMinutes,
                 pointsEarned,
-                savedAttempt.getId()
+                finalAttempt.getId()
         );
 
         QuizResultDTO finalResult = new QuizResultDTO();

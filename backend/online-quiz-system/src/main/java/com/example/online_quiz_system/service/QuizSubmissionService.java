@@ -9,6 +9,8 @@ import com.example.online_quiz_system.enums.QuestionType;
 import com.example.online_quiz_system.enums.Subject;
 import com.example.online_quiz_system.enums.SubmissionStatus;
 import com.example.online_quiz_system.repository.QuizSubmissionRepository;
+import com.example.online_quiz_system.repository.UserRankingRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,6 +29,9 @@ public class QuizSubmissionService {
 
     @Autowired
     private QuizSubmissionRepository submissionRepository;
+
+    @Autowired
+    private UserRankingRepository userRankingRepository;
 
     public QuizSubmission submitQuiz(QuizSubmissionDTO dto, Long contributorId){
         QuizSubmission submission = new QuizSubmission();
@@ -182,6 +187,11 @@ public class QuizSubmissionService {
     public QuizSubmission approveSubmission(Long id, Long adminId){
         QuizSubmission submission = submissionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đề thi"));
+
+        UserRanking userRanking = userRankingRepository.findByUserId(submission.getContributorId())
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        userRanking.setConsumptionPoints(userRanking.getConsumptionPoints() + 50);
 
         submission.setStatus(SubmissionStatus.APPROVED);
         submission.setApprovedBy(adminId);

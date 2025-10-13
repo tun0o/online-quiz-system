@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from 'react-toastify';
 import { Loader2, Clock, Check, X, Send, ArrowLeft, ArrowRight, Info, LogOut } from "lucide-react";
@@ -15,12 +15,14 @@ export default function QuizTakingPage() {
   const [quiz, setQuiz] = useState(null);
   const [userAnswers, setUserAnswers] = useState({});
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [attemptId, setAttemptId] = useState(null);
   const [timeLeft, setTimeLeft] = useState(null);
   const [quizState, setQuizState] = useState('LOADING'); // LOADING, IN_PROGRESS, SUBMITTING, COMPLETED
   const [result, setResult] = useState(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
   const [isGradingRequested, setIsGradingRequest] = useState(false);
+  const hasStartedAttempt = useRef(false); // Ref để theo dõi việc gọi API
 
   // Memoize to check if the quiz has essay questions
   const hasEssayQuestions = useMemo(() => {
@@ -32,7 +34,7 @@ export default function QuizTakingPage() {
     setQuizState('SUBMITTING');
 
     const payload = {
-      quizId: quiz.id,
+      // quizId is now inferred from attemptId on the backend
       answers: Object.entries(userAnswers).map(([questionId, answer]) => {
         const question = quiz.questions.find(q => q.id.toString() === questionId);
         if (question.questionType === 'ESSAY') {
@@ -44,7 +46,7 @@ export default function QuizTakingPage() {
     };
 
     try {
-      const response = await quizService.submitAttempt(payload);
+      const response = await quizService.submitAttempt(attemptId, payload);
       setResult(response);
       setQuizState('COMPLETED');
       toast.success(`Nộp bài thành công! Bạn nhận được ${response.pointsEarned} điểm.`);
@@ -57,7 +59,7 @@ export default function QuizTakingPage() {
       console.error(error);
       setQuizState('IN_PROGRESS');
     }
-  }, [quiz, userAnswers]);
+  }, [quiz, userAnswers, attemptId]);
 
   const handleConfirmExit = useCallback(() => {
     setIsExitModalOpen(false);
@@ -68,11 +70,19 @@ export default function QuizTakingPage() {
   // Fetch quiz data
   useEffect(() => {
     const loadQuiz = async () => {
+      // Ngăn chặn việc gọi API lần thứ hai do StrictMode
+      if (hasStartedAttempt.current) return;
+      hasStartedAttempt.current = true;
+
       try {
-        const response = await quizService.getQuizForTaking(quizId);
-        setQuiz(response);
-        if (response.durationMinutes) {
-          setTimeLeft(response.durationMinutes * 60);
+        // Step 1: Start the attempt and get quiz data + attemptId
+        const startResponse = await quizService.startAttempt(quizId);
+        const { quizData, attemptId: newAttemptId } = startResponse;
+
+        setQuiz(quizData);
+        setAttemptId(newAttemptId);
+        if (quizData.durationMinutes) {
+          setTimeLeft(quizData.durationMinutes * 60);
         }
         setQuizState('IN_PROGRESS');
       } catch (error) {
@@ -223,7 +233,7 @@ export default function QuizTakingPage() {
 
           {/* Question Body */}
           <div className="p-6 min-h-[300px]">
-            <h2 className="text-xl font-semibold mb-6">{currentQuestion.questionText}</h2>
+            <h2 className="text-xl font-semibold mb-6 text-gray-800">{currentQuestion.questionText}</h2>
             {renderAnswerOptions(currentQuestion)}
           </div>
 

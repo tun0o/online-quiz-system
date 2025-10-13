@@ -1,8 +1,7 @@
 package com.example.online_quiz_system.controller;
 
-import com.example.online_quiz_system.dto.QuizAttemptRequestDTO;
-import com.example.online_quiz_system.dto.QuizForTakingDTO;
-import com.example.online_quiz_system.dto.QuizResultDTO;
+import com.example.online_quiz_system.dto.*;
+import com.example.online_quiz_system.entity.QuizAttempt;
 import com.example.online_quiz_system.security.UserPrincipal;
 import com.example.online_quiz_system.service.QuizAttemptService;
 import jakarta.validation.Valid;
@@ -31,18 +30,25 @@ public class QuizTakingController {
         return principal instanceof UserPrincipal ? ((UserPrincipal) principal).getId() : null;
     }
 
-    @GetMapping("/{quizId}/take")
-    public ResponseEntity<QuizForTakingDTO> getQuizForTaking(@PathVariable Long quizId){
-        QuizForTakingDTO quiz = quizAttemptService.getQuizForTaking(quizId);
-        return ResponseEntity.ok(quiz);
-    }
-
-    @PostMapping("/submit")
-    public ResponseEntity<QuizResultDTO> submitQuizForGrading(@Valid @RequestBody QuizAttemptRequestDTO attemptRequestDTO){
+    @PostMapping("/{quizId}/start")
+    public ResponseEntity<QuizStartResponseDTO> startQuiz(@PathVariable Long quizId) {
         Long userId = getCurrentUserId();
         if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
-        QuizResultDTO result = quizAttemptService.submitAndGradeQuiz(attemptRequestDTO, userId);
+        QuizAttempt attempt = quizAttemptService.startQuizAttempt(quizId, userId);
+        QuizForTakingDTO quizData = quizAttemptService.getQuizForTaking(quizId);
+
+        QuizStartResponseDTO response = new QuizStartResponseDTO(attempt.getId(), quizData);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/submit/{attemptId}")
+    public ResponseEntity<QuizResultDTO> submitQuizForGrading(@PathVariable Long attemptId,
+                                                              @Valid @RequestBody QuizAttemptRequestDTO attemptRequestDTO){
+        Long userId = getCurrentUserId();
+        if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+        QuizResultDTO result = quizAttemptService.submitAndGradeQuiz(attemptId, attemptRequestDTO, userId);
         return ResponseEntity.ok(result);
     }
 

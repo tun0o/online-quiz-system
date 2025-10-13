@@ -5,7 +5,7 @@ import { gradingService } from '@/services/gradingService';
 import { Loader2, CheckCircle, ArrowLeft } from 'lucide-react';
 
 export default function GradingDetailPage() {
-  const { submissionId : attemptId } = useParams();
+  const { attemptId } = useParams();
   const navigate = useNavigate();
 
   const [details, setDetails] = useState(null);
@@ -87,7 +87,7 @@ export default function GradingDetailPage() {
 
   return (
     <div className="space-y-6">
-      <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
+      <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm text-white hover:text-gray-900">
         <ArrowLeft size={16} /> Quay lại danh sách
       </button>
 

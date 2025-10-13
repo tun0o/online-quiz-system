@@ -24,4 +24,6 @@ public interface EssayGradingRequestRepository extends JpaRepository<EssayGradin
             "FROM EssayGradingRequest egr JOIN egr.quizAttempt qa JOIN qa.quizSubmission qs " +
             "WHERE egr.status = 'PENDING'")
     List<GradingRequestDTO> findPendingGradingRequests();
+
+    boolean existsByQuizAttemptId(Long quizAttemptId);
 }

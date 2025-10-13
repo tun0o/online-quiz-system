@@ -356,6 +356,10 @@ export default function ContributorDashboard() {
                     <p className="font-medium">{selectedSubmission.subject}</p>
                   </div>
                   <div>
+                    <span className="text-gray-500">Độ khó:</span>
+                    <p className="font-medium">{selectedSubmission.difficultyLevel}</p>
+                  </div>
+                  <div>
                     <span className="text-gray-500">Thời gian:</span>
                     <p className="font-medium">{selectedSubmission.durationMinutes} phút</p>
                   </div>

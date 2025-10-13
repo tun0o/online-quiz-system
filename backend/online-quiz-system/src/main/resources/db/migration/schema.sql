@@ -82,7 +82,6 @@ CREATE TABLE submission_questions (
     question_text TEXT NOT NULL,    
     question_type question_type NOT NULL DEFAULT 'MULTIPLE_CHOICE',
     explanation TEXT,
-    difficulty_level difficulty_level DEFAULT 'EASY',
     FOREIGN KEY (submission_id) REFERENCES quiz_submissions(id) ON DELETE CASCADE
 );
 
@@ -197,25 +196,6 @@ ALTER TABLE submission_questions ADD COLUMN essay_guidelines TEXT;
 -- Thêm cột difficulty_level vào bảng quizzes
 ALTER TABLE quiz_submissions ADD COLUMN difficulty_level difficulty_level;
 
--- Tính toán và cập nhật độ khó cho các quiz hiện có
-UPDATE quiz_submissions 
-SET difficulty_level = (
-    CASE 
-        WHEN ( -- Assuming EASY=1, MEDIUM=2, HARD=3 for calculation
-            SELECT AVG(CASE difficulty_level WHEN 'EASY' THEN 1.0 WHEN 'MEDIUM' THEN 2.0 ELSE 3.0 END)
-            FROM submission_questions 
-            WHERE submission_id = quiz_submissions.id
-        ) <= 1.5 THEN 'EASY'::difficulty_level
-        WHEN (
-            SELECT AVG(CASE difficulty_level WHEN 'EASY' THEN 1.0 WHEN 'MEDIUM' THEN 2.0 ELSE 3.0 END)
-            FROM submission_questions 
-            WHERE submission_id = quiz_submissions.id
-        ) <= 2.3 THEN 'MEDIUM'::difficulty_level
-        ELSE 'HARD'::difficulty_level
-    END
-)
-WHERE difficulty_level IS NULL;
-
 -- Bảng lưu lại mỗi lần người dùng làm một đề thi
 CREATE TABLE quiz_attempts (
     id BIGSERIAL PRIMARY KEY,
@@ -246,9 +226,23 @@ CREATE TABLE user_answers (
     UNIQUE(quiz_attempt_id, question_id) -- Mỗi câu hỏi chỉ được trả lời 1 lần trong 1 attempt
 );
 
+CREATE TABLE payment_transactions (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    amount BIGINT NOT NULL,
+    points_purchased INT NOT NULL,
+    vnp_txn_ref VARCHAR(255) UNIQUE NOT NULL,
+    status status_enum NOT NULL, -- PENDING, SUCCESS, FAILED
+    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
 -- Thêm các cột cần thiết để chấm điểm trực tiếp trên bảng user_answers
 ALTER TABLE user_answers ADD COLUMN score DECIMAL(5, 2);
 ALTER TABLE user_answers ADD COLUMN admin_feedback TEXT;
+
+ALTER TABLE user_rankings ADD COLUMN consumption_points INTEGER NOT NULL DEFAULT 0;
 
 -- 3. INDEXES
 CREATE INDEX IF NOT EXISTS idx_users_provider ON users(provider, provider_id);

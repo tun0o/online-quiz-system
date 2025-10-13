@@ -153,6 +153,7 @@ public class ChallengeService {
         ranking.setDailyPoints(ranking.getDailyPoints() + points);
         ranking.setWeeklyPoints(ranking.getWeeklyPoints() + points);
         ranking.setMonthlyPoints(ranking.getMonthlyPoints() + points);
+        ranking.setConsumptionPoints(ranking.getConsumptionPoints() + points);
 
         LocalDate today = LocalDate.now();
         if(!today.equals(ranking.getLastActivityDate())){

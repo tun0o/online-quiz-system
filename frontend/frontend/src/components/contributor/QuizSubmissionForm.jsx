@@ -10,6 +10,7 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
     title: '',
     description: '',
     subject: '',
+    difficultyLevel: 'EASY',
     durationMinutes: 60,
     questions: [createEmptyQuestion()]
   });
@@ -44,6 +45,7 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
         title: '',
         description: '',
         subject: '',
+        difficultyLevel: 'EASY',
         durationMinutes: 60,
         questions: [createEmptyQuestion()]
       });
@@ -75,7 +77,6 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
       questionText: '',
       questionType: 'MULTIPLE_CHOICE',
       explanation: '',
-      difficultyLevel: 'EASY', // Sửa giá trị mặc định từ số 1 thành chuỗi 'EASY'
       maxScore: 10.0,
       essayGuidelines: '',
       answerOptions: [
@@ -130,7 +131,7 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
 
     // Validation cho từng loại câu hỏi
     const validationErrors = [];
-    
+
     formData.questions.forEach((q, index) => {
       if (q.questionType === 'ESSAY') {
         // Câu tự luận không cần đáp án
@@ -154,7 +155,9 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
     const payload = {
       ...formData,
       questions: formData.questions.map(q => {
-        const { clientKey, ...questionData } = q; // Loại bỏ clientKey
+        // Loại bỏ clientKey và difficultyLevel khỏi mỗi câu hỏi
+        // eslint-disable-next-line no-unused-vars
+        const { clientKey, difficultyLevel, ...questionData } = q;
         return questionData;
       })
     };
@@ -174,6 +177,7 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
           title: '',
           description: '',
           subject: '',
+          difficultyLevel: 'EASY',
           durationMinutes: 60,
           questions: [createEmptyQuestion()]
         });
@@ -233,17 +237,35 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Thời gian làm bài (phút) *
+              Độ khó *
             </label>
-            <input
-              type="number"
+            <select
               required
-              min="1"
-              name="durationMinutes"
-              value={formData.durationMinutes}
+              name="difficultyLevel"
+              value={formData.difficultyLevel}
               onChange={handleChange}
               className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800"
-            />
+            >
+              <option value="EASY">Dễ</option>
+              <option value="MEDIUM">Trung bình</option>
+              <option value="HARD">Khó</option>
+            </select>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Thời gian làm bài (phút) *
+              </label>
+              <input
+                type="number"
+                required
+                min="1"
+                name="durationMinutes"
+                value={formData.durationMinutes}
+                onChange={handleChange}
+                className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800"
+              />
+            </div>
           </div>
         </div>
 
@@ -309,7 +331,7 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
                       onChange={(e) => {
                         const newType = e.target.value;
                         let newOptions = question.answerOptions;
-                        
+
                         // Cập nhật answerOptions dựa trên loại câu hỏi
                         if (newType === 'TRUE_FALSE') {
                           newOptions = [
@@ -326,7 +348,7 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
                             { id: null, optionText: '', isCorrect: false, clientKey: `ans_${Date.now()}_6` }
                           ];
                         }
-                        
+
                         updateQuestion(qIndex, 'questionType', newType);
                         updateQuestion(qIndex, 'answerOptions', newOptions);
                       }}
@@ -338,20 +360,6 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
                     </select>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Độ khó
-                    </label>
-                    <select
-                      value={question.difficultyLevel || 'EASY'} // Mặc định là EASY nếu chưa có giá trị
-                      onChange={(e) => updateQuestion(qIndex, 'difficultyLevel', e.target.value)}
-                      className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800"
-                    >
-                      <option value="EASY">Dễ</option>
-                      <option value="MEDIUM">Trung bình</option>
-                      <option value="HARD">Khó</option>
-                    </select>
-                  </div>
                 </div>
 
                 {/* Điểm tối đa cho câu tự luận */}
@@ -419,8 +427,8 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
                             updateQuestion(qIndex, 'answerOptions', newOptions);
                           }}
                           className="flex-1 p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800"
-                          placeholder={question.questionType === 'TRUE_FALSE' ? 
-                            (oIndex === 0 ? 'Đúng' : 'Sai') : 
+                          placeholder={question.questionType === 'TRUE_FALSE' ?
+                            (oIndex === 0 ? 'Đúng' : 'Sai') :
                             `Đáp án ${String.fromCharCode(65 + oIndex)}`
                           }
                           readOnly={question.questionType === 'TRUE_FALSE'}

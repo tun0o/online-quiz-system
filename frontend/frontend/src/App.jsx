@@ -1,7 +1,7 @@
 // App.jsx
 import { Routes, Route, NavLink, Outlet, useLocation, Navigate, useNavigate, Link, useParams } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
-import { Home, Star, Shield, ClipboardList, User, Settings, UserPlus, LogIn, TrophyIcon, TargetIcon, ServerCrash, LogOut } from "lucide-react";
+import { Home, Star, Shield, ClipboardList, User, Settings, UserPlus, LogIn, TrophyIcon, TargetIcon, ServerCrash, LogOut, DollarSign } from "lucide-react";
 import { QuizProvider } from "@/contexts/QuizContext";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -9,6 +9,7 @@ import 'react-toastify/dist/ReactToastify.css';
 // Import components
 import ContributorDashboard from "@/components/contributor/ContributorDashboard";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useAuth, useAuthStore } from "@/hooks/useAuth";
 import AdminLayout from "@/components/admin/AdminLayout";
 import ModerationPanel from "@/components/admin/ModerationPanel";
@@ -35,14 +36,34 @@ import Logout from "@/components/auth/Logout";
 import NotFoundPage from "@/components/common/NotFoundPage";
 import UserDashboard from "@/components/user/UserDashboard";
 import AdminDashboard from "@/components/admin/AdminDashboard";
-import UserView from "@/components/admin/UserView";
+import { useAdminView } from "./contexts/AdminViewContext";
+import AdminViewHandler from "./components/common/AdminViewHandler";
+import PurchasePointsPage from "./components/payment/PurchasePointsPage"; // Giả sử bạn tạo file ở đây
+import PaymentResultPage from "./components/payment/PaymentResultPage"; // Giả sử bạn tạo file ở đây
+
+function AdminViewBanner() {
+  const { switchToAdminView } = useAdminView();
+  return (
+    <div className="bg-yellow-400 text-black py-2 px-4 text-center text-sm sticky top-0 z-50 flex justify-center items-center gap-4">
+      <span>
+        Bạn đang xem với tư cách <strong>Người dùng</strong>.
+      </span>
+      <button
+        onClick={switchToAdminView}
+        className="bg-black text-white px-3 py-1 rounded-md text-xs font-semibold hover:bg-gray-800"
+      >
+        Quay lại trang Admin
+      </button>
+    </div>
+  );
+}
 
 /**
  * Layout chung cho toàn bộ ứng dụng, bao gồm Sidebar và khu vực nội dung chính.
  */
 function AppLayout() {
   const location = useLocation();
-  const { user, logout, isAuthenticated, hasRole } = useAuth();
+  const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const showRightSidebar = !['/contribute'].includes(location.pathname);
 
@@ -58,6 +79,9 @@ function AppLayout() {
 
     return () => unsub(); // Hủy đăng ký listener khi component unmount.
   }, []);
+
+  const { isViewingAsUser } = useAdminView();
+  const isAdmin = useIsAdmin();
 
   // State cho challenges và rankings thật
   const [challenges, setChallenges] = useState([]);
@@ -82,7 +106,8 @@ function AppLayout() {
     if (!isAuthenticated()) return; // Thêm kiểm tra để chắc chắn
     try {
       const data = await challengeService.getTodayChallenges();
-      setChallenges(data);
+      // Đảm bảo rằng chúng ta luôn set một mảng cho state `challenges`
+      setChallenges(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error loading challenges (user might not be logged in):', error);
     } finally {
@@ -122,16 +147,12 @@ function AppLayout() {
       { icon: <ClipboardList size={20} />, label: "NHIỆM VỤ", path: "/tasks" },
       { icon: <Star size={20} />, label: "ĐÓNG GÓP", path: "/contribute" },
       { icon: <User size={20} />, label: "HỒ SƠ", path: "/user/dashboard" },
+      { icon: <DollarSign size={20} />, label: "MUA ĐIỂM", path: "/purchase-points" },
     ];
-
-    const adminItem = { icon: <Settings size={20} />, label: "QUẢN TRỊ", path: "/admin" };
 
     let menu = [...publicItems];
     if (isAuthenticated()) {
       menu.push(...userItems);
-      if (user?.roles?.some(role => role.includes('ADMIN'))) {
-        menu.push(adminItem);
-      }
     }
     return menu;
   };
@@ -166,6 +187,9 @@ function AppLayout() {
     );
   }
   return (
+    <>
+    {/* Hiển thị banner nếu admin đang trong chế độ xem người dùng */ }
+      { isAdmin && isViewingAsUser && <AdminViewBanner /> }
     <div className="min-h-screen bg-gray-50 text-gray-800 flex">
       {/* Sidebar */}
       <aside className="w-64 bg-white flex flex-col p-6 space-y-6 border-r border-gray-200 shadow-sm flex-shrink-0">
@@ -295,9 +319,9 @@ function AppLayout() {
                     <h3 className="font-bold text-gray-800">Nhiệm vụ hằng ngày</h3>
                   </div>
                   {isAuthenticated() ? (
-                  <Link to="/tasks" className="text-blue-600 text-sm font-medium hover:text-blue-700">XEM TẤT CẢ</Link>
-                ) : (
-                  <></>
+                    <Link to="/tasks" className="text-blue-600 text-sm font-medium hover:text-blue-700">XEM TẤT CẢ</Link>
+                  ) : (
+                    <></>
                   )}
                 </div>
                 <div className="space-y-4">
@@ -306,31 +330,31 @@ function AppLayout() {
                       <Link to="/login" className="font-medium text-green-600 hover:text-green-700">Đăng nhập</Link> để xem nhiệm vụ.
                     </div>
                   ) : loadingChallenges ? (
-                      <div className="text-center text-gray-500">Đang tải...</div>
+                    <div className="text-center text-gray-500">Đang tải...</div>
                   ) : challenges.length > 0 ? (
-                      challenges.map((challenge) => (
-                        <div key={challenge.id} className="p-3 bg-white rounded-lg shadow-sm border border-green-100">
-                          <div className="flex justify-between items-center mb-2">
-                            <p className="text-sm font-medium text-gray-800">{challenge.title}</p>
-                            <span className="text-xs text-green-600 font-medium">+{challenge.rewardPoints} điểm</span>
-                          </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-                            <div
-                              className={`h-2 rounded-full transition-all duration-300 ${challenge.isCompleted ? 'bg-green-500' : 'bg-green-400'
-                                }`}
-                              style={{ width: `${challenge.progressPercentage}%` }}
-                            />
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <p className="text-xs text-gray-600">
-                              {challenge.currentProgress}/{challenge.targetValue}
-                            </p>
-                            {challenge.isCompleted && (
-                              <span className="text-xs text-green-600 font-medium">✓ Hoàn thành</span>
-                            )}
-                          </div>
+                    challenges.map((challenge) => (
+                      <div key={challenge.id} className="p-3 bg-white rounded-lg shadow-sm border border-green-100">
+                        <div className="flex justify-between items-center mb-2">
+                          <p className="text-sm font-medium text-gray-800">{challenge.title}</p>
+                          <span className="text-xs text-green-600 font-medium">+{challenge.rewardPoints} điểm</span>
                         </div>
-                      ))
+                        <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                          <div
+                            className={`h-2 rounded-full transition-all duration-300 ${challenge.isCompleted ? 'bg-green-500' : 'bg-green-400'
+                              }`}
+                            style={{ width: `${challenge.progressPercentage}%` }}
+                          />
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <p className="text-xs text-gray-600">
+                            {challenge.currentProgress}/{challenge.targetValue}
+                          </p>
+                          {challenge.isCompleted && (
+                            <span className="text-xs text-green-600 font-medium">✓ Hoàn thành</span>
+                          )}
+                        </div>
+                      </div>
+                    ))
                   ) : (
                     <div className="text-center text-gray-500">Chưa có nhiệm vụ</div>
                   )}
@@ -341,6 +365,7 @@ function AppLayout() {
         )}
       </div>
     </div>
+    </>
   );
 }
 
@@ -498,8 +523,8 @@ function HomePage() {
                     key={i}
                     onClick={() => handlePageChange(i)}
                     className={`px-3 py-1 rounded ${i === query.page
-                        ? 'bg-green-600 text-white'
-                        : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                      ? 'bg-green-600 text-white'
+                      : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
                       }`}
                   >
                     {i + 1}
@@ -546,9 +571,8 @@ function AppRoutes() {
         <Route path="moderation" element={<ModerationPanel />} />
         <Route path="management" element={<AllSubmissionsTable />} />
         <Route path="management/edit/:submissionId" element={<QuizSubmissionForm onSuccess={() => navigate("/admin/management")} />} />
-        <Route path="user-view" element={<UserView />} />
         <Route path="grading" element={<GradingListPage />} />
-        <Route path="grading/:submissionId" element={<GradingDetailPage />} />
+        <Route path="grading/:attemptId" element={<GradingDetailPage />} />
       </Route>
 
       {/* === GENERAL APP ROUTES: Dùng layout chung (AppLayout) === */}
@@ -562,6 +586,8 @@ function AppRoutes() {
         <Route path="tasks" element={<ProtectedRoute><TasksPage /></ProtectedRoute>} />
         <Route path="user/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
         <Route path="change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
+        <Route path="purchase-points" element={<ProtectedRoute><PurchasePointsPage /></ProtectedRoute>} />
+        <Route path="payment/result" element={<ProtectedRoute><PaymentResultPage /></ProtectedRoute>} />
         {/* <Route path="profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} /> */}
       </Route>
 
@@ -577,6 +603,7 @@ function AppRoutes() {
 function App() {
   return (
     <QuizProvider>
+      <AdminViewHandler />
       <ToastContainer position="bottom-right" autoClose={3000} hideProgressBar={false} newestOnTop closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
       <AppRoutes />
     </QuizProvider>

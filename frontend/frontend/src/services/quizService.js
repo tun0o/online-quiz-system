@@ -49,6 +49,14 @@ export const quizService = {
     }
   },
 
+  requestEssayGrading: async (attemptId) => {
+    try {
+      const response = await api.post(`/api/quizzes/${attemptId}/request-grading`);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Không thể yêu cầu chấm điểm tự luận.');
+    }
+  },
 
   getMySubmissions: async (page = 0, size = 10) => {
     try {

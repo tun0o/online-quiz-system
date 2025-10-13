@@ -20,7 +20,7 @@ export default function QuizTakingPage() {
   const [result, setResult] = useState(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
-  const [requestEssayGrading, setRequestEssayGrading] = useState(false);
+  const [isGradingRequested, setIsGradingRequest] = useState(false);
 
   // Memoize to check if the quiz has essay questions
   const hasEssayQuestions = useMemo(() => {
@@ -33,7 +33,6 @@ export default function QuizTakingPage() {
 
     const payload = {
       quizId: quiz.id,
-      requestEssayGrading: requestEssayGrading,
       answers: Object.entries(userAnswers).map(([questionId, answer]) => {
         const question = quiz.questions.find(q => q.id.toString() === questionId);
         if (question.questionType === 'ESSAY') {
@@ -50,11 +49,15 @@ export default function QuizTakingPage() {
       setQuizState('COMPLETED');
       toast.success(`Nộp bài thành công! Bạn nhận được ${response.pointsEarned} điểm.`);
     } catch (error) {
-      toast.error("Có lỗi xảy ra khi nộp bài. Vui lòng thử lại.");
+      if (error.response && error.response.data.message.includes("Không đủ điểm")) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error("Có lỗi xảy ra khi nộp bài. Vui lòng thử lại.");
+      }
       console.error(error);
       setQuizState('IN_PROGRESS');
     }
-  }, [quiz, userAnswers, requestEssayGrading]);
+  }, [quiz, userAnswers]);
 
   const handleConfirmExit = useCallback(() => {
     setIsExitModalOpen(false);
@@ -176,10 +179,10 @@ export default function QuizTakingPage() {
                 key={q.id}
                 onClick={() => jumpToQuestion(index)}
                 className={`h-10 w-10 rounded flex items-center justify-center font-medium border transition ${index === currentQuestionIndex
-                    ? 'bg-green-600 text-white border-green-600 ring-2 ring-green-300'
-                    : userAnswers[q.id]
-                      ? 'bg-blue-100 text-blue-800 border-blue-200'
-                      : 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200'
+                  ? 'bg-green-600 text-white border-green-600 ring-2 ring-green-300'
+                  : userAnswers[q.id]
+                    ? 'bg-blue-100 text-blue-800 border-blue-200'
+                    : 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200'
                   }`}
               >
                 {index + 1}
@@ -190,7 +193,7 @@ export default function QuizTakingPage() {
           <div className="mt-8 border-t border-gray-200 pt-6">
             <button
               onClick={() => setIsExitModalOpen(true)}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 text-white rounded-lg hover:bg-gray-50 hover:border-gray-400 transition"
             >
               <LogOut size={16} />
               Thoát
@@ -230,12 +233,6 @@ export default function QuizTakingPage() {
               <ArrowLeft size={16} /> Câu trước
             </button>
             <div className="flex items-center gap-4">
-              {currentQuestionIndex === quiz.questions.length - 1 && hasEssayQuestions && (
-                <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700">
-                  <input type="checkbox" checked={requestEssayGrading} onChange={(e) => setRequestEssayGrading(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500" />
-                  Yêu cầu chấm bài tự luận
-                </label>
-              )}
 
               {currentQuestionIndex === quiz.questions.length - 1 ? (
                 <button onClick={handleSubmitRequest} className="flex items-center gap-2 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 shadow-sm">
@@ -298,6 +295,20 @@ export default function QuizTakingPage() {
     ];
     const chartColors = ['#10B981', '#E5E7EB']; // green-500, gray-200
 
+    const handleRequestGrading = async () => {
+      try {
+        await quizService.requestEssayGrading(result.attemptId);
+        toast.success("Yêu cầu chấm bài đã được gửi thành công!");
+        setIsGradingRequest(true);
+      } catch (error) {
+        if (error.response && error.response.data?.message) {
+          toast.error(error.response.data.message);
+        } else {
+          toast.error("Có lỗi xảy ra khi gửi yêu cầu chấm bài. Vui lòng thử lại.");
+        }
+      }
+    };
+
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
         <h1 className="text-3xl font-bold text-center text-green-600">Kết quả bài làm</h1>
@@ -327,11 +338,23 @@ export default function QuizTakingPage() {
           </div>
         </div>
 
-        {result.results.some(r => r.isCorrect === null) && requestEssayGrading && (
-          <div className="mt-6 p-4 bg-indigo-50 text-indigo-800 rounded-lg border border-indigo-200 flex items-center gap-3">
-            <Info size={20} />
-            <span>Bài làm của bạn có câu hỏi tự luận và đã được gửi đi để chấm điểm. Điểm số cuối cùng sẽ được cập nhật sau.</span>
-          </div>
+        {result.results.some(r => r.isCorrect === null) && (
+          isGradingRequested ? (
+            <div className="mt-6 p-4 bg-indigo-50 text-indigo-800 rounded-lg border border-indigo-200 flex items-center gap-3">
+              <Info size={20} />
+              <span>Yêu cầu chấm bài đã được gửi. Điểm số cuối cùng sẽ được cập nhật sau khi admin chấm xong.</span>
+            </div>
+          ) : (
+            <div className="mt-8 p-6 bg-yellow-50 border-2 border-dashed border-yellow-300 rounded-lg text-center">
+              <h3 className="text-lg font-semibold text-yellow-900">Bạn có câu hỏi tự luận chưa được chấm!</h3>
+              <p className="text-yellow-800 mt-2">
+                Yêu cầu admin chấm bài để hoàn thiện điểm số của bạn.
+              </p>
+              <button onClick={handleRequestGrading} className="mt-4 px-6 py-2 bg-yellow-500 text-white font-bold rounded-lg hover:bg-yellow-600 transition shadow-md">
+                Yêu cầu chấm bài (Chi phí: 100 điểm)
+              </button>
+            </div>
+          )
         )}
 
         {/* Detailed Results */}
@@ -374,9 +397,6 @@ export default function QuizTakingPage() {
                       <p className="text-sm font-medium text-gray-600">Câu trả lời của bạn:</p>
                       <div className="p-3 bg-gray-50 border border-gray-200 rounded-md text-gray-800 whitespace-pre-wrap">
                         {res.userAnswer?.answerText || <i className="text-gray-400">Không trả lời</i>}
-                      </div>
-                      <div className="p-3 bg-indigo-50 text-indigo-700 text-sm rounded-md border border-indigo-200">
-                        Câu trả lời đang chờ admin chấm điểm.
                       </div>
                     </div>
                   )}

@@ -7,12 +7,6 @@ export default function SubmissionDetailView({ submission }) {
     return <div className="text-center p-8 text-gray-500">Đang tải chi tiết...</div>;
   }
 
-  const difficultyMap = {
-    1: { text: 'Dễ', color: 'text-green-600' },
-    2: { text: 'Trung bình', color: 'text-yellow-600' },
-    3: { text: 'Khó', color: 'text-red-600' },
-  };
-
   const getQuestionTypeBadge = (questionType) => {
     switch (questionType) {
       case 'MULTIPLE_CHOICE':
@@ -52,9 +46,6 @@ export default function SubmissionDetailView({ submission }) {
               <h4 className="font-semibold text-gray-800">Câu {qIndex + 1}:</h4>
               <div className="flex gap-2 items-center">
                 {getQuestionTypeBadge(question.questionType)}
-                <span className={`font-medium text-xs ${difficultyMap[question.difficultyLevel]?.color || 'text-gray-500'}`}>
-                  {difficultyMap[question.difficultyLevel]?.text || 'Không xác định'}
-                </span>
                 {question.questionType === 'ESSAY' && (
                   <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded text-xs font-medium">
                     {question.maxScore} điểm

@@ -4,12 +4,11 @@ import com.example.online_quiz_system.dto.*;
 import com.example.online_quiz_system.entity.*;
 import com.example.online_quiz_system.enums.GradingStatus;
 import com.example.online_quiz_system.enums.QuestionType;
-import com.example.online_quiz_system.repository.EssayGradingRequestRepository;
-import com.example.online_quiz_system.repository.QuizAttemptRepository;
-import com.example.online_quiz_system.repository.QuizSubmissionRepository;
-import com.example.online_quiz_system.repository.UserAnswerRepository;
+import com.example.online_quiz_system.exception.InsufficientPointsException;
+import com.example.online_quiz_system.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +37,11 @@ public class QuizAttemptService {
 
     @Autowired
     private EssayGradingRequestRepository essayGradingRequestRepository;
+
+    @Autowired
+    private UserRankingRepository userRankingRepository;
+
+    private static final int ESSAY_GRADING_COST = 100;
 
     public QuizForTakingDTO getQuizForTaking(Long quizId){
         QuizSubmission submission = quizSubmissionRepository.findById(quizId)
@@ -108,7 +112,6 @@ public class QuizAttemptService {
                 .collect(Collectors.toMap(SubmissionQuestion::getId, Function.identity()));
 
         int correctAnswersCount = 0;
-        int essayQuestionsCount = 0;
         List<UserAnswer> userAnswersToSave = new ArrayList<>();
         BigDecimal calculatedScore = BigDecimal.ZERO;
 
@@ -142,7 +145,6 @@ public class QuizAttemptService {
                 } else if (question.getQuestionType() == QuestionType.ESSAY) {
                     userAnswer.setAnswerText(userAnswerDTO.getAnswerText());
                     userAnswer.setIsCorrect(null);
-                    essayQuestionsCount++;
                 }
                 userAnswersToSave.add(userAnswer);
             }
@@ -165,15 +167,6 @@ public class QuizAttemptService {
                 }).collect(Collectors.toList());
 
         userAnswerRepository.saveAll(userAnswersToSave);
-
-        if(essayQuestionsCount > 0 && attemptDTO.isRequestEssayGrading()){
-            EssayGradingRequest gradingRequest = new EssayGradingRequest();
-            gradingRequest.setUserId(userId);
-            gradingRequest.setQuizAttempt(savedAttempt);
-            gradingRequest.setStatus(GradingStatus.PENDING);
-            gradingRequest.setTotalEssayQuestions(essayQuestionsCount);
-            essayGradingRequestRepository.save(gradingRequest);
-        }
 
         savedAttempt.setEndTime(LocalDateTime.now());
         savedAttempt.setCorrectAnswers(correctAnswersCount);
@@ -202,5 +195,36 @@ public class QuizAttemptService {
         finalResult.setMaxScore(BigDecimal.TEN);
 
         return finalResult;
+    }
+
+    @Transactional
+    public void requestEssayGrading(Long attemptId, Long userId){
+        QuizAttempt attempt = quizAttemptRepository.findById(attemptId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy bài làm với ID: " + attemptId));
+
+        if(!attempt.getUserId().equals(userId))
+            throw new AccessDeniedException("Bạn không có quyền thực hiện hành động này.");
+
+        if(essayGradingRequestRepository.existsByQuizAttemptId(attemptId))
+            throw new IllegalStateException("Yêu cầu chấm bài cho bài làm này đã tồn tại.");
+
+        UserRanking userRanking = userRankingRepository.findByUserId(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy thông tin xếp hạng của người dùng."));
+
+        if(userRanking.getConsumptionPoints() < ESSAY_GRADING_COST)
+            throw new InsufficientPointsException("Không đủ điểm để yêu cầu chấm bài. Bạn cần " + ESSAY_GRADING_COST + " điểm.");
+
+        userRanking.setConsumptionPoints(userRanking.getConsumptionPoints() - ESSAY_GRADING_COST);
+        userRankingRepository.save(userRanking);
+
+        long essayQuestionCount = attempt.getQuizSubmission().getQuestions().stream()
+                .filter(q -> q.getQuestionType() == QuestionType.ESSAY).count();
+
+        EssayGradingRequest essayGradingRequest = new EssayGradingRequest();
+        essayGradingRequest.setUserId(userId);
+        essayGradingRequest.setTotalEssayQuestions((int) essayQuestionCount);
+        essayGradingRequest.setQuizAttempt(attempt);
+        essayGradingRequest.setStatus(GradingStatus.PENDING);
+        essayGradingRequestRepository.save(essayGradingRequest);
     }
 }

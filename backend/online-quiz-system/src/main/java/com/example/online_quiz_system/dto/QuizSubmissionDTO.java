@@ -1,5 +1,6 @@
 package com.example.online_quiz_system.dto;
 
+import com.example.online_quiz_system.enums.DifficultyLevel;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -22,6 +23,8 @@ public class QuizSubmissionDTO {
     @NotNull(message = "Thời gian làm bài không được để trống")
     @Positive(message = "Thời gian làm bài phải lớn hơn 0")
     private Integer durationMinutes;
+
+    private DifficultyLevel difficultyLevel;
 
     @Valid
     private List<QuestionDTO> questions;

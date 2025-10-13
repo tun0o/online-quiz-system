@@ -24,7 +24,7 @@ const DefaultLoader = () => (
 
 export default function AdminLayout() {
     const { user, isAuthenticated, logout } = useAuth();
-    const { isAdminView, switchToUserView, canToggle } = useAdminView();
+    const { switchToUserView } = useAdminView();
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -56,22 +56,20 @@ export default function AdminLayout() {
                     ))}
                 </nav>
                 <div className="p-4 border-t border-gray-700 space-y-2">
-                    {canToggle && (
-                        <button
-                            onClick={() => navigate('/admin/user-view')}
-                            className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
-                        >
-                            <User size={20} />
-                            <span>Xem giao diện User</span>
-                        </button>
-                    )}
-                    <a
+                    <button
+                        onClick={switchToUserView}
+                        className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
+                    >
+                        <User size={20} />
+                        <span>Xem giao diện User</span>
+                    </button>
+                    {/* <a
                         href="/"
                         className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
                     >
                         <Home size={20} />
                         <span>Về trang chủ</span>
-                    </a>
+                    </a> */}
                     <button
                         onClick={handleLogout}
                         type="button"

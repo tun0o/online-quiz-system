@@ -48,7 +48,7 @@ export default function GradingListPage() {
             <thead className="bg-gray-50">
               <tr>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên đề thi</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User ID</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Người nộp bài</th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thời gian nộp</th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số câu tự luận</th>
                 <th scope="col" className="relative px-6 py-3"><span className="sr-only">Hành động</span></th>
@@ -58,7 +58,7 @@ export default function GradingListPage() {
               {requests.map((req) => (
                 <tr key={req.requestId} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{req.quizTitle}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.userId}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.userName || `User ID: ${req.userId}`}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(req.requestedAt)}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">{req.totalEssayQuestions}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">

@@ -14,9 +14,9 @@ import {
     Target,
     ArrowLeft
 } from 'lucide-react';
-import { useAuth } from '../../hooks/useAuth';
-import { useAdminView } from '../../contexts/AdminViewContext';
-import api from '@/services/api.js';
+import { useAuth } from '@/hooks/useAuth';
+import { useAdminView } from '@/contexts/AdminViewContext';
+import { userService } from '@/services/userService';
 
 const UserView = () => {
     const { user, logout } = useAuth();
@@ -24,6 +24,24 @@ const UserView = () => {
     const navigate = useNavigate();
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [stats, setStats] = useState({
+        totalSubmissions: 0,
+        approvedSubmissions: 0,
+        pendingSubmissions: 0,
+    });
+
+    useEffect(() => {
+        const fetchUserStats = async () => {
+            try {
+                const data = await userService.getUserStats();
+                setStats(data);
+            } catch (error) {
+                toast.error("Không thể tải thống kê người dùng.");
+            }
+        };
+
+        fetchUserStats();
+    }, []);
 
     const handleLogout = () => {
         logout();
@@ -41,12 +59,12 @@ const UserView = () => {
 
     const handleViewSubmissions = () => {
         // Navigate đến trang submissions của user
-        navigate('/user/submissions');
+        navigate('/contribute');
     };
 
     const handleCreateSubmission = () => {
         // Navigate đến trang tạo submission
-        navigate('/user/create-submission');
+        navigate('/contribute');
     };
 
     return (
@@ -216,15 +234,15 @@ const UserView = () => {
                                 <div className="space-y-3">
                                     <div className="flex justify-between items-center">
                                         <span className="text-sm text-gray-600">Bài nộp đã tạo:</span>
-                                        <span className="text-sm font-medium text-gray-900">0</span>
+                                        <span className="text-sm font-medium text-gray-900">{stats.totalSubmissions}</span>
                                     </div>
                                     <div className="flex justify-between items-center">
                                         <span className="text-sm text-gray-600">Bài được duyệt:</span>
-                                        <span className="text-sm font-medium text-green-600">0</span>
+                                        <span className="text-sm font-medium text-green-600">{stats.approvedSubmissions}</span>
                                     </div>
                                     <div className="flex justify-between items-center">
                                         <span className="text-sm text-gray-600">Bài đang chờ:</span>
-                                        <span className="text-sm font-medium text-yellow-600">0</span>
+                                        <span className="text-sm font-medium text-yellow-600">{stats.pendingSubmissions}</span>
                                     </div>
                                 </div>
                             </div>
@@ -259,4 +277,3 @@ const UserView = () => {
 };
 
 export default UserView;
-

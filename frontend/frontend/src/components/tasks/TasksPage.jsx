@@ -20,7 +20,8 @@ export default function TasksPage() {
   const loadChallenges = async () => {
     try {
       const data = await challengeService.getTodayChallenges();
-      setChallenges(data);
+      // Ensure that `challenges` is always an array to prevent errors.
+      setChallenges(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error loading challenges:', error);
     } finally {

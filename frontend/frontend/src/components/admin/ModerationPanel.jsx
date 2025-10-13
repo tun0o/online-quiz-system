@@ -226,7 +226,7 @@ export default function ModerationPanel() {
                         <div className="font-medium text-gray-800">
                           Câu {index + 1}: {question.questionText}
                         </div>
-                        <div className="flex gap-2 text-xs">
+                        <div className="flex gap-2 text-xs items-center">
                           <span className={`px-2 py-1 rounded ${
                             question.questionType === 'MULTIPLE_CHOICE' ? 'bg-blue-100 text-blue-800' :
                             question.questionType === 'TRUE_FALSE' ? 'bg-green-100 text-green-800' :

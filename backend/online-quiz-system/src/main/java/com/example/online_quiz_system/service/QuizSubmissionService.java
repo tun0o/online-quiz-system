@@ -28,29 +28,6 @@ public class QuizSubmissionService {
     @Autowired
     private QuizSubmissionRepository submissionRepository;
 
-    private DifficultyLevel calculateSubmissionDifficulty(List<SubmissionQuestion> questions){
-        if(questions.isEmpty()){
-            return DifficultyLevel.EASY;
-        }
-
-        double avgDifficulty = questions.stream()
-                .mapToInt(q -> {
-                    DifficultyLevel level = q.getDifficultyLevel();
-                    if (level == null) return 1; // Mặc định là Dễ nếu null
-                    return switch (level) {
-                        case EASY -> 1;
-                        case MEDIUM -> 2;
-                        case HARD -> 3;
-                    };
-                })
-                .average()
-                .orElse(1.0);
-
-        if (avgDifficulty <= 1.6) return DifficultyLevel.EASY;
-        if (avgDifficulty <= 2.4) return DifficultyLevel.MEDIUM;
-        return DifficultyLevel.HARD;
-    }
-
     public QuizSubmission submitQuiz(QuizSubmissionDTO dto, Long contributorId){
         QuizSubmission submission = new QuizSubmission();
         submission.setTitle(dto.getTitle());
@@ -59,14 +36,14 @@ public class QuizSubmissionService {
         submission.setDurationMinutes(dto.getDurationMinutes());
         submission.setContributorId(contributorId);
         submission.setStatus(SubmissionStatus.PENDING);
+        submission.setDifficultyLevel(dto.getDifficultyLevel());
 
-        if(dto.getQuestions() != null){
+        // THÊM LOGIC XỬ LÝ CÂU HỎI
+        if (dto.getQuestions() != null && !dto.getQuestions().isEmpty()) {
             List<SubmissionQuestion> questions = dto.getQuestions().stream()
-                    .map(q -> mapToQuestion(q, submission))
+                    .map(questionDTO -> mapToQuestion(questionDTO, submission))
                     .collect(Collectors.toList());
             submission.setQuestions(questions);
-
-            submission.setDifficultyLevel(calculateSubmissionDifficulty(questions));
         }
 
         return submissionRepository.save(submission);
@@ -78,7 +55,6 @@ public class QuizSubmissionService {
         question.setQuestionText(dto.getQuestionText());
         question.setQuestionType(dto.getQuestionType());
         question.setExplanation(dto.getExplanation());
-        question.setDifficultyLevel(dto.getDifficultyLevel());
         question.setMaxScore(dto.getMaxScore());
         question.setEssayGuidelines(dto.getEssayGuidelines());
 

@@ -13,6 +13,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/quizzes")
 public class QuizTakingController {
@@ -42,5 +44,14 @@ public class QuizTakingController {
 
         QuizResultDTO result = quizAttemptService.submitAndGradeQuiz(attemptRequestDTO, userId);
         return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/{attemptId}/request-grading")
+    public ResponseEntity<?> requestGrading(@PathVariable Long attemptId){
+        Long userId = getCurrentUserId();
+        if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+        quizAttemptService.requestEssayGrading(attemptId, userId);
+        return ResponseEntity.ok().body(Map.of("message", "Yêu cầu chấm bài đã được gửi thành công."));
     }
 }

@@ -28,7 +28,7 @@ public class DataInitializer implements CommandLineRunner {
         String adminEmail = "admin@quiz.com";
         if(!userRepository.existsByEmail(adminEmail)) {
             User adminUser = User.builder().email(adminEmail).passwordHash(passwordEncoder.encode("admin"))
-                    .name("Default Admin").role(Role.ADMIN).isVerified(true).build();
+                    .name("Default Admin").role(Role.ADMIN).verified(true).build();
             userRepository.save(adminUser);
             logger.info("Tao thanh cong default admin voi email: {}", adminEmail);
         }

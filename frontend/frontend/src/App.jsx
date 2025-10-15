@@ -36,10 +36,11 @@ import Logout from "@/components/auth/Logout";
 import NotFoundPage from "@/components/common/NotFoundPage";
 import UserDashboard from "@/components/user/UserDashboard";
 import AdminDashboard from "@/components/admin/AdminDashboard";
+import UserManagementPage from "@/components/admin/UserManagementPage";
 import { useAdminView } from "./contexts/AdminViewContext";
 import AdminViewHandler from "./components/common/AdminViewHandler";
-import PurchasePointsPage from "./components/payment/PurchasePointsPage"; // Giả sử bạn tạo file ở đây
-import PaymentResultPage from "./components/payment/PaymentResultPage"; // Giả sử bạn tạo file ở đây
+import PurchasePointsPage from "./components/payment/PurchasePointsPage";
+import PaymentResultPage from "./components/payment/PaymentResultPage";
 
 function AdminViewBanner() {
   const { switchToAdminView } = useAdminView();
@@ -568,6 +569,7 @@ function AppRoutes() {
       >
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="users" element={<UserManagementPage />} />
         <Route path="moderation" element={<ModerationPanel />} />
         <Route path="management" element={<AllSubmissionsTable />} />
         <Route path="management/edit/:submissionId" element={<QuizSubmissionForm onSuccess={() => navigate("/admin/management")} />} />

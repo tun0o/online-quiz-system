@@ -193,7 +193,7 @@ const Register = () => {
                                     onChange={handleChange}
                                     className="appearance-none block w-full px-3 py-3 border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
                                 >
-                                    <option value="">Chọn lớp</option>
+                                    <option value="" disabled>Chọn lớp</option>
                                     <option value="10">Lớp 10</option>
                                     <option value="11">Lớp 11</option>
                                     <option value="12">Lớp 12</option>
@@ -207,7 +207,7 @@ const Register = () => {
                                     onChange={handleChange}
                                     className="appearance-none block w-full px-3 py-3 border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
                                 >
-                                    <option value="">Chọn mục tiêu</option>
+                                    <option value="" disabled>Chọn mục tiêu</option>
                                     <option value="EXAM_PREP">Ôn thi</option>
                                     <option value="KNOWLEDGE_IMPROVEMENT">Nâng cao kiến thức</option>
                                     <option value="FUN">Học cho vui</option>

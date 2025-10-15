@@ -33,7 +33,7 @@ public class User {
 
     @Builder.Default
     @Column(nullable=false)
-    private boolean isVerified = false;
+    private boolean verified = false;
 
     private String grade;
     private String goal;
@@ -51,14 +51,14 @@ public class User {
     @Column(nullable = false)
     private Role role;
 
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean enabled = true;
+
     // --- mapping 1:N tới VerificationToken ---
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<VerificationToken> verificationTokens = new ArrayList<>();
 
     private String name;
-
-    public void setVerified(boolean verified) {
-        this.isVerified = verified;
-    }
 }

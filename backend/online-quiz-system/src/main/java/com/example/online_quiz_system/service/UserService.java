@@ -1,12 +1,22 @@
 package com.example.online_quiz_system.service;
 
+import com.example.online_quiz_system.dto.UserAdminDTO;
+import com.example.online_quiz_system.dto.UserCreateRequest;
+import com.example.online_quiz_system.dto.UserUpdateRequest;
 import com.example.online_quiz_system.enums.Role;
 import com.example.online_quiz_system.entity.User;
 import com.example.online_quiz_system.exception.BusinessException;
+import com.example.online_quiz_system.mapper.UserMapper;
+import com.example.online_quiz_system.security.UserPrincipal;
 import com.example.online_quiz_system.util.OAuth2Validation;
 import com.example.online_quiz_system.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,20 +29,18 @@ import java.util.UUID;
 @Transactional
 public class UserService {
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
-
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final VerificationService verificationService;
     private final EmailService emailService;
+    private final UserMapper userMapper;
 
-    public UserService(UserRepository userRepository,
-                       PasswordEncoder passwordEncoder,
-                       VerificationService verificationService,
-                       EmailService emailService) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, VerificationService verificationService, EmailService emailService, UserMapper userMapper) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.verificationService = verificationService;
         this.emailService = emailService;
+        this.userMapper = userMapper;
     }
 
     public void registerUser(String email, String password, String grade, String goal) {
@@ -53,7 +61,7 @@ public class UserService {
                 .passwordHash(passwordEncoder.encode(password))
                 .grade(grade)
                 .goal(goal)
-                .isVerified(false)
+                .verified(false)
                 .role(Role.USER)
                 .build();
 
@@ -178,7 +186,7 @@ public class UserService {
                 .email(finalEmail)
                 .passwordHash(passwordEncoder.encode(UUID.randomUUID().toString()))
                 .name(name)
-                .isVerified(userInfo.isEmailVerified())
+                .verified(userInfo.isEmailVerified())
                 .provider(provider)
                 .providerId(providerId)
                 .role(Role.USER)
@@ -244,5 +252,89 @@ public class UserService {
         } else {
             logger.debug("Resend verification requested for non-existing email: {}", normalized);
         }
+    }
+
+    public Page<UserAdminDTO> getAllUserForAdmin(String keyword, String role, String enabled, String verified, Pageable pageable){
+        Specification<User> spec = (root, query, criteriaBuilder) -> criteriaBuilder.conjunction();
+
+        if (keyword != null && !keyword.isBlank()) {
+            String keywordPattern = "%" + keyword.toLowerCase() + "%";
+            spec = spec.and((root, query, cb) ->
+                    cb.or(
+                            cb.like(cb.lower(root.get("email")), keywordPattern),
+                            cb.like(cb.lower(root.get("name")), keywordPattern)
+                    )
+            );
+        }
+
+        if (role != null && !role.isBlank()) {
+            try {
+                Role roleEnum = Role.valueOf(role.toUpperCase());
+                spec = spec.and((root, query, cb) -> cb.equal(root.get("role"), roleEnum));
+            } catch (IllegalArgumentException e) {
+                logger.warn("Invalid role value provided: {}", role);
+            }
+        }
+
+        if (enabled != null && !enabled.isBlank()) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("enabled"), Boolean.parseBoolean(enabled)));
+        }
+
+        if (verified != null && !verified.isBlank()) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("verified"), Boolean.parseBoolean(verified)));
+        }
+
+        return userRepository.findAll(spec, pageable).map(userMapper::toUserAdminDTO);
+    }
+
+    public UserAdminDTO getUserByIdForAdmin(Long userId){
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng với ID: " + userId));
+        return  userMapper.toUserAdminDTO(user);
+    }
+
+    @Transactional
+    public UserAdminDTO updateUserByAdmin(Long userId, UserUpdateRequest updateRequest, UserPrincipal adminPrincipal){
+        User userToUpdate = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng với ID: " + userId));
+
+        if(userToUpdate.getId().equals(adminPrincipal.getId()))
+            throw new AccessDeniedException("Admin không thể tự cập nhật thông tin của chính mình qua API này.");
+
+        if(userToUpdate.getRole() == Role.ADMIN && updateRequest.getRole() != Role.ADMIN)
+            throw new AccessDeniedException("Không thể thay đổi vai trò của một Admin khác.");
+
+        userToUpdate.setName(updateRequest.getName());
+        userToUpdate.setGrade(updateRequest.getGrade());
+        userToUpdate.setGoal(updateRequest.getGoal());
+        userToUpdate.setRole(updateRequest.getRole());
+        userToUpdate.setEnabled(updateRequest.getEnabled());
+        userToUpdate.setVerified(updateRequest.getVerified());
+
+        User updatedUser = userRepository.save(userToUpdate);
+        return userMapper.toUserAdminDTO(updatedUser);
+    }
+
+    @Transactional
+    public UserAdminDTO createUserByAdmin(UserCreateRequest createRequest) {
+        String normalizedEmail = createRequest.getEmail().trim().toLowerCase();
+        if (userRepository.existsByEmail(normalizedEmail)) {
+            throw new BusinessException("Email đã tồn tại trong hệ thống.");
+        }
+
+        User newUser = User.builder()
+                .email(normalizedEmail)
+                .passwordHash(passwordEncoder.encode(createRequest.getPassword()))
+                .name(createRequest.getName())
+                .grade(null)
+                .goal(null)
+                .role(createRequest.getRole())
+                .verified(true) // Tài khoản do admin tạo được xác thực sẵn
+                .enabled(true) // và được kích hoạt sẵn
+                .build();
+
+        User savedUser = userRepository.save(newUser);
+        logger.info("Admin created a new user: {} with role: {}", savedUser.getEmail(), savedUser.getRole());
+        return userMapper.toUserAdminDTO(savedUser);
     }
 }

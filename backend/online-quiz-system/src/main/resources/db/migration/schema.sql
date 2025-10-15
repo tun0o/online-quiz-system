@@ -28,13 +28,14 @@ CREATE TABLE IF NOT EXISTS users (
     id BIGSERIAL PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
-    is_verified BOOLEAN NOT NULL DEFAULT FALSE,
+    verified BOOLEAN NOT NULL DEFAULT FALSE,
     grade VARCHAR(10),
     goal TEXT,
     name VARCHAR(100),
     provider VARCHAR(50),
     provider_id VARCHAR(100),
     role role_enum NOT NULL DEFAULT 'USER',
+    enabled BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -238,16 +239,10 @@ CREATE TABLE payment_transactions (
     CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
--- Thêm các cột cần thiết để chấm điểm trực tiếp trên bảng user_answers
-ALTER TABLE user_answers ADD COLUMN score DECIMAL(5, 2);
-ALTER TABLE user_answers ADD COLUMN admin_feedback TEXT;
-
-ALTER TABLE user_rankings ADD COLUMN consumption_points INTEGER NOT NULL DEFAULT 0;
-
 -- 3. INDEXES
 CREATE INDEX IF NOT EXISTS idx_users_provider ON users(provider, provider_id);
 CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
-CREATE INDEX IF NOT EXISTS idx_users_verified ON users(is_verified);
+CREATE INDEX IF NOT EXISTS idx_users_verified ON users(verified);
 
 CREATE INDEX IF NOT EXISTS idx_verification_tokens_hash ON verification_tokens(token_hash);
 CREATE INDEX IF NOT EXISTS idx_verification_tokens_user ON verification_tokens(user_id);

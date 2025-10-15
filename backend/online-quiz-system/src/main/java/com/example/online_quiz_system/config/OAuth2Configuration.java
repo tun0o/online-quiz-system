@@ -1,5 +1,8 @@
 package com.example.online_quiz_system.config;
 
+import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
@@ -11,6 +14,8 @@ import org.springframework.context.annotation.PropertySource;
 @Configuration
 @PropertySource("classpath:application.properties")
 public class OAuth2Configuration {
+
+    private static final Logger logger = LoggerFactory.getLogger(OAuth2Configuration.class);
 
     @Value("${app.frontend.url:http://localhost:3000}")
     private String frontendUrl;
@@ -42,6 +47,14 @@ public class OAuth2Configuration {
     public static final String ERROR_AUTHENTICATION_FAILED = "AUTHENTICATION_FAILED";
     public static final String ERROR_PROVIDER_NOT_SUPPORTED = "PROVIDER_NOT_SUPPORTED";
 
+    @PostConstruct
+    public void validateConfiguration() {
+        if (!isConfigurationValid()) {
+            logger.error("OAuth2 configuration is invalid. Please check your application.properties for client-id and client-secret of Google and Facebook.");
+            // You might want to throw an exception here to prevent the application from starting
+            // throw new IllegalStateException("Invalid OAuth2 Configuration");
+        }
+    }
     public String getFrontendUrl() {
         return frontendUrl;
     }

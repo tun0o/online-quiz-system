@@ -112,6 +112,11 @@ public class AuthController {
                         .body(Map.of("error", "Tài khoản chưa được xác thực. Vui lòng kiểm tra email."));
             }
 
+            if(!user.isEnabled()){
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("error", "Tài khoản đã bị vô hiệu hóa!"));
+            }
+
             // Generate tokens (using userDetails)
             String accessToken = jwtService.generateAccessToken(userPrincipal);
             String refreshToken = jwtService.generateRefreshToken(userPrincipal);

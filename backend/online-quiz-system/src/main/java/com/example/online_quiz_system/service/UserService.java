@@ -100,6 +100,10 @@ public class UserService {
         Optional<User> existingByProvider = userRepository.findByProviderAndProviderId(provider, providerId);
         if (existingByProvider.isPresent()) {
             User user = existingByProvider.get();
+
+            if(!user.isEnabled())
+                throw new AccessDeniedException("User has been disable by admin!");
+
             logger.info("Found existing user by provider: {}", user.getEmail());
             return updateUserFromOAuth2(user, userInfo);
         }
@@ -109,6 +113,10 @@ public class UserService {
             Optional<User> existingByEmail = userRepository.findByEmail(email);
             if (existingByEmail.isPresent()) {
                 User user = existingByEmail.get();
+
+                if (!user.isEnabled())
+                    throw new AccessDeniedException("User has been disable by admin!");
+
                 logger.info("Found existing user by email, linking social account: {}", user.getEmail());
                 return linkSocialAccountToUser(user, provider, providerId, userInfo);
             }

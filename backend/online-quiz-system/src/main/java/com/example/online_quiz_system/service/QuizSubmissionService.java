@@ -184,12 +184,18 @@ public class QuizSubmissionService {
         submissionRepository.delete(submission);
     }
 
+    @Transactional
     public QuizSubmission approveSubmission(Long id, Long adminId){
         QuizSubmission submission = submissionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đề thi"));
 
+        // Tìm UserRanking, nếu không có thì tạo mới
         UserRanking userRanking = userRankingRepository.findByUserId(submission.getContributorId())
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+                .orElseGet(() -> {
+                    UserRanking ranking = new UserRanking();
+                    ranking.setUserId(submission.getContributorId());
+                    return userRankingRepository.save(ranking);
+                });
 
         userRanking.setConsumptionPoints(userRanking.getConsumptionPoints() + 50);
 

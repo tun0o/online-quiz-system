@@ -21,6 +21,7 @@ export default function QuizTakingPage() {
   const [result, setResult] = useState(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
+  const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
   const [isGradingRequested, setIsGradingRequest] = useState(false);
   const hasStartedAttempt = useRef(false); // Ref để theo dõi việc gọi API
 
@@ -311,7 +312,11 @@ export default function QuizTakingPage() {
         toast.success("Yêu cầu chấm bài đã được gửi thành công!");
         setIsGradingRequest(true);
       } catch (error) {
-        if (error.response && error.response.data?.message) {
+        // Check if the error is due to insufficient points
+        if (error.response && error.response.data?.message?.includes("Không đủ điểm")) {
+          // Open the purchase points modal
+          setIsPurchaseModalOpen(true);
+        } else if (error.response && error.response.data?.message) {
           toast.error(error.response.data.message);
         } else {
           toast.error("Có lỗi xảy ra khi gửi yêu cầu chấm bài. Vui lòng thử lại.");
@@ -361,7 +366,7 @@ export default function QuizTakingPage() {
                 Yêu cầu admin chấm bài để hoàn thiện điểm số của bạn.
               </p>
               <button onClick={handleRequestGrading} className="mt-4 px-6 py-2 bg-yellow-500 text-white font-bold rounded-lg hover:bg-yellow-600 transition shadow-md">
-                Yêu cầu chấm bài (Chi phí: 100 điểm)
+                Yêu cầu chấm bài (Chi phí: 100 điểm tiêu dùng)
               </button>
             </div>
           )
@@ -428,7 +433,7 @@ export default function QuizTakingPage() {
           <button onClick={() => navigate('/')} className="px-6 py-3 bg-white border border-gray-300 rounded-lg hover:bg-gray-100">
             Về trang chủ
           </button>
-          <button onClick={() => window.location.reload()} className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700">
+          <button onClick={() => navigate(0)} className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700">
             Làm lại
           </button>
         </div>
@@ -470,6 +475,17 @@ export default function QuizTakingPage() {
         message="Bạn có chắc chắn muốn thoát không? Mọi tiến trình làm bài sẽ bị mất."
         confirmText="Thoát"
         variant="danger"
+      />
+
+      <ConfirmationModal
+        isOpen={isPurchaseModalOpen}
+        onClose={() => setIsPurchaseModalOpen(false)}
+        onConfirm={() => navigate('/purchase-points')}
+        title="Không đủ điểm"
+        message="Bạn không đủ điểm để thực hiện hành động này. Bạn có muốn mua thêm điểm không?"
+        confirmText="Mua điểm"
+        cancelText="Để sau"
+        variant="primary"
       />
     </div>
   );

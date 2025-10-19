@@ -12,29 +12,26 @@ export default function AdminViewHandler() {
     const isAdmin = useIsAdmin();
     const navigate = useNavigate();
     const location = useLocation();
-    const previousIsViewingAsUser = useRef(isViewingAsUser);
+    const hasNavigatedRef = useRef(false);
 
     useEffect(() => {
         // Chỉ thực hiện logic nếu người dùng là Admin
         if (!isAdmin) {
+            hasNavigatedRef.current = false; // Reset khi không còn là admin
             return;
         }
 
-        // Kiểm tra xem state có thay đổi không
-        if (previousIsViewingAsUser.current !== isViewingAsUser) {
-            if (isViewingAsUser && !location.pathname.startsWith('/admin')) {
-                // Đang ở chế độ xem user, và đã ở trang user -> không làm gì
-            } else if (isViewingAsUser) {
+        if (isViewingAsUser) {
+            // Nếu đang ở chế độ xem user nhưng vẫn ở trang admin
+            if (location.pathname.startsWith('/admin')) {
                 navigate('/');
-            } else if (!isViewingAsUser && location.pathname.startsWith('/admin')) {
-                // Đang ở chế độ admin, và đã ở trang admin -> không làm gì
-            } else {
+            }
+        } else {
+            // Nếu đang ở chế độ admin nhưng không ở trang admin (và không phải trang chủ)
+            if (!location.pathname.startsWith('/admin')) {
                 navigate('/admin');
             }
         }
-
-        // Cập nhật giá trị trước đó cho lần render tiếp theo
-        previousIsViewingAsUser.current = isViewingAsUser;
     }, [isViewingAsUser, isAdmin, navigate, location.pathname]);
 
     return null; // Component này không render gì cả

@@ -81,8 +81,23 @@ function AppLayout() {
     return () => unsub(); // Hủy đăng ký listener khi component unmount.
   }, []);
 
-  const { isViewingAsUser } = useAdminView();
+  const { isViewingAsUser, switchToAdminView } = useAdminView();
   const isAdmin = useIsAdmin();
+
+  // Thêm useEffect để xử lý điều hướng cho Admin sau khi rehydrate
+  useEffect(() => {
+    // Chỉ chạy logic này sau khi store đã được rehydrate
+    if (isHydrated) {
+      const isAdminUser = useAuthStore.getState().hasRole('ADMIN');
+      // Nếu là admin, đã đăng nhập, đang ở trang chủ, VÀ KHÔNG trong chế độ xem user,
+      // thì mới điều hướng đến trang admin.
+      if (isAdminUser && isAuthenticated() && location.pathname === '/' && !isViewingAsUser) {
+        // Dùng `replace: true` để người dùng không thể nhấn "back" quay lại trang chủ
+        navigate('/admin', { replace: true });
+      }
+    }
+    // Phụ thuộc vào các state này để chạy lại khi cần
+  }, [isHydrated, location.pathname, isAuthenticated, navigate, isViewingAsUser]);
 
   // State cho challenges và rankings thật
   const [challenges, setChallenges] = useState([]);
@@ -130,6 +145,8 @@ function AppLayout() {
   const handleLogout = async () => {
     try {
       await logout();
+      // Đặt lại trạng thái xem của admin về mặc định khi đăng xuất
+      if (isAdmin) switchToAdminView();
       navigate("/login");
       toast.success("Đã đăng xuất thành công");
     } catch {
@@ -148,7 +165,6 @@ function AppLayout() {
       { icon: <ClipboardList size={20} />, label: "NHIỆM VỤ", path: "/tasks" },
       { icon: <Star size={20} />, label: "ĐÓNG GÓP", path: "/contribute" },
       { icon: <User size={20} />, label: "HỒ SƠ", path: "/user/dashboard" },
-      { icon: <DollarSign size={20} />, label: "MUA ĐIỂM", path: "/purchase-points" },
     ];
 
     let menu = [...publicItems];
@@ -272,9 +288,6 @@ function AppLayout() {
                     </div>
                     <div>
                       <p className="font-medium text-gray-800">{user?.name || user?.email}</p>
-                      <p className="text-sm text-gray-600">
-                        {user?.roles?.includes('ROLE_ADMIN') ? 'Quản trị viên' : 'Người dùng'}
-                      </p>
                     </div>
                   </div>
                 </div>

@@ -95,7 +95,9 @@ public class QuizAttemptService {
     @Transactional
     public QuizResultDTO submitAndGradeQuiz(Long attemptId, QuizAttemptRequestDTO attemptDTO, Long userId){
         QuizAttempt savedAttempt = quizAttemptRepository.findById(attemptId)
-                .orElseThrow(() -> new EntityNotFoundException("Quiz Attempt not found with id: " + attemptId));        QuizSubmission quiz = savedAttempt.getQuizSubmission();
+                .orElseThrow(() -> new EntityNotFoundException("Quiz Attempt not found with id: " + attemptId));
+
+        QuizSubmission quiz = savedAttempt.getQuizSubmission();
         List<SubmissionQuestion> allQuestions = quiz.getQuestions();
         BigDecimal totalEssayMaxScore = allQuestions.stream()
                 .filter(q -> q.getQuestionType() == QuestionType.ESSAY)
@@ -112,9 +114,6 @@ public class QuizAttemptService {
         if(mcqCount > 0){
             scorePerMcq = totalMcqMaxScore.divide(BigDecimal.valueOf(mcqCount), 2, RoundingMode.HALF_UP);
         }
-
-        Map<Long, SubmissionQuestion> questionMap = quiz.getQuestions().stream()
-                .collect(Collectors.toMap(SubmissionQuestion::getId, Function.identity()));
 
         int correctAnswersCount = 0;
         List<UserAnswer> userAnswersToSave = new ArrayList<>();

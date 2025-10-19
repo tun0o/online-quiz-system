@@ -52,19 +52,19 @@ export const quizService = {
    */
   submitAttempt: async (attemptId, payload) => {
     try {
-      const response = await api.post(`/api/quizzes/submit/${attemptId}`, payload);
+      const response = await api.post(`/api/attempts/${attemptId}/submit`, payload);
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.message || 'Không thể nộp bài làm.');
+      throw error; // Re-throw the original error to be handled in the component
     }
   },
 
   requestEssayGrading: async (attemptId) => {
     try {
-      const response = await api.post(`/api/quizzes/${attemptId}/request-grading`);
+      const response = await api.post(`/api/attempts/${attemptId}/request-grading`);
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.message || 'Không thể yêu cầu chấm điểm tự luận.');
+      throw error; // Re-throw the original error to be handled in the component
     }
   },
 

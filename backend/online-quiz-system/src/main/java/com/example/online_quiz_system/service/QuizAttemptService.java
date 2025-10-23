@@ -61,6 +61,7 @@ public class QuizAttemptService {
                     qDTO.setId(q.getId());
                     qDTO.setQuestionText(q.getQuestionText());
                     qDTO.setQuestionType(q.getQuestionType());
+                    qDTO.setEssayGuidelines(q.getEssayGuidelines());
 
                     List<AnswerOptionForTakingDTO> optionDTOs = q.getAnswerOptions().stream()
                             .map(o -> {

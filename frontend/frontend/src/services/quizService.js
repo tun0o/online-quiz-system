@@ -142,12 +142,11 @@ export const quizService = {
     }
   },
 
-  getPendingCount: async () => {
-    try {
-      const response = await api.get('/api/quiz-submissions/stats/pending-count');
-      return response.data;
-    } catch (error) {
-      throw new Error(error.response?.data?.message || 'Không thể lấy số lượng đề chờ duyệt.');
-    }
-  }
+  /**
+     * Lấy kết quả chi tiết của một lần làm bài.
+     */
+    getAttemptResult: async (attemptId) => {
+        const response = await api.get(`/api/attempts/${attemptId}/result`);
+        return response.data;
+    },
 };

@@ -1,12 +1,16 @@
 package com.example.online_quiz_system.service;
 
-import com.example.online_quiz_system.dto.UserAdminDTO;
-import com.example.online_quiz_system.dto.UserCreateRequest;
-import com.example.online_quiz_system.dto.UserUpdateRequest;
+import com.example.online_quiz_system.dto.*;
+import com.example.online_quiz_system.entity.QuizAttempt;
+import com.example.online_quiz_system.entity.UserRanking;
 import com.example.online_quiz_system.enums.Role;
 import com.example.online_quiz_system.entity.User;
+import com.example.online_quiz_system.enums.SubmissionStatus;
 import com.example.online_quiz_system.exception.BusinessException;
 import com.example.online_quiz_system.mapper.UserMapper;
+import com.example.online_quiz_system.repository.QuizAttemptRepository;
+import com.example.online_quiz_system.repository.QuizSubmissionRepository;
+import com.example.online_quiz_system.repository.UserRankingRepository;
 import com.example.online_quiz_system.security.UserPrincipal;
 import com.example.online_quiz_system.util.OAuth2Validation;
 import com.example.online_quiz_system.repository.UserRepository;
@@ -14,6 +18,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
@@ -21,9 +26,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @Transactional
@@ -34,13 +37,22 @@ public class UserService {
     private final VerificationService verificationService;
     private final EmailService emailService;
     private final UserMapper userMapper;
+    private final UserRankingRepository userRankingRepository;
+    private final QuizAttemptRepository quizAttemptRepository;
+    private final QuizSubmissionRepository quizSubmissionRepository;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, VerificationService verificationService, EmailService emailService, UserMapper userMapper) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, VerificationService verificationService, EmailService emailService, UserMapper userMapper,
+                       UserRankingRepository userRankingRepository,
+                       QuizAttemptRepository quizAttemptRepository,
+                       QuizSubmissionRepository quizSubmissionRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.verificationService = verificationService;
         this.emailService = emailService;
         this.userMapper = userMapper;
+        this.userRankingRepository = userRankingRepository;
+        this.quizAttemptRepository = quizAttemptRepository;
+        this.quizSubmissionRepository = quizSubmissionRepository;
     }
 
     public void registerUser(String email, String password, String grade, String goal) {
@@ -344,5 +356,54 @@ public class UserService {
         User savedUser = userRepository.save(newUser);
         logger.info("Admin created a new user: {} with role: {}", savedUser.getEmail(), savedUser.getRole());
         return userMapper.toUserAdminDTO(savedUser);
+    }
+
+    @Transactional(readOnly = true)
+    public UserDashboardStatsDTO getDashboardStatsForUser(Long userId){
+        UserRanking ranking = userRankingRepository.findByUserId(userId)
+                .orElse(new UserRanking());
+
+        if(ranking.getUserId() == null) ranking.setUserId(userId);
+
+        Integer totalPoints = ranking.getTotalPoints();
+        Integer currentStreak = ranking.getCurrentStreak();
+        Integer rank = userRankingRepository.findUserRankByUserId(userId);
+
+        long quizzesTaken = quizAttemptRepository.countByUserIdAndStatus(userId, "COMPLETED");
+
+        long submitted = quizSubmissionRepository.countByContributorId(userId);
+        long approved = quizSubmissionRepository.countByContributorIdAndStatus(userId, SubmissionStatus.APPROVED);
+        long pending = quizSubmissionRepository.countByContributorIdAndStatus(userId, SubmissionStatus.PENDING);
+        long rejected = quizSubmissionRepository.countByContributorIdAndStatus(userId, SubmissionStatus.REJECTED);
+        ContributionStatsDTO contributionStatsDTO = new ContributionStatsDTO(submitted, approved, pending, rejected);
+
+        List<QuizAttempt> recentAttemptRaw = quizAttemptRepository.findByUserIdAndEndTimeIsNotNullOrderByEndTimeDesc(
+                userId,
+                PageRequest.of(0, 5)
+        );
+
+        List<RecentAttemptDTO> recentAttemptDTOS = recentAttemptRaw.stream()
+                .map(this::mapToRecentAttemptDTO)
+                .toList();
+
+        return new UserDashboardStatsDTO(
+                totalPoints,
+                currentStreak,
+                rank,
+                quizzesTaken,
+                contributionStatsDTO,
+                recentAttemptDTOS
+        );
+    }
+
+    private RecentAttemptDTO mapToRecentAttemptDTO(QuizAttempt attempt){
+        return new RecentAttemptDTO(
+                attempt.getId(),
+                attempt.getQuizSubmission().getTitle(),
+                attempt.getEndTime(),
+                attempt.getScore(),
+                attempt.getCorrectAnswers(),
+                attempt.getTotalQuestions()
+        );
     }
 }

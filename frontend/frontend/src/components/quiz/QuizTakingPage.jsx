@@ -279,6 +279,7 @@ export default function QuizTakingPage() {
       case 'ESSAY':
         return (
           <div>
+            <p className="mb-4 text-gray-600">Hướng dẫn trả lời: {question.essayGuidelines || 'Không có hướng dẫn'}</p>
             <textarea
               value={answer || ''}
               onChange={(e) => handleAnswerChange(question.id, e.target.value)}

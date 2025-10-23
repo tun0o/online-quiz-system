@@ -1,6 +1,9 @@
 package com.example.online_quiz_system.controller;
 
+import com.example.online_quiz_system.dto.UserDashboardStatsDTO;
 import com.example.online_quiz_system.security.UserPrincipal;
+import com.example.online_quiz_system.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -14,6 +17,9 @@ import java.util.Map;
 @RequestMapping("/api/user")
 @PreAuthorize("hasRole('USER')")
 public class UserController {
+
+    @Autowired
+    private UserService userService;
 
     @GetMapping("/dashboard")
     public ResponseEntity<?> userDashboard() {
@@ -56,5 +62,14 @@ public class UserController {
                 "averageScore", 85,
                 "lastActivity", "2023-10-15"
         ));
+    }
+
+    @GetMapping("/me/dashboard-stats")
+    public ResponseEntity<UserDashboardStatsDTO> getMyDashboardStats(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+
+        UserDashboardStatsDTO statsDTO = userService.getDashboardStatsForUser(userPrincipal.getId());
+        return ResponseEntity.ok(statsDTO);
     }
 }

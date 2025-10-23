@@ -1,7 +1,7 @@
 // App.jsx
 import { Routes, Route, NavLink, Outlet, useLocation, Navigate, useNavigate, Link, useParams } from "react-router-dom";
-import { useState, useEffect, useCallback } from "react";
-import { Home, Star, Shield, ClipboardList, User, Settings, UserPlus, LogIn, TrophyIcon, TargetIcon, ServerCrash, LogOut, DollarSign } from "lucide-react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { Home, Star, Shield, ClipboardList, User, Settings, UserPlus, LogIn, TrophyIcon, TargetIcon, ServerCrash, LogOut, DollarSign, Bell, ChartBar } from "lucide-react";
 import { QuizProvider } from "@/contexts/QuizContext";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -38,11 +38,13 @@ import UserDashboard from "@/components/user/UserDashboard";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import UserManagementPage from "@/components/admin/UserManagementPage";
 import { useAdminView } from "./contexts/AdminViewContext";
+import AttemptResultPage from "./components/quiz/AttemptResultPage.jsx";
 import AdminViewHandler from "./components/common/AdminViewHandler";
 import PurchasePointsPage from "./components/payment/PurchasePointsPage";
 import PaymentResultPage from "./components/payment/PaymentResultPage";
 
 function AdminViewBanner() {
+  // ... (no changes here)
   const { switchToAdminView } = useAdminView();
   return (
     <div className="bg-yellow-400 text-black py-2 px-4 text-center text-sm sticky top-0 z-50 flex justify-center items-center gap-4">
@@ -63,10 +65,12 @@ function AdminViewBanner() {
  * Layout chung cho toàn bộ ứng dụng, bao gồm Sidebar và khu vực nội dung chính.
  */
 function AppLayout() {
+  // ... (no changes here)
   const location = useLocation();
   const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const showRightSidebar = !['/contribute'].includes(location.pathname);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false); // State để quản lý hiển thị dropdown
 
   // State để theo dõi quá trình rehydration của Zustand store
   const [isHydrated, setIsHydrated] = useState(useAuthStore.persist.hasHydrated);
@@ -79,6 +83,19 @@ function AppLayout() {
     setIsHydrated(useAuthStore.persist.hasHydrated());
 
     return () => unsub(); // Hủy đăng ký listener khi component unmount.
+  }, []);
+
+  // Ref cho dropdown để xử lý click bên ngoài
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const { isViewingAsUser, switchToAdminView } = useAdminView();
@@ -164,7 +181,7 @@ function AppLayout() {
     const userItems = [
       { icon: <ClipboardList size={20} />, label: "NHIỆM VỤ", path: "/tasks" },
       { icon: <Star size={20} />, label: "ĐÓNG GÓP", path: "/contribute" },
-      { icon: <User size={20} />, label: "HỒ SƠ", path: "/user/dashboard" },
+      { icon: <ChartBar size={20} />, label: "THỐNG KÊ", path: "/user/dashboard" },
     ];
 
     let menu = [...publicItems];
@@ -230,7 +247,7 @@ function AppLayout() {
           ))}
         </nav>
 
-        {/* Logout button (xuống dưới cùng) */}
+        {/* Logout button (xuống dưới cùng)
         {isAuthenticated() && ( // Chỉ hiển thị nút Đăng xuất khi đã đăng nhập
           <button
             onClick={handleLogout} // Thêm mt-auto để đẩy nút xuống dưới cùng
@@ -239,7 +256,7 @@ function AppLayout() {
             <LogOut size={20} />
             Đăng xuất
           </button>
-        )}
+        )} */}
       </aside>
 
       {/* Main content area */}
@@ -281,15 +298,46 @@ function AppLayout() {
                 </div>
 
               ) : (
-                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center text-white font-bold">
-                      {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-800">{user?.name || user?.email}</p>
+                <div className="relative" ref={dropdownRef}>
+                  <div
+                    className="bg-green-50 p-4 rounded-lg border border-green-200 cursor-pointer hover:bg-green-100 transition"
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center text-white font-bold">
+                        {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-800">{user?.name || user?.email}</p>
+                      </div>
                     </div>
                   </div>
+
+                  {isDropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20 border border-gray-200">
+                      <Link
+                        to="/user/dashboard"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <User size={16} className="inline mr-2" /> Hồ sơ
+                      </Link>
+                      {/* Placeholder for Notifications - you might want to create a dedicated /notifications page */}
+                      <Link
+                        to="/notifications"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <Bell size={16} className="inline mr-2" /> Thông báo
+                      </Link>
+                      <button
+                        onClick={() => { handleLogout(); setIsDropdownOpen(false); }}
+                        className="w-full text-left flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                      >
+                        <LogOut size={16} className="inline mr-2" /> Đăng xuất
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -601,13 +649,14 @@ function AppRoutes() {
         <Route path="tasks" element={<ProtectedRoute><TasksPage /></ProtectedRoute>} />
         <Route path="user/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
         <Route path="change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
-        <Route path="purchase-points" element={<ProtectedRoute><PurchasePointsPage /></ProtectedRoute>} />
-        <Route path="payment/result" element={<ProtectedRoute><PaymentResultPage /></ProtectedRoute>} />
         {/* <Route path="profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} /> */}
       </Route>
 
-      {/* === SPECIAL LAYOUT ROUTES: Route không có layout chung === */}
+      {/* === ROUTES KHÔNG CÓ LAYOUT CHUNG (NO SIDEBARS) === */}
       <Route path="quiz/:quizId" element={<div className="min-h-screen bg-gray-50 p-6"><QuizTakingPage /></div>} />
+      <Route path="attempts/:attemptId/result" element={<div className="min-h-screen bg-gray-50 p-6"><AttemptResultPage /></div>} />
+      <Route path="purchase-points" element={<ProtectedRoute><div className="min-h-screen bg-gray-50 p-6"><PurchasePointsPage /></div></ProtectedRoute>} />
+      <Route path="payment/result" element={<ProtectedRoute><div className="min-h-screen bg-gray-50 p-6"><PaymentResultPage /></div></ProtectedRoute>} />
 
       {/* === FALLBACK ROUTE === */}
       <Route path="*" element={<NotFoundPage />} />

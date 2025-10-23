@@ -205,8 +205,33 @@ public class ChallengeService {
                 }).toList();
     }
 
-    public Long getUserRank(Long userId){
-        return rankingRepository.findUserRankByUserId(userId);
+    public LeaderBoardEntryDTO getUserRank(Long userId){
+        UserRanking ranking = rankingRepository.findByUserId(userId)
+                .orElse(new UserRanking());
+
+        if(ranking.getUserId() == null) ranking.setUserId(userId);
+
+        Integer userRank = rankingRepository.findUserRankByUserId(userId);
+        LeaderBoardEntryDTO dto = new LeaderBoardEntryDTO();
+        dto.setRank(userRank);
+        dto.setUserId(ranking.getUserId());
+        dto.setUserName(userRepository.findById(userId).get().getName());
+        dto.setTotalPoints(ranking.getTotalPoints());
+        dto.setWeeklyPoints(ranking.getWeeklyPoints());
+        dto.setCurrentStreak(ranking.getCurrentStreak());
+
+        switch (userRank) {
+            case 0 : dto.setMedal("🥇");
+                break;
+            case 1 : dto.setMedal("🥈");
+                break;
+            case 2 : dto.setMedal("🥉");
+                break;
+            default: dto.setMedal("");
+        }
+
+
+        return dto;
     }
 
     public void updateQuizCompletionProgress(Long userId, int correctAnswersCount, int studyTimeMinutes, int quizPoints, Long sourceId){

@@ -20,7 +20,7 @@ public interface QuizSubmissionRepository extends JpaRepository<QuizSubmission, 
     @Query("SELECT qs FROM QuizSubmission qs LEFT JOIN FETCH qs.questions WHERE qs.id = :id")
     QuizSubmission findByIdWithQuestions(@Param("id") Long id);
 
-    long countByStatus(SubmissionStatus status);
+    long countByContributorIdAndStatus(Long contributorId, SubmissionStatus status);
 
     long countByContributorId(Long contributorId);
 }

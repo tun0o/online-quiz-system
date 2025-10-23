@@ -10,5 +10,6 @@ public class QuestionForTakingDTO {
     private Long id;
     private String questionText;
     private QuestionType questionType;
+    private String essayGuidelines;
     private List<AnswerOptionForTakingDTO> answerOptions;
 }

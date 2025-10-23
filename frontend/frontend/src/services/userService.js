@@ -3,10 +3,10 @@ import api from './api';
 
 export const userService = {
     /**
-     * Lấy thống kê của người dùng hiện tại (đã đăng nhập).
+     * Lấy tất cả dữ liệu thống kê cho trang dashboard của người dùng.
      */
-    getUserStats: async () => {
-        const response = await api.get('/api/users/me/stats');
+    getDashboardStats: async () => {
+        const response = await api.get('/api/user/me/dashboard-stats');
         return response.data;
     },
 

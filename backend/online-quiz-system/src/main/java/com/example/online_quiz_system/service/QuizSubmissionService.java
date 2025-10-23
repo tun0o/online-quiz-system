@@ -10,7 +10,6 @@ import com.example.online_quiz_system.enums.Subject;
 import com.example.online_quiz_system.enums.SubmissionStatus;
 import com.example.online_quiz_system.repository.QuizSubmissionRepository;
 import com.example.online_quiz_system.repository.UserRankingRepository;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -214,10 +213,5 @@ public class QuizSubmissionService {
         submission.setApprovedBy(adminId);
 
         return submissionRepository.save(submission);
-    }
-
-    @Transactional(readOnly = true)
-    public long getPendingCount() {
-        return submissionRepository.countByStatus(SubmissionStatus.PENDING);
     }
 }

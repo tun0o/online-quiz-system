@@ -24,7 +24,7 @@ public interface UserRankingRepository extends JpaRepository<UserRanking, Long> 
 
     @Query("SELECT COUNT(ur) + 1 FROM UserRanking ur WHERE ur.totalPoints > " +
             "(SELECT ur2.totalPoints FROM UserRanking ur2 WHERE ur2.userId = :userId)")
-    Long findUserRankByUserId(@Param("userId") Long userId);
+    Integer findUserRankByUserId(@Param("userId") Long userId);
 
     @Query("SELECT ur FROM UserRanking ur WHERE ur.totalPoints > 0 " +
             "ORDER BY ur.totalPoints DESC")

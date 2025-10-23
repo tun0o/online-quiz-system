@@ -26,5 +26,18 @@ export const challengeService = {
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Không thể tải bảng xếp hạng.');
     }
-  }
+  },
+
+  /**
+   * Fetches the current user's ranking details.
+   * @returns {Promise<any>} A promise that resolves to the user's rank data.
+   */
+  getMyRank: async () => {
+    try {
+      const response = await api.get('/api/challenges/my-rank');
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Không thể tải xếp hạng của bạn.');
+    }
+  },
 };

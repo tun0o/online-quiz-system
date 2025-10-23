@@ -131,10 +131,4 @@ public class QuizSubmissionController {
         QuizSubmission submission = submissionService.rejectSubmission(id, dto.getReason(), adminId);
         return ResponseEntity.ok(submission);
     }
-
-    @GetMapping("/stats/pending-count")
-    public ResponseEntity<Long> getPendingCount(){
-        long count = submissionService.getPendingCount();
-        return ResponseEntity.ok(count);
-    }
 }

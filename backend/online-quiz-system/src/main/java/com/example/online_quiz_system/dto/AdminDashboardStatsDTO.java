@@ -9,15 +9,14 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserDashboardStatsDTO {
-    private Integer totalPoints;
-    private Integer currentStreak;
-    private Integer rank;
-    private Long quizzesTaken;
-    private Integer consumptionPoints;
-    private ContributionStatsDTO contributions;
-    private List<RecentAttemptDTO> recentAttempts;
-    private List<ChartDataPoint> quizAttemptsOverTime;
+public class AdminDashboardStatsDTO {
+    private long totalUsers;
+    private long totalApprovedQuizzes;
+    private long totalPendingSubmissions;
+    private long totalRejectedSubmissions;
+    private long totalPendingGradings;
+    private List<ChartDataPoint> userRegistrations;
+    private List<ChartDataPoint> quizSubmissions;
 
     @Data
     @NoArgsConstructor

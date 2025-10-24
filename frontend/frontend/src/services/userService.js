@@ -46,4 +46,13 @@ export const userService = {
         const response = await api.post('/api/admin/users', userData);
         return response.data;
     },
+
+    /**
+     * Cập nhật thông tin hồ sơ của người dùng hiện tại.
+     * @param {object} userData - Dữ liệu hồ sơ cần cập nhật (name, grade, goal)
+     */
+    updateUserProfile: async (userData) => {
+        const response = await api.put('/api/user/me', userData); // Assuming a PUT /api/user/me endpoint for profile updates
+        return response.data;
+    },
 };

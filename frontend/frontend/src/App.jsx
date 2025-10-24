@@ -42,6 +42,7 @@ import AttemptResultPage from "./components/quiz/AttemptResultPage.jsx";
 import AdminViewHandler from "./components/common/AdminViewHandler";
 import PurchasePointsPage from "./components/payment/PurchasePointsPage";
 import PaymentResultPage from "./components/payment/PaymentResultPage";
+import UserProfilePage from "./components/user/UserProfilePage";
 
 function AdminViewBanner() {
   // ... (no changes here)
@@ -316,7 +317,7 @@ function AppLayout() {
                   {isDropdownOpen && (
                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20 border border-gray-200">
                       <Link
-                        to="/user/dashboard"
+                        to="/user/profile"
                         className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         onClick={() => setIsDropdownOpen(false)}
                       >
@@ -649,7 +650,7 @@ function AppRoutes() {
         <Route path="tasks" element={<ProtectedRoute><TasksPage /></ProtectedRoute>} />
         <Route path="user/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
         <Route path="change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
-        {/* <Route path="profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} /> */}
+        <Route path="user/profile" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />
       </Route>
 
       {/* === ROUTES KHÔNG CÓ LAYOUT CHUNG (NO SIDEBARS) === */}

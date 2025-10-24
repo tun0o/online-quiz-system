@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -26,6 +27,10 @@ public class JwtResponseDTO {
         private final Long id;
         private final String email;
         private final String name;
+        private final String provider;
+        private final String grade;
+        private final String goal;
+        private final LocalDateTime createdAt;
         private final List<String> roles;
         private final boolean verified;
     }

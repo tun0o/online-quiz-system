@@ -301,7 +301,11 @@ public class AuthController {
         JwtResponseDTO.UserDTO userDTO = new JwtResponseDTO.UserDTO(
                 user.getId(),
                 user.getEmail(),
-                user.getName(), // Thêm tên người dùng
+                user.getName(),// Thêm tên người dùng
+                user.getProvider(),
+                user.getGrade(),
+                user.getGoal(),
+                user.getCreatedAt(),
                 roles,
                 user.isVerified()
         );

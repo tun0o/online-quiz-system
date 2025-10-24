@@ -1,9 +1,11 @@
 package com.example.online_quiz_system.controller;
 
+import com.example.online_quiz_system.dto.AdminDashboardStatsDTO;
 import com.example.online_quiz_system.dto.UserAdminDTO;
 import com.example.online_quiz_system.dto.UserCreateRequest;
 import com.example.online_quiz_system.dto.UserUpdateRequest;
 import com.example.online_quiz_system.security.UserPrincipal;
+import com.example.online_quiz_system.service.AdminService;
 import com.example.online_quiz_system.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +18,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -27,20 +28,13 @@ public class AdminController {
     @Autowired
     private UserService userService;
 
-    @GetMapping("/dashboard")
-    public ResponseEntity<?> adminDashboard() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+    @Autowired
+    private AdminService adminService;
 
-        return ResponseEntity.ok(Map.of(
-                "message", "Chào mừng Admin " + userPrincipal.getEmail() + " đến trang quản trị",
-                "features", List.of("Quản lý người dùng", "Duyệt bài quiz", "Xem báo cáo thống kê"),
-                "userInfo", Map.of(
-                        "id", userPrincipal.getId(),
-                        "email", userPrincipal.getEmail(),
-                        "role", userPrincipal.getAuthorities()
-                )
-        ));
+    @GetMapping("/dashboard-stats")
+    public ResponseEntity<AdminDashboardStatsDTO> getDashboardStats() {
+        AdminDashboardStatsDTO stats = adminService.getDashboardStats();
+        return ResponseEntity.ok(stats);
     }
 
     @GetMapping("/users")

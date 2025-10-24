@@ -141,6 +141,9 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                 .queryParam("email", user.getEmail())
                 .queryParam("name", URLEncoder.encode(user.getName(), StandardCharsets.UTF_8))
                 .queryParam("provider", user.getProvider())
+                .queryParam("grade", user.getGrade() != null ? URLEncoder.encode(user.getGrade(), StandardCharsets.UTF_8) : "")
+                .queryParam("goal", user.getGoal() != null ? URLEncoder.encode(user.getGoal(), StandardCharsets.UTF_8) : "")
+                .queryParam("createdAt", user.getCreatedAt() != null ? user.getCreatedAt().toString() : "")
                 .queryParam("roles", URLEncoder.encode(rolesJson, StandardCharsets.UTF_8))
                 .queryParam("verified", String.valueOf(user.isVerified()))
                 .build().toUriString();

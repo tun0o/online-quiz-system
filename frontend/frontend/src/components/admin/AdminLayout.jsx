@@ -64,13 +64,6 @@ export default function AdminLayout() {
                         <User size={20} />
                         <span>Xem giao diện User</span>
                     </button>
-                    {/* <a
-                        href="/"
-                        className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
-                    >
-                        <Home size={20} />
-                        <span>Về trang chủ</span>
-                    </a> */}
                     <button
                         onClick={handleLogout}
                         type="button"

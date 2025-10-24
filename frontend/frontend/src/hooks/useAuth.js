@@ -81,6 +81,14 @@ const useAuthStore = create(
                 }
             },
 
+            /**
+             * Cập nhật một phần thông tin người dùng trong store.
+             * @param {object} partialUser - Đối tượng chứa các trường thông tin người dùng cần cập nhật.
+             */
+            updateUser: (partialUser) => {
+                set((state) => ({ user: { ...state.user, ...partialUser } }));
+            },
+
             // --- GETTERS / HELPERS ---
 
             isAuthenticated: () => !!get().user,

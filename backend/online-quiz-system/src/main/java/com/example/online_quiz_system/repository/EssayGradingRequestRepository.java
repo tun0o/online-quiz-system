@@ -1,6 +1,7 @@
 package com.example.online_quiz_system.repository;
 
 import com.example.online_quiz_system.dto.GradingRequestDTO;
+import com.example.online_quiz_system.enums.GradingStatus;
 import com.example.online_quiz_system.entity.EssayGradingRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -26,4 +27,6 @@ public interface EssayGradingRequestRepository extends JpaRepository<EssayGradin
     List<GradingRequestDTO> findPendingGradingRequests();
 
     boolean existsByQuizAttemptId(Long quizAttemptId);
+
+    long countByStatus(GradingStatus status);
 }

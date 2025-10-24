@@ -23,3 +23,9 @@ export const getDifficultyColor = (difficulty) => {
   };
   return colors[difficulty] || 'text-gray-600 bg-gray-100';
 };
+
+export const goalDisplayMap = {
+  EXAM_PREP: 'Ôn thi',
+  KNOWLEDGE_IMPROVEMENT: 'Nâng cao kiến thức',
+  FUN: 'Học cho vui'
+};

@@ -25,6 +25,12 @@ const OAuth2Success = () => {
                 const userId = searchParams.get('userId');
                 const email = searchParams.get('email');
                 const name = searchParams.get('name');
+                const provider = searchParams.get('provider');
+                const grade = searchParams.get('grade');
+                const goal = searchParams.get('goal');
+                const createdAt = searchParams.get('createdAt');
+                const rolesParam = searchParams.get('roles');
+                const verifiedParam = searchParams.get('verified');
 
                 // Validate required parameters
                 if (!accessToken || !refreshToken) {
@@ -37,11 +43,15 @@ const OAuth2Success = () => {
 
                 // Prepare user data
                 const user = {
-                    id: userId,
-                    email: email,
-                    name: name,
-                    roles: JSON.parse(searchParams.get('roles') || '["ROLE_USER"]'),
-                    isVerified: searchParams.get('verified') === 'true'
+                    id: userId ? parseInt(userId, 10) : null,
+                    email: email, // No need to decode, not encoded
+                    provider: provider, // No need to decode, not encoded
+                    grade: grade ? decodeURIComponent(grade) : null,
+                    goal: goal ? decodeURIComponent(goal) : null,
+                    createdAt: createdAt || null,
+                    name: name ? decodeURIComponent(name) : email.split('@')[0], // Fallback name
+                    roles: rolesParam ? JSON.parse(decodeURIComponent(rolesParam)) : ['ROLE_USER'],
+                    verified: verifiedParam === 'true'
                 };
 
                 setUserData(user);

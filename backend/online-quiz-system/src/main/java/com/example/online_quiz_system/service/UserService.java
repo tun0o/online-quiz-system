@@ -27,6 +27,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -358,6 +361,17 @@ public class UserService {
         return userMapper.toUserAdminDTO(savedUser);
     }
 
+    @Transactional
+    public User updateUserProfile(Long userId, UserProfileUpdateDTO updateDTO) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng với ID: " + userId));
+
+        user.setName(updateDTO.getName());
+        user.setGrade(updateDTO.getGrade());
+        user.setGoal(updateDTO.getGoal());
+        return userRepository.save(user);
+    }
+
     @Transactional(readOnly = true)
     public UserDashboardStatsDTO getDashboardStatsForUser(Long userId){
         UserRanking ranking = userRankingRepository.findByUserId(userId)
@@ -368,6 +382,7 @@ public class UserService {
         Integer totalPoints = ranking.getTotalPoints();
         Integer currentStreak = ranking.getCurrentStreak();
         Integer rank = userRankingRepository.findUserRankByUserId(userId);
+        Integer consumptionPoints = ranking.getConsumptionPoints();
 
         long quizzesTaken = quizAttemptRepository.countByUserIdAndStatus(userId, "COMPLETED");
 
@@ -386,14 +401,37 @@ public class UserService {
                 .map(this::mapToRecentAttemptDTO)
                 .toList();
 
+        // Chart data for user attempts
+        List<CountByDate> userAttemptCounts = quizAttemptRepository.countAttemptsByUserIdLast7Days(userId);
+        List<UserDashboardStatsDTO.ChartDataPoint> quizAttemptsOverTime = formatChartData(userAttemptCounts);
+
         return new UserDashboardStatsDTO(
                 totalPoints,
                 currentStreak,
                 rank,
                 quizzesTaken,
+                consumptionPoints,
                 contributionStatsDTO,
-                recentAttemptDTOS
+                recentAttemptDTOS,
+                quizAttemptsOverTime
         );
+    }
+
+    private List<UserDashboardStatsDTO.ChartDataPoint> formatChartData(List<CountByDate> counts) {
+        Map<String, Long> countsByDate = counts.stream()
+                .collect(Collectors.toMap(CountByDate::getDate, CountByDate::getCount));
+
+        List<UserDashboardStatsDTO.ChartDataPoint> chartData = new ArrayList<>();
+        LocalDate today = LocalDate.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+        for (int i = 6; i >= 0; i--) {
+            LocalDate date = today.minusDays(i);
+            String dateString = date.format(formatter);
+            long pointValue = countsByDate.getOrDefault(dateString, 0L);
+            chartData.add(new UserDashboardStatsDTO.ChartDataPoint(dateString, pointValue));
+        }
+        return chartData;
     }
 
     private RecentAttemptDTO mapToRecentAttemptDTO(QuizAttempt attempt){

@@ -1,6 +1,7 @@
 package com.example.online_quiz_system.repository;
 
 import com.example.online_quiz_system.entity.QuizSubmission;
+import com.example.online_quiz_system.dto.CountByDate;
 import com.example.online_quiz_system.enums.SubmissionStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -9,6 +10,8 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 @Repository
 public interface QuizSubmissionRepository extends JpaRepository<QuizSubmission, Long>, JpaSpecificationExecutor<QuizSubmission> {
@@ -23,4 +26,13 @@ public interface QuizSubmissionRepository extends JpaRepository<QuizSubmission, 
     long countByContributorIdAndStatus(Long contributorId, SubmissionStatus status);
 
     long countByContributorId(Long contributorId);
+
+    long countByStatus(SubmissionStatus status);
+
+    @Query(value = "SELECT TO_CHAR(created_at, 'YYYY-MM-DD') as date, COUNT(*) as count " +
+                   "FROM quiz_submissions " +
+                   "WHERE created_at >= CURRENT_DATE - INTERVAL '6 days' " +
+                   "GROUP BY TO_CHAR(created_at, 'YYYY-MM-DD') " +
+                   "ORDER BY date ASC", nativeQuery = true)
+    List<CountByDate> countNewSubmissionsLast7Days();
 }

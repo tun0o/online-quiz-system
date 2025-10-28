@@ -88,7 +88,7 @@ const SubmissionItem = ({ submission, onViewDetails, onEdit, onDeleteRequest }) 
     )}
 
     <div className="flex gap-2 mt-3">
-      <button onClick={() => onViewDetails(submission.id)} className="flex items-center gap-1 px-3 py-1 bg-white text-white border border-gray-300 rounded hover:bg-gray-50 transition text-sm"><Eye size={14} /> Xem chi tiết</button>
+      <button onClick={() => onViewDetails(submission.id)} className="flex items-center gap-1 px-3 py-1 bg-white text-gray-700 border border-gray-300 rounded hover:bg-gray-50 transition text-sm"><Eye size={14} /> Xem chi tiết</button>
       {submission.status === 'PENDING' && (<>
         <button onClick={() => onEdit(submission)} className="flex items-center gap-1 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-sm"><Edit size={14} /> Sửa</button>
         <button onClick={() => onDeleteRequest(submission.id)} className="flex items-center gap-1 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition text-sm"><Trash2 size={14} /> Xóa</button>

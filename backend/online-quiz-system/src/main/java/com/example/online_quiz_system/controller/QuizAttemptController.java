@@ -1,6 +1,7 @@
 package com.example.online_quiz_system.controller;
 
 import com.example.online_quiz_system.dto.QuizAttemptRequestDTO;
+import com.example.online_quiz_system.dto.QuizAttemptResultDTO;
 import com.example.online_quiz_system.dto.QuizResultDTO;
 import com.example.online_quiz_system.security.UserPrincipal;
 import com.example.online_quiz_system.service.QuizAttemptService;
@@ -46,5 +47,14 @@ public class QuizAttemptController {
 
         quizAttemptService.requestEssayGrading(attemptId, userId);
         return ResponseEntity.ok().body(Map.of("message", "Yêu cầu chấm bài đã được gửi thành công."));
+    }
+
+    @GetMapping("/{attemptId}/result")
+    public ResponseEntity<QuizAttemptResultDTO> getAttemptResult(@PathVariable Long attemptId){
+        Long userId = getCurrentUserId();
+        if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+        QuizAttemptResultDTO dto = quizAttemptService.getAttemptResultDetails(attemptId, userId);
+        return ResponseEntity.ok(dto);
     }
 }

@@ -232,4 +232,84 @@ public class QuizAttemptService {
         essayGradingRequest.setStatus(GradingStatus.PENDING);
         essayGradingRequestRepository.save(essayGradingRequest);
     }
+
+    @Transactional(readOnly = true)
+    public QuizAttemptResultDTO getAttemptResultDetails(Long attemptId, Long userId) {
+        QuizAttempt attempt = quizAttemptRepository.findById(attemptId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy bài làm với ID: " + attemptId));
+
+        if (!attempt.getUserId().equals(userId)) {
+            throw new AccessDeniedException("Bạn không có quyền xem kết quả này.");
+        }
+
+        QuizSubmission quiz = attempt.getQuizSubmission();
+        List<SubmissionQuestion> questions = quiz.getQuestions();
+        List<UserAnswer> userAnswers = userAnswerRepository.findByQuizAttemptId(attemptId);
+        Map<Long, UserAnswer> userAnswerMap = userAnswers.stream()
+                .collect(Collectors.toMap(ua -> ua.getQuestion().getId(), Function.identity()));
+
+        // Tính toán các thông số
+        BigDecimal totalMaxScore = questions.stream()
+                .map(SubmissionQuestion::getMaxScore)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        int essayQuestionsCount = 0;
+        int gradedEssayCount = 0;
+
+        for (SubmissionQuestion q : questions) {
+            if (q.getQuestionType() == QuestionType.ESSAY) {
+                essayQuestionsCount++;
+                UserAnswer ua = userAnswerMap.get(q.getId());
+                if (ua != null && ua.getScore() != null) { // Suy luận isGraded từ trường score
+                    gradedEssayCount++;
+                }
+            }
+        }
+
+        // Chuyển đổi sang DTOs mới
+        List<AttemptQuestionResultDTO> questionDTOs = questions.stream().map(q -> {
+            List<AnswerOptionDTO> optionDTOs = q.getAnswerOptions().stream().map(o -> {
+                AnswerOptionDTO dto = new AnswerOptionDTO();
+                dto.setOptionText(o.getOptionText());
+                dto.setIsCorrect(o.getIsCorrect());
+                dto.setId(o.getId());
+                return dto;
+            }).collect(Collectors.toList());
+
+            return new AttemptQuestionResultDTO(
+                    q.getId(),
+                    q.getQuestionText(),
+                    q.getExplanation(),
+                    q.getQuestionType(),
+                    q.getMaxScore(),
+                    optionDTOs
+            );
+        }).collect(Collectors.toList());
+
+        List<AttemptUserAnswerResultDTO> userAnswerDTOs = userAnswers.stream().map(ua -> new AttemptUserAnswerResultDTO(
+                ua.getQuestion().getId(),
+                ua.getSelectedOption() != null ? ua.getSelectedOption().getId() : null,
+                ua.getIsCorrect(),
+                ua.getAnswerText(),
+                ua.getScore() != null,
+                ua.getScore(),
+                ua.getAdminFeedback()
+        )).collect(Collectors.toList());
+
+        QuizAttemptResultDTO resultDTO = new QuizAttemptResultDTO();
+        resultDTO.setAttemptId(attempt.getId());
+        resultDTO.setQuizTitle(quiz.getTitle());
+        resultDTO.setCompletedAt(attempt.getEndTime());
+        resultDTO.setScore(attempt.getScore());
+        resultDTO.setMaxScore(totalMaxScore);
+        resultDTO.setCorrectAnswers(attempt.getCorrectAnswers());
+        resultDTO.setTotalQuestions(attempt.getTotalQuestions());
+        resultDTO.setEssayQuestionsCount(essayQuestionsCount);
+        resultDTO.setGradedEssayCount(gradedEssayCount);
+        resultDTO.setQuestions(questionDTOs);
+        resultDTO.setUserAnswers(userAnswerDTOs);
+
+        return resultDTO;
+    }
 }

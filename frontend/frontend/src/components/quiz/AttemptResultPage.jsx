@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { CheckCircle, XCircle, HelpCircle, ArrowLeft } from 'lucide-react';
+import { CheckCircle, XCircle, HelpCircle, ArrowLeft, Edit2 } from 'lucide-react';
 import { quizService } from '@/services/quizService';
 
-const getAnswerColor = (option, question, userAnswer) => {
+const getAnswerColor = (option, userAnswer) => {
     const isSelected = userAnswer?.selectedOptionId === option.id;
     const isCorrect = option.isCorrect;
 
@@ -53,17 +53,23 @@ const AttemptResultPage = () => {
             </Link>
 
             <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-                <h1 className="text-2xl font-bold mb-2">{result.quizTitle}</h1>
+                <h1 className="text-2xl text-gray-800 font-bold mb-2">{result.quizTitle}</h1>
                 <p className="text-gray-600">Hoàn thành lúc: {new Date(result.completedAt).toLocaleString('vi-VN')}</p>
                 <div className="mt-4 flex flex-wrap gap-4 text-center">
                     <div className="flex-1 bg-blue-50 p-3 rounded-lg">
-                        <p className="text-sm text-blue-800 font-semibold">Điểm số</p>
-                        <p className="text-2xl font-bold text-blue-900">{result.score.toFixed(1)}/10</p>
+                        <p className="text-sm text-blue-800 font-semibold">Điểm</p>
+                        <p className="text-2xl font-bold text-blue-900">{result.score.toFixed(1)}/{result.maxScore}</p>
                     </div>
                     <div className="flex-1 bg-green-50 p-3 rounded-lg">
                         <p className="text-sm text-green-800 font-semibold">Số câu đúng</p>
                         <p className="text-2xl font-bold text-green-900">{result.correctAnswers} / {result.totalQuestions}</p>
                     </div>
+                    {result.essayQuestionsCount > 0 && (
+                        <div className="flex-1 bg-yellow-50 p-3 rounded-lg">
+                            <p className="text-sm text-yellow-800 font-semibold">Câu tự luận</p>
+                            <p className="text-2xl font-bold text-yellow-900">{result.gradedEssayCount} / {result.essayQuestionsCount} <span className="text-base">đã chấm</span></p>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -81,16 +87,46 @@ const AttemptResultPage = () => {
                                 {isCorrect === null && <HelpCircle className="text-yellow-500 flex-shrink-0 ml-4" />}
                             </div>
 
-                            <div className="space-y-3">
-                                {question.options.map(option => (
-                                    <div
-                                        key={option.id}
-                                        className={`p-3 border rounded-lg ${getAnswerColor(option, question, userAnswer)}`}
-                                    >
-                                        {option.optionText}
+                            {question.questionType !== 'ESSAY' ? (
+                                <div className="space-y-3 text-gray-700">
+                                    {question.options.map(option => (
+                                        <div
+                                            key={option.id}
+                                            className={`p-3 border rounded-lg ${getAnswerColor(option, userAnswer)}`}
+                                        >
+                                            {option.optionText}
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-600 mb-1">Câu trả lời của bạn:</p>
+                                        <div className="p-3 bg-gray-50 border border-gray-200 rounded-md text-gray-800 whitespace-pre-wrap">
+                                            {userAnswer?.answerText || <i className="text-gray-400">Không trả lời</i>}
+                                        </div>
                                     </div>
-                                ))}
-                            </div>
+                                    {userAnswer?.isGraded ? (
+                                        <div className="p-4 bg-green-50 border-l-4 border-green-400 rounded-r-lg">
+                                            <p className="font-semibold text-green-800">Đã chấm điểm</p>
+                                            <p className="text-lg font-bold text-green-900">Điểm: {userAnswer.score} / {question.maxScore}</p>
+                                            {userAnswer.feedback && (
+                                                <div className="mt-2">
+                                                    <p className="font-semibold text-sm text-green-800">Nhận xét từ người chấm:</p>
+                                                    <p className="text-sm text-green-700 italic">"{userAnswer.feedback}"</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded-r-lg flex items-center gap-3">
+                                            <Edit2 size={16} className="text-yellow-700" />
+                                            <p className="text-sm text-yellow-800">
+                                                Câu hỏi này đang chờ được chấm điểm.
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
 
                             {question.explanation && (
                                 <div className="mt-4 p-3 bg-gray-100 border-l-4 border-gray-400 rounded-r-lg">

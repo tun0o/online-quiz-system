@@ -4,8 +4,21 @@ import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { BookOpen, Award, Star, TrendingUp, Send, CheckCircle, Clock, XCircle, LineChart as LineChartIcon } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { userService } from '@/services/userService'; // Giả sử bạn sẽ thêm hàm mới vào đây
-import { ResponsiveContainer, LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Line } from 'recharts';
+import { userService } from '@/services/userService';
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend,
+    Filler,
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
+
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
 // Component Card thống kê chung
 const StatCard = ({ icon, title, value, color, unit }) => (
@@ -65,11 +78,48 @@ const UserDashboard = () => {
         return <div className="p-6 text-center text-red-500">Không thể tải dữ liệu. Vui lòng thử lại.</div>;
     }
 
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'top',
+            },
+            tooltip: {
+                backgroundColor: '#fff',
+                titleColor: '#333',
+                bodyColor: '#666',
+                borderColor: '#ddd',
+                borderWidth: 1,
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1,
+                }
+            }
+        },
+    };
+
+    const attemptsChartData = {
+        labels: stats?.quizAttemptsOverTime?.map(d => new Date(d.date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })) || [],
+        datasets: [{
+            label: 'Số bài đã làm',
+            data: stats?.quizAttemptsOverTime?.map(d => d.count) || [],
+            fill: true,
+            borderColor: 'rgb(59, 130, 246)',
+            backgroundColor: 'rgba(59, 130, 246, 0.2)',
+            tension: 0.3,
+            pointBackgroundColor: 'rgb(59, 130, 246)',
+        }],
+    };
+
     return (
         <div className="p-6 space-y-6">
             <div>
                 <h1 className="text-2xl font-bold text-gray-800">Tổng quan</h1>
-                <p className="text-gray-600">Chào mừng trở lại, {user?.name || user?.email}!</p>
             </div>
 
             {/* Các chỉ số chính */}
@@ -105,16 +155,9 @@ const UserDashboard = () => {
             {/* Charts Section */}
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                 <h3 className="font-semibold mb-4 text-gray-800 text-lg flex items-center"><LineChartIcon size={20} className="mr-2 text-blue-500" /> Hoạt động làm bài trong 7 ngày</h3>
-                <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={stats?.quizAttemptsOverTime}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="date" tickFormatter={(date) => new Date(date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })} />
-                        <YAxis allowDecimals={false} />
-                        <Tooltip />
-                        <Legend />
-                        <Line type="monotone" dataKey="count" name="Số bài đã làm" stroke="#3b82f6" strokeWidth={2} />
-                    </LineChart>
-                </ResponsiveContainer>
+                <div style={{ height: '300px' }}>
+                    <Line options={chartOptions} data={attemptsChartData} />
+                </div>
             </div>
 
             {/* Thống kê đóng góp và Lịch sử gần đây */}
@@ -168,7 +211,10 @@ const UserDashboard = () => {
                                             <span className='text-green-600 font-bold text-lg'>{attempt.score.toFixed(1)}/10</span>
                                             <p className='text-xs text-gray-500'>{attempt.correctAnswers}/{attempt.totalQuestions} câu</p>
                                         </div>
-                                        <Link to={`/attempts/${attempt.id}/result`} className="px-4 py-2 text-sm font-bold text-white bg-blue-700 rounded-md hover:bg-blue-800 transition-colors whitespace-nowrap">
+                                        <Link
+                                            to={`/attempts/${attempt.id}/result`}
+                                            className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-md border border-blue-200 hover:bg-blue-100 hover:text-blue-700 transition-all duration-200"
+                                        >
                                             Xem chi tiết
                                         </Link>
                                     </div>

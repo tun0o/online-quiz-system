@@ -93,7 +93,7 @@ export default function AllSubmissionsTable() {
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <h2 className="text-xl font-semibold mb-4">Quản lý Đề thi Đã Duyệt</h2>
+      <h1 className="text-3xl font-bold text-gray-800 mb-4">Quản lý Đề thi Đã Duyệt</h1>
 
       <div className="flex flex-wrap gap-4 mb-4 items-end">
         <input

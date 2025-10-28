@@ -136,10 +136,14 @@ const UserProfilePage = () => {
                             <p className="text-sm text-gray-500">Điểm có thể dùng</p>
                             <p className="text-5xl font-extrabold text-indigo-600">{stats?.consumptionPoints?.toLocaleString() || 0}</p>
                         </div>
-                        <Link to="/purchase-points" className="inline-flex items-center justify-center px-8 py-2.5 bg-indigo-700 text-white rounded-lg font-bold hover:bg-indigo-800 transition duration-200 shadow-md">
-                            <DollarSign size={18} className="mr-2" />
+                        <Link
+                            to="/purchase-points"
+                            className="inline-flex items-center justify-center px-6 py-2.5 bg-indigo-50 text-indigo-700 font-medium rounded-md border border-indigo-200 hover:bg-indigo-100 hover:text-indigo-800 transition-all duration-200"
+                        >
+                            <DollarSign size={18} className="mr-2 text-indigo-600" />
                             Mua thêm điểm
                         </Link>
+
                     </div>
                 </div>
             </div>

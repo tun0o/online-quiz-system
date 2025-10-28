@@ -5,6 +5,8 @@ import lombok.Data;
 
 @Data
 public class AnswerOptionDTO {
+    private Long id;
+
     @NotBlank(message = "Đáp án không được để trống")
     private String optionText;
 

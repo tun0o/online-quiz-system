@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { BookOpen, Award, Star, TrendingUp, Send, CheckCircle, Clock, XCircle, LineChart as LineChartIcon } from 'lucide-react';
+import { BookOpen, Award, Star, TrendingUp, Send, CheckCircle, Clock, XCircle, LineChart as LineChartIcon, ChartBar } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { userService } from '@/services/userService';
 import {
@@ -118,7 +118,8 @@ const UserDashboard = () => {
 
     return (
         <div className="p-6 space-y-6">
-            <div>
+            <div className="flex items-center gap-3">
+                <ChartBar size={28} className="text-blue-500" />
                 <h1 className="text-2xl font-bold text-gray-800">Tổng quan</h1>
             </div>
 
@@ -195,7 +196,10 @@ const UserDashboard = () => {
 
                 {/* Lịch sử làm bài */}
                 <div className="lg:col-span-2 bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-                    <h3 className="font-semibold mb-4 text-gray-800">Lịch sử làm bài gần đây</h3>
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-semibold mb-4 text-gray-800">Lịch sử làm bài gần đây</h3>
+                        <Link to='/history' className="text-sm text-blue-600 hover:underline mb-4 inline-block">Xem tất cả</Link>
+                    </div>
                     <div className="space-y-3">
                         {stats.recentAttempts?.length > 0 ? (
                             stats.recentAttempts.map(attempt => (

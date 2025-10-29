@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { CheckCircle, XCircle, HelpCircle, ArrowLeft, Edit2 } from 'lucide-react';
 import { quizService } from '@/services/quizService';
@@ -21,6 +21,7 @@ const AttemptResultPage = () => {
     const { attemptId } = useParams();
     const [result, setResult] = useState(null);
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchResult = async () => {
@@ -47,10 +48,13 @@ const AttemptResultPage = () => {
 
     return (
         <div className="max-w-4xl mx-auto">
-            <Link to="/user/dashboard" className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-4">
+            <button
+                onClick={() => navigate(-1)}
+                className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-4"
+            >
                 <ArrowLeft size={16} />
-                Quay lại Dashboard
-            </Link>
+                Quay lại
+            </button>
 
             <div className="bg-white p-6 rounded-lg shadow-md mb-6">
                 <h1 className="text-2xl text-gray-800 font-bold mb-2">{result.quizTitle}</h1>

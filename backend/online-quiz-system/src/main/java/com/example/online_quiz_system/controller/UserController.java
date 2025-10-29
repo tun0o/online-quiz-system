@@ -1,5 +1,6 @@
 package com.example.online_quiz_system.controller;
 
+import com.example.online_quiz_system.dto.RecentAttemptDTO;
 import com.example.online_quiz_system.dto.UserDashboardStatsDTO;
 import com.example.online_quiz_system.dto.UserProfileUpdateDTO;
 import com.example.online_quiz_system.entity.User;
@@ -7,6 +8,9 @@ import com.example.online_quiz_system.security.UserPrincipal;
 import com.example.online_quiz_system.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -36,5 +40,14 @@ public class UserController {
                                                   @Valid @RequestBody UserProfileUpdateDTO updateDTO){
         User updateUser = userService.updateUserProfile(userPrincipal.getId(), updateDTO);
         return ResponseEntity.ok(updateUser);
+    }
+
+    @GetMapping("/me/history")
+    public ResponseEntity<Page<RecentAttemptDTO>> getMyAttemptHistory( @PageableDefault(size = 10) Pageable pageable){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+
+        Page<RecentAttemptDTO> recentAttemptDTOS = userService.getAttemptsHistory(userPrincipal.getId(), pageable);
+        return ResponseEntity.ok(recentAttemptDTOS);
     }
 }

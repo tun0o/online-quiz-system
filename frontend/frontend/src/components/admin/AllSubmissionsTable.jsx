@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import { quizService } from '@/services/quizService';
 import { Edit, Trash2, BookOpen } from 'lucide-react';
 import { subjectDisplayMap, difficultyDisplayMap, getDifficultyColor } from '@/utils/displayMaps';
+import Pagination from '@/components/common/Pagination';
 import ConfirmationModal from '@/components/common/ConfirmationModal';
 
 export default function AllSubmissionsTable() {
@@ -190,17 +191,7 @@ export default function AllSubmissionsTable() {
       </div>
 
       {pagination.totalPages > 1 && (
-        <div className="flex justify-center items-center gap-2 mt-6">
-          {Array.from({ length: pagination.totalPages }, (_, i) => (
-            <button
-              key={i}
-              onClick={() => loadQuizzes(i)}
-              className={`px-3 py-1 rounded ${i === pagination.page ? 'bg-green-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}
-            >
-              {i + 1}
-            </button>
-          ))}
-        </div>
+        <Pagination currentPage={pagination.page} totalPages={pagination.totalPages} onPageChange={loadQuizzes} />
       )}
 
       <ConfirmationModal

@@ -60,8 +60,7 @@ public class QuizSubmissionController {
     }
 
     @GetMapping("/my-submissions")
-    public ResponseEntity<Page<QuizSubmission>> getSubmissionsByContributor(
-                                                                            @RequestParam(defaultValue = "0") int page,
+    public ResponseEntity<Page<QuizSubmission>> getSubmissionsByContributor(@RequestParam(defaultValue = "0") int page,
                                                                             @RequestParam(defaultValue = "10") int size) {
         Long userId = getCurrentUserId();
         if(userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();

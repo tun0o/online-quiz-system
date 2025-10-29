@@ -1,7 +1,7 @@
 // App.jsx
 import { Routes, Route, NavLink, Outlet, useLocation, Navigate, useNavigate, Link, useParams } from "react-router-dom";
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Home, Star, Shield, ClipboardList, User, Settings, UserPlus, LogIn, TrophyIcon, TargetIcon, ServerCrash, LogOut, DollarSign, Bell, ChartBar } from "lucide-react";
+import { Home, Star, Shield, ClipboardList, User, UserPlus, LogIn, TrophyIcon, TargetIcon, LogOut, Bell, ChartBar, History } from "lucide-react";
 import { QuizProvider } from "@/contexts/QuizContext";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -44,6 +44,8 @@ import PurchasePointsPage from "./components/payment/PurchasePointsPage";
 import PaymentResultPage from "./components/payment/PaymentResultPage";
 import UserProfilePage from "./components/user/UserProfilePage";
 
+import Pagination from "./components/common/Pagination";
+import AttemptHistoryPage from "./components/user/AttemptHistoryPage";
 function AdminViewBanner() {
   // ... (no changes here)
   const { switchToAdminView } = useAdminView();
@@ -247,17 +249,6 @@ function AppLayout() {
             </NavLink>
           ))}
         </nav>
-
-        {/* Logout button (xuống dưới cùng)
-        {isAuthenticated() && ( // Chỉ hiển thị nút Đăng xuất khi đã đăng nhập
-          <button
-            onClick={handleLogout} // Thêm mt-auto để đẩy nút xuống dưới cùng
-            className="mt-auto flex items-center gap-3 p-4 py-2 rounded-lg text-white hover:bg-red-50 hover:text-red-600 transition"
-          >
-            <LogOut size={20} />
-            Đăng xuất
-          </button>
-        )} */}
       </aside>
 
       {/* Main content area */}
@@ -331,6 +322,13 @@ function AppLayout() {
                       >
                         <Bell size={16} className="inline mr-2" /> Thông báo
                       </Link>
+                      <Link
+                        to="/history"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <History size={16} className="inline mr-2" /> Lịch sử
+                      </Link> 
                       <button
                         onClick={() => { handleLogout(); setIsDropdownOpen(false); }}
                         className="w-full text-left flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50"
@@ -580,20 +578,7 @@ function HomePage() {
             </div>
             {/* Pagination */}
             {pagination.totalPages > 1 && (
-              <div className="flex justify-center items-center gap-2 mt-6">
-                {Array.from({ length: pagination.totalPages }, (_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => handlePageChange(i)}
-                    className={`px-3 py-1 rounded ${i === query.page
-                      ? 'bg-green-600 text-white'
-                      : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
-                      }`}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-              </div>
+              <Pagination currentPage={query.page} totalPages={pagination.totalPages} onPageChange={handlePageChange} />
             )}
           </>
         ) : (
@@ -650,6 +635,7 @@ function AppRoutes() {
         <Route path="tasks" element={<ProtectedRoute><TasksPage /></ProtectedRoute>} />
         <Route path="user/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
         <Route path="change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
+        <Route path="history" element={<ProtectedRoute><AttemptHistoryPage /></ProtectedRoute>} />
         <Route path="user/profile" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />
       </Route>
 

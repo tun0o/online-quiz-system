@@ -55,4 +55,13 @@ export const userService = {
         const response = await api.put('/api/user/me', userData); // Assuming a PUT /api/user/me endpoint for profile updates
         return response.data;
     },
+
+    /**
+     * Lấy lịch sử làm bài của người dùng hiện tại (có phân trang).
+     * @param {object} params - Các tham số truy vấn (page, size)
+     */
+    getAttemptHistory: async (params) => {
+        const response = await api.get('/api/user/me/history', { params });
+        return response.data;
+    },
 };

@@ -3,6 +3,7 @@ import { toast } from 'react-toastify';
 import { Edit, UserCheck, UserX, Shield, User, UserPlus, CheckCircle, XCircle } from 'lucide-react';
 import { userService } from '@/services/userService';
 import ConfirmationModal from '@/components/common/ConfirmationModal';
+import Pagination from '@/components/common/Pagination';
 
 const RoleBadge = ({ role }) => {
     const isAdmin = role === 'ADMIN';
@@ -426,25 +427,7 @@ export default function UserManagementPage() {
                 </div>
 
                 {pagination.totalPages > 1 && (
-                    <div className="flex justify-center items-center gap-2 p-4 border-t">
-                        <button
-                            onClick={() => handlePageChange(pagination.page - 1)}
-                            disabled={pagination.page === 0}
-                            className="px-3 py-1 rounded bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50"
-                        >
-                            Trước
-                        </button>
-                        <span className="text-sm text-gray-600">
-                            Trang {pagination.page + 1} / {pagination.totalPages}
-                        </span>
-                        <button
-                            onClick={() => handlePageChange(pagination.page + 1)}
-                            disabled={pagination.page === pagination.totalPages - 1}
-                            className="px-3 py-1 rounded bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50"
-                        >
-                            Sau
-                        </button>
-                    </div>
+                    <Pagination currentPage={pagination.page} totalPages={pagination.totalPages} onPageChange={handlePageChange} />
                 )}
             </div>
 

@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Clock, CheckCircle, XCircle, Eye, Edit, Trash2, X } from 'lucide-react';
+import { Plus, Clock, CheckCircle, XCircle, Eye, Edit, Trash2, X, Star } from 'lucide-react';
 import { toast } from 'react-toastify';
 import QuizSubmissionForm from '@/components/contributor/QuizSubmissionForm';
 import ConfirmationModal from '@/components/common/ConfirmationModal';
 import SubmissionDetailView from '@/components/contributor/SubmissionDetailView';
 import { subjectDisplayMap } from '@/utils/displayMaps';
+import Pagination from '@/components/common/Pagination';
 import { quizService } from '@/services/quizService';
 
 const getStatusBadge = (status) => {
@@ -88,7 +89,7 @@ const SubmissionItem = ({ submission, onViewDetails, onEdit, onDeleteRequest }) 
     )}
 
     <div className="flex gap-2 mt-3">
-      <button onClick={() => onViewDetails(submission.id)} className="flex items-center gap-1 px-3 py-1 bg-white text-gray-700 border border-gray-300 rounded hover:bg-gray-50 transition text-sm"><Eye size={14} /> Xem chi tiết</button>
+      <button onClick={() => onViewDetails(submission.id)} className="flex items-center gap-1 px-3 py-1 bg-white text-white border border-gray-300 rounded hover:bg-gray-50 transition text-sm"><Eye size={14} /> Xem chi tiết</button>
       {submission.status === 'PENDING' && (<>
         <button onClick={() => onEdit(submission)} className="flex items-center gap-1 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-sm"><Edit size={14} /> Sửa</button>
         <button onClick={() => onDeleteRequest(submission.id)} className="flex items-center gap-1 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition text-sm"><Trash2 size={14} /> Xóa</button>
@@ -201,15 +202,17 @@ export default function ContributorDashboard() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-800">Đóng góp đề thi</h1>
+        <div className="flex items-center gap-2">
+          <Star size={28} className="text-yellow-600" />
+          <h1 className="text-2xl font-bold text-gray-800">Đóng góp đề thi</h1>
+        </div>
         <div className="flex gap-2">
           <button
             onClick={() => setActiveTab('list')}
-            className={`px-4 py-2 rounded-lg transition ${
-              activeTab === 'list'
+            className={`px-4 py-2 rounded-lg transition ${activeTab === 'list'
                 ? 'bg-green-600 text-white'
                 : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
-            }`}
+              }`}
           >
             <Eye size={16} className="inline mr-2" />
             Đề của tôi
@@ -220,11 +223,10 @@ export default function ContributorDashboard() {
               setEditingSubmission(null);
               setActiveTab('create');
             }}
-            className={`px-4 py-2 rounded-lg transition ${
-              activeTab === 'create'
+            className={`px-4 py-2 rounded-lg transition ${activeTab === 'create'
                 ? 'bg-green-600 text-white'
                 : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
-            }`}
+              }`}
           >
             <Plus size={16} className="inline mr-2" />
             Tạo đề mới
@@ -234,13 +236,13 @@ export default function ContributorDashboard() {
 
       {/* Content */}
       {activeTab === 'create' || activeTab === 'edit' ? (
-        <QuizSubmissionForm 
+        <QuizSubmissionForm
           submission={editingSubmission}
           onSuccess={() => {
             setEditingSubmission(null);
             setActiveTab('list');
             loadSubmissions();
-          }} 
+          }}
         />
       ) : (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
@@ -293,24 +295,9 @@ export default function ContributorDashboard() {
                     onDeleteRequest={handleDeleteRequest}
                   />
                 ))}
-
                 {/* Pagination */}
                 {pagination.totalPages > 1 && (
-                  <div className="flex justify-center items-center gap-2 mt-6">
-                    {Array.from({ length: pagination.totalPages }, (_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => loadSubmissions(i)}
-                        className={`px-3 py-1 rounded ${
-                          i === pagination.page
-                            ? 'bg-green-600 text-white'
-                            : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
-                        }`}
-                      >
-                        {i + 1}
-                      </button>
-                    ))}
-                  </div>
+                  <Pagination currentPage={pagination.page} totalPages={pagination.totalPages} onPageChange={loadSubmissions} />
                 )}
               </div>
             )}
@@ -388,13 +375,12 @@ export default function ContributorDashboard() {
                             Câu {index + 1}: {question.questionText}
                           </h5>
                           <div className="flex gap-2 text-xs">
-                            <span className={`px-2 py-1 rounded ${
-                              question.questionType === 'MULTIPLE_CHOICE' ? 'bg-blue-100 text-blue-800' :
-                              question.questionType === 'TRUE_FALSE' ? 'bg-green-100 text-green-800' :
-                              'bg-purple-100 text-purple-800'
-                            }`}>
+                            <span className={`px-2 py-1 rounded ${question.questionType === 'MULTIPLE_CHOICE' ? 'bg-blue-100 text-blue-800' :
+                                question.questionType === 'TRUE_FALSE' ? 'bg-green-100 text-green-800' :
+                                  'bg-purple-100 text-purple-800'
+                              }`}>
                               {question.questionType === 'MULTIPLE_CHOICE' ? 'Trắc nghiệm' :
-                               question.questionType === 'TRUE_FALSE' ? 'Đúng/Sai' : 'Tự luận'}
+                                question.questionType === 'TRUE_FALSE' ? 'Đúng/Sai' : 'Tự luận'}
                             </span>
                             {question.questionType === 'ESSAY' && (
                               <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded">
@@ -411,11 +397,10 @@ export default function ContributorDashboard() {
                             {question.answerOptions?.map((option, optIndex) => (
                               <div
                                 key={option.id}
-                                className={`text-sm px-3 py-2 rounded ${
-                                  option.isCorrect
+                                className={`text-sm px-3 py-2 rounded ${option.isCorrect
                                     ? 'bg-green-100 text-green-800 font-medium border border-green-200'
                                     : 'bg-gray-50 text-gray-600'
-                                }`}
+                                  }`}
                               >
                                 {String.fromCharCode(65 + optIndex)}. {option.optionText}
                                 {option.isCorrect && ' ✓ (Đáp án đúng)'}
@@ -469,7 +454,7 @@ export default function ContributorDashboard() {
                       Ngày tạo: {formatDate(selectedSubmission.createdAt)}
                     </div>
                   </div>
-                  
+
                   {selectedSubmission.adminFeedback && (
                     <div className="mt-3">
                       <span className="text-gray-500">Phản hồi từ admin:</span>

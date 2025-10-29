@@ -18,6 +18,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -392,11 +393,12 @@ public class UserService {
         long rejected = quizSubmissionRepository.countByContributorIdAndStatus(userId, SubmissionStatus.REJECTED);
         ContributionStatsDTO contributionStatsDTO = new ContributionStatsDTO(submitted, approved, pending, rejected);
 
-        List<QuizAttempt> recentAttemptRaw = quizAttemptRepository.findByUserIdAndEndTimeIsNotNullOrderByEndTimeDesc(
+        Page<QuizAttempt> recentAttemptsPage = quizAttemptRepository.findByUserIdAndEndTimeIsNotNullOrderByEndTimeDesc(
                 userId,
                 PageRequest.of(0, 5)
         );
 
+        List<QuizAttempt> recentAttemptRaw = recentAttemptsPage.getContent();
         List<RecentAttemptDTO> recentAttemptDTOS = recentAttemptRaw.stream()
                 .map(this::mapToRecentAttemptDTO)
                 .toList();
@@ -443,5 +445,19 @@ public class UserService {
                 attempt.getCorrectAnswers(),
                 attempt.getTotalQuestions()
         );
+    }
+
+    @Transactional(readOnly = true)
+    public Page<RecentAttemptDTO> getAttemptsHistory(Long userId, Pageable pageable){
+        Page<QuizAttempt> attemptsPage = quizAttemptRepository.findByUserIdAndEndTimeIsNotNullOrderByEndTimeDesc(
+                userId,
+                pageable
+        );
+
+        List<RecentAttemptDTO> dtoList = attemptsPage.getContent().stream()
+                .map(this::mapToRecentAttemptDTO)
+                .toList();
+
+        return new PageImpl<>(dtoList, pageable, attemptsPage.getTotalElements());
     }
 }

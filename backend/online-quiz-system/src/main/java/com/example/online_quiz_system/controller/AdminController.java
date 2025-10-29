@@ -18,8 +18,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
-
 @RestController
 @RequestMapping("/api/admin")
 @PreAuthorize("hasRole('ADMIN')")
@@ -68,13 +66,4 @@ public class AdminController {
         return ResponseEntity.status(201).body(newUser);
     }
 
-    @GetMapping("/stats")
-    public ResponseEntity<?> getSystemStats() {
-        // Triển khai logic thống kê hệ thống
-        return ResponseEntity.ok(Map.of(
-                "totalUsers", 100,
-                "totalQuizzes", 500,
-                "pendingApprovals", 15
-        ));
-    }
 }

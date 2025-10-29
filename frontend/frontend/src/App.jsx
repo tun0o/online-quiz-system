@@ -44,6 +44,7 @@ import PurchasePointsPage from "./components/payment/PurchasePointsPage";
 import PaymentResultPage from "./components/payment/PaymentResultPage";
 import UserProfilePage from "./components/user/UserProfilePage";
 
+import NotificationsPage from "./components/user/NotificationsPage";
 import Pagination from "./components/common/Pagination";
 import AttemptHistoryPage from "./components/user/AttemptHistoryPage";
 function AdminViewBanner() {
@@ -72,6 +73,7 @@ function AppLayout() {
   const location = useLocation();
   const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const { unreadCount, fetchUnreadCount } = useAuthStore();
   const showRightSidebar = !['/contribute'].includes(location.pathname);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false); // State để quản lý hiển thị dropdown
 
@@ -132,6 +134,7 @@ function AppLayout() {
       loadRankings();
       if (isAuthenticated()) {
         loadChallenges();
+        fetchUnreadCount(); // Tải số lượng thông báo chưa đọc
       } else {
         setLoadingChallenges(false); // Nếu chưa đăng nhập, dừng loading challenges
       }
@@ -320,7 +323,17 @@ function AppLayout() {
                         className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         onClick={() => setIsDropdownOpen(false)}
                       >
-                        <Bell size={16} className="inline mr-2" /> Thông báo
+                        <div className="flex items-center">
+                          <Bell size={16} className="inline mr-2" />
+                          <span className="relative pr-6">
+                            Thông báo
+                          {unreadCount > 0 && (
+                            <span className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+                              {unreadCount}
+                            </span>
+                          )}
+                          </span>
+                        </div>
                       </Link>
                       <Link
                         to="/history"
@@ -636,6 +649,7 @@ function AppRoutes() {
         <Route path="user/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
         <Route path="change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
         <Route path="history" element={<ProtectedRoute><AttemptHistoryPage /></ProtectedRoute>} />
+        <Route path="notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
         <Route path="user/profile" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />
       </Route>
 

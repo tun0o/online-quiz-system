@@ -19,6 +19,9 @@ DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'question_type') THEN
         CREATE TYPE question_type AS ENUM ('MULTIPLE_CHOICE', 'TRUE_FALSE', 'ESSAY');
     END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'notification_type_enum') THEN
+        CREATE TYPE notification_type_enum AS ENUM ('GRADING_COMPLETED', 'PAYMENT_SUCCESS', 'PAYMENT_FAILURE', 'SUBMISSION_APPROVED', 'SUBMISSION_REJECTED', 'WELCOME');
+    END IF;
 END $$;
 
 -- 2. CREATE TABLES
@@ -239,6 +242,22 @@ CREATE TABLE payment_transactions (
     CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
+-- Bảng thông báo
+CREATE TABLE notifications (
+    id BIGSERIAL PRIMARY KEY,
+    recipient_id BIGINT NOT NULL,
+    message TEXT NOT NULL,
+    is_read BOOLEAN DEFAULT FALSE,
+    link VARCHAR(255),
+    notification_type notification_type_enum NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_recipient
+        FOREIGN KEY(recipient_id)
+        REFERENCES users(id)
+        ON DELETE CASCADE
+);
+
 -- 3. INDEXES
 CREATE INDEX IF NOT EXISTS idx_users_provider ON users(provider, provider_id);
 CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
@@ -274,6 +293,11 @@ CREATE INDEX IF NOT EXISTS idx_essay_grading_requests_assigned ON essay_grading_
 
 CREATE INDEX IF NOT EXISTS idx_quiz_attempts_user ON quiz_attempts(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_answers_attempt ON user_answers(quiz_attempt_id);
+
+-- Indexes để tăng tốc độ truy vấn
+CREATE INDEX idx_notifications_recipient_id ON notifications(recipient_id);
+CREATE INDEX idx_notifications_is_read ON notifications(is_read);
+
 
 -- 4. TRIGGER FUNCTION to update updated_at
 CREATE OR REPLACE FUNCTION update_updated_at_column()

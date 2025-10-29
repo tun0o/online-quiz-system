@@ -5,6 +5,7 @@ import com.example.online_quiz_system.dto.CreatePaymentRequestDTO;
 import com.example.online_quiz_system.entity.PaymentTransaction;
 import com.example.online_quiz_system.entity.User;
 import com.example.online_quiz_system.entity.UserRanking;
+import com.example.online_quiz_system.enums.NotificationType;
 import com.example.online_quiz_system.enums.PaymentStatus;
 import com.example.online_quiz_system.repository.PaymentTransactionRepository;
 import com.example.online_quiz_system.repository.UserRankingRepository;
@@ -38,6 +39,9 @@ public class PaymentService {
 
     @Autowired
     private UserRankingRepository userRankingRepository;
+
+    @Autowired
+    private NotificationService notificationService;
 
     private long getAmountFromPackageId(Integer packageId){
         if (packageId == 1) {
@@ -162,9 +166,19 @@ public class PaymentService {
                         .orElseThrow(() -> new EntityNotFoundException("UserRanking not found for user id: " + transaction.getUser().getId()));
                 userRanking.setConsumptionPoints(userRanking.getConsumptionPoints() + transaction.getPointsPurchased());
                 userRankingRepository.save(userRanking);
+
+                User user = transaction.getUser();
+                String message = "Bạn đã mua thành công " + transaction.getPointsPurchased() + " điểm tiêu dùng!.";
+                String link = "/user/profile";
+                notificationService.createNotification(user, message, link, NotificationType.PAYMENT_SUCCESS);
             } else {
                 logger.warn("Payment failed for transaction: {}, ResponseCode: {}", vnp_TxnRef, vnp_ResponseCode);
                 transaction.setStatus(PaymentStatus.FAILED);
+
+                User user = transaction.getUser();
+                String message = "Giao dịch mua điểm tiêu dùng không thành công!";
+                String link = "";
+                notificationService.createNotification(user, message, link, NotificationType.PAYMENT_FAILURE);
             }
             paymentTransactionRepository.save(transaction);
             return "00".equals(vnp_ResponseCode);

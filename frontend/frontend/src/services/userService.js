@@ -64,4 +64,37 @@ export const userService = {
         const response = await api.get('/api/user/me/history', { params });
         return response.data;
     },
+
+    /**
+     * Lấy danh sách thông báo của người dùng hiện tại.
+     */
+    getNotifications: async () => {
+        const response = await api.get('/api/notifications');
+        return response.data;
+    },
+
+    /**
+     * Lấy số lượng thông báo chưa đọc của người dùng hiện tại.
+     */
+    getUnreadNotificationCount: async () => {
+        const response = await api.get('/api/notifications/unread-count');
+        return response.data;
+    },
+
+    /**
+     * Đánh dấu một thông báo là đã đọc.
+     * @param {number} notificationId - ID của thông báo.
+     */
+    markNotificationAsRead: async (notificationId) => {
+        // Trả về response để có thể xử lý tiếp nếu cần
+        return await api.post(`/api/notifications/${notificationId}/read`);
+    },
+
+    /**
+     * Đánh dấu tất cả thông báo là đã đọc.
+     */
+    markAllNotificationsAsRead: async () => {
+        // Trả về response để có thể xử lý tiếp nếu cần
+        return await api.post('/api/notifications/read-all');
+    },
 };

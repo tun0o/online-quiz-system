@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { useEffect, useState } from 'react';
 import api from '@/services/api.js';
+import { userService } from '@/services/userService';
 
 const useAuthStore = create(
     persist(
@@ -10,6 +11,7 @@ const useAuthStore = create(
             accessToken: null,
             refreshToken: null,
             loading: true,
+            unreadCount: 0,
 
             // --- ACTIONS ---
 
@@ -89,6 +91,26 @@ const useAuthStore = create(
                 set((state) => ({ user: { ...state.user, ...partialUser } }));
             },
 
+            // --- NOTIFICATION ACTIONS ---
+
+            setUnreadCount: (count) => {
+                set({ unreadCount: Math.max(0, count) });
+            },
+
+            fetchUnreadCount: async () => {
+                // Chỉ fetch khi đã đăng nhập
+                if (!get().isAuthenticated()) {
+                    set({ unreadCount: 0 });
+                    return;
+                }
+                try {
+                    const count = await userService.getUnreadNotificationCount();
+                    set({ unreadCount: count });
+                } catch (error) {
+                    console.error("Failed to fetch unread notification count:", error);
+                }
+            },
+
             // --- GETTERS / HELPERS ---
 
             isAuthenticated: () => !!get().user,
@@ -119,6 +141,7 @@ const useAuthStore = create(
                 user: state.user,
                 accessToken: state.accessToken,
                 refreshToken: state.refreshToken,
+                // không lưu unreadCount vào localStorage, sẽ fetch lại mỗi lần tải trang
             }),
             // Hàm được gọi sau khi state được lấy lại từ storage
             // onRehydrateStorage đã được chứng minh là không đáng tin cậy cho việc set state.

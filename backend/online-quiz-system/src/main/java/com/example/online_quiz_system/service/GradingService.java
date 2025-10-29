@@ -3,11 +3,14 @@ package com.example.online_quiz_system.service;
 import com.example.online_quiz_system.dto.*;
 import com.example.online_quiz_system.entity.EssayGradingRequest;
 import com.example.online_quiz_system.entity.QuizAttempt;
+import com.example.online_quiz_system.entity.User;
 import com.example.online_quiz_system.entity.UserAnswer;
 import com.example.online_quiz_system.enums.GradingStatus;
+import com.example.online_quiz_system.enums.NotificationType;
 import com.example.online_quiz_system.repository.EssayGradingRequestRepository;
 import com.example.online_quiz_system.repository.QuizAttemptRepository;
 import com.example.online_quiz_system.repository.UserAnswerRepository;
+import com.example.online_quiz_system.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,6 +33,12 @@ public class GradingService {
 
     @Autowired
     private UserAnswerRepository userAnswerRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private NotificationService notificationService;
 
     public List<GradingRequestDTO> getPendingGradingRequests() {
         return gradingRequestRepository.findPendingGradingRequests();
@@ -95,5 +105,17 @@ public class GradingService {
         request.setCompletedAt(LocalDateTime.now());
 //        request.setAssignedTo();
         gradingRequestRepository.save(request);
+
+        User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + request.getUserId()));
+
+        LocalDateTime requestedAt = request.getRequestedAt();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
+
+        String formattedTime = requestedAt.format(formatter);
+
+        String message = "Yêu cầu chấm bài cho đề thi có tiêu đề '" + request.getQuizAttempt().getQuizSubmission().getTitle() + "' vào lúc " + formattedTime + " của bạn đã được hoàn tất!";
+        String link = "/attempts/" + request.getQuizAttempt().getId() + "/result";
+        notificationService.createNotification(user, message, link, NotificationType.GRADING_COMPLETED);
     }
 }

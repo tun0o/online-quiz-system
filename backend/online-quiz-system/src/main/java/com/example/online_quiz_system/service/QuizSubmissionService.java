@@ -4,12 +4,10 @@ import com.example.online_quiz_system.dto.AnswerOptionDTO;
 import com.example.online_quiz_system.dto.QuestionDTO;
 import com.example.online_quiz_system.dto.QuizSubmissionDTO;
 import com.example.online_quiz_system.entity.*;
-import com.example.online_quiz_system.enums.DifficultyLevel;
-import com.example.online_quiz_system.enums.QuestionType;
-import com.example.online_quiz_system.enums.Subject;
-import com.example.online_quiz_system.enums.SubmissionStatus;
+import com.example.online_quiz_system.enums.*;
 import com.example.online_quiz_system.repository.QuizSubmissionRepository;
 import com.example.online_quiz_system.repository.UserRankingRepository;
+import com.example.online_quiz_system.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,6 +29,11 @@ public class QuizSubmissionService {
 
     @Autowired
     private UserRankingRepository userRankingRepository;
+
+    @Autowired
+    private NotificationService notificationService;
+    @Autowired
+    private UserRepository userRepository;
 
     public QuizSubmission submitQuiz(QuizSubmissionDTO dto, Long contributorId){
         QuizSubmission submission = new QuizSubmission();
@@ -168,7 +171,7 @@ public class QuizSubmissionService {
         if(dto.getQuestions() != null){
             List<SubmissionQuestion> questions = dto.getQuestions().stream()
                     .map(q -> mapToQuestion(q, submission))
-                    .collect(Collectors.toList());
+                    .toList();
             submission.getQuestions().addAll(questions);
         }
 
@@ -202,6 +205,12 @@ public class QuizSubmissionService {
         submission.setApprovedBy(adminId);
         submission.setApprovedAt(LocalDateTime.now());
 
+        User contributor = userRepository.findById(submission.getContributorId())
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + submission.getContributorId()));
+        String message = "Đề thi với tiêu đề '" + submission.getTitle() + "' của bạn đã được phê duyệt. Bạn nhận được 50 điểm tiêu dùng!";
+        String link = "/contribute";
+        notificationService.createNotification(contributor, message, link, NotificationType.SUBMISSION_APPROVED);
+
         return submissionRepository.save(submission);
     }
 
@@ -211,6 +220,12 @@ public class QuizSubmissionService {
         submission.setStatus(SubmissionStatus.REJECTED);
         submission.setAdminFeedback(reason);
         submission.setApprovedBy(adminId);
+
+        User contributor = userRepository.findById(submission.getContributorId())
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + submission.getContributorId()));
+        String message = "Đề thi với tiêu đề '" + submission.getTitle() + "' của bạn đã bị từ chối!";
+        String link = "/contribute";
+        notificationService.createNotification(contributor, message, link, NotificationType.SUBMISSION_REJECTED);
 
         return submissionRepository.save(submission);
     }

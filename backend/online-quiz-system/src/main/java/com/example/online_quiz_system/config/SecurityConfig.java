@@ -88,7 +88,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/user/**").hasRole("USER")
                         .requestMatchers("/api/quiz-submissions/public").permitAll()
                         .requestMatchers("/api/challenges/leaderboard").permitAll() // Cho phép xem bảng xếp hạng công khai
-                        .requestMatchers("/api/quiz-submissions/**", "/api/challenges/**", "/api/quizzes/**").authenticated() // Các API còn lại cần đăng nhập
+                        .requestMatchers("/api/quiz-submissions/**", "/api/challenges/**", "/api/quizzes/**", "api/notifications/**").authenticated() // Các API còn lại cần đăng nhập
                         .requestMatchers("/oauth2/**", "/login/**", "/oauth2/authorization/**", "/login/oauth2/**").permitAll()
                         .anyRequest().authenticated()
                 )

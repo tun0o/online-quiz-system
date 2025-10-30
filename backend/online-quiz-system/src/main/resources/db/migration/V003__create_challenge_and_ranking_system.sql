@@ -78,16 +78,16 @@ CREATE INDEX idx_daily_point_history_user_date ON daily_point_history(user_id, a
 -- Insert default challenge templates (3 levels per day)
 INSERT INTO challenge_templates (title, description, challenge_type, difficulty_level, target_value, reward_points) VALUES
 -- Easy challenges
-('Trả lời đúng 5 câu', 'Trả lời đúng 5 câu hỏi bất kỳ trong ngày', 'CORRECT_ANSWERS', 'EASY', 5, 10),
+('Trả lời đúng 5 câu hỏi', 'Trả lời đúng 5 câu hỏi trắc nghiệm hoặc đúng/sai trong ngày', 'CORRECT_ANSWERS', 'EASY', 5, 10),
 ('Học 5 phút', 'Dành 5 phút để làm bài tập', 'STUDY_TIME_MINUTES', 'EASY', 5, 10),
 ('Hoàn thành 1 đề thi', 'Hoàn thành 1 đề thi bất kỳ', 'COMPLETE_QUIZZES', 'EASY', 1, 15),
 
 -- Medium challenges  
-('Trả lời đúng 10 câu', 'Trả lời đúng 10 câu hỏi bất kỳ trong ngày', 'CORRECT_ANSWERS', 'MEDIUM', 10, 25),
+('Trả lời đúng 10 câu hỏi', 'Trả lời đúng 10 câu hỏi trắc nghiệm hoặc đúng/sai trong ngày', 'CORRECT_ANSWERS', 'MEDIUM', 10, 25),
 ('Học 15 phút', 'Dành 15 phút để làm bài tập', 'STUDY_TIME_MINUTES', 'MEDIUM', 15, 25),
 ('Hoàn thành 3 đề thi', 'Hoàn thành 3 đề thi bất kỳ', 'COMPLETE_QUIZZES', 'MEDIUM', 3, 30),
 
 -- Hard challenges
-('Trả lời đúng 20 câu', 'Trả lời đúng 20 câu hỏi bất kỳ trong ngày', 'CORRECT_ANSWERS', 'HARD', 20, 50),
+('Trả lời đúng 20 câu hỏi', 'Trả lời đúng 20 câu hỏi trắc nghiệm hoặc đúng/sai trong ngày', 'CORRECT_ANSWERS', 'HARD', 20, 50),
 ('Học 30 phút', 'Dành 30 phút để làm bài tập', 'STUDY_TIME_MINUTES', 'HARD', 30, 50),
 ('Hoàn thành 5 đề thi', 'Hoàn thành 5 đề thi bất kỳ', 'COMPLETE_QUIZZES', 'HARD', 5, 60);

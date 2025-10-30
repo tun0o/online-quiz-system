@@ -481,7 +481,10 @@ export default function QuizTakingPage() {
       <ConfirmationModal
         isOpen={isPurchaseModalOpen}
         onClose={() => setIsPurchaseModalOpen(false)}
-        onConfirm={() => navigate('/purchase-points')}
+        onConfirm={() => {
+          window.open('/purchase-points', '_blank');
+          setIsPurchaseModalOpen(false);
+        }}
         title="Không đủ điểm"
         message="Bạn không đủ điểm để thực hiện hành động này. Bạn có muốn mua thêm điểm không?"
         confirmText="Mua điểm"

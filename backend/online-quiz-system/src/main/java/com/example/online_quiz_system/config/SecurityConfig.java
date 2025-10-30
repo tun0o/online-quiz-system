@@ -6,8 +6,10 @@ import com.example.online_quiz_system.service.CustomOAuth2UserService;
 import com.example.online_quiz_system.service.OAuth2AuthenticationSuccessHandler;
 import com.example.online_quiz_system.service.OAuth2AuthenticationFailureHandler;
 import com.example.online_quiz_system.security.HttpCookieOAuth2AuthorizationRequestRepository;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -82,6 +84,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**", "/api/payment/vnpay-return").permitAll()
                         .requestMatchers("/api/oauth2/test/**").permitAll() // OAuth2 test endpoints
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
@@ -91,6 +94,13 @@ public class SecurityConfig {
                         .requestMatchers("/api/quiz-submissions/**", "/api/challenges/**", "/api/quizzes/**", "api/notifications/**").authenticated() // Các API còn lại cần đăng nhập
                         .requestMatchers("/oauth2/**", "/login/**", "/oauth2/authorization/**", "/login/oauth2/**").permitAll()
                         .anyRequest().authenticated()
+                )
+                .exceptionHandling(e -> e
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setContentType("application/json");
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.getWriter().write("{\"error\": \"Unauthorized or invalid token\"}");
+                        })
                 )
                 .authenticationProvider(authenticationProvider())
                 .oauth2Login(oauth2 -> oauth2

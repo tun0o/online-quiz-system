@@ -11,4 +11,5 @@ public class QuestionResultDTO {
     private SubmissionAnswerOption correctAnswer;
     private Boolean isCorrect;
     private String explanation;
+    private String imageUrl;
 }

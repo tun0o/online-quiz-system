@@ -236,10 +236,10 @@ export default function QuizTakingPage() {
           <div className="p-6 min-h-[300px]">
             <h2 className="text-xl font-semibold mb-6 text-gray-800">{currentQuestion.questionText}</h2>
 
-            {/* Hiển thị hình ảnh nếu có */}
+            {/* Hiển thị hình ảnh nếu có (thay đổi class để ảnh hiển thị lớn và rõ hơn) */}
             {currentQuestion.imageUrl && (
-              <div className="mb-4 border rounded-lg overflow-hidden">
-                <img src={currentQuestion.imageUrl} alt={`Hình ảnh cho câu ${currentQuestionIndex + 1}`} className="max-w-full h-auto mx-auto" />
+              <div className="mb-6 p-2 border rounded-lg bg-gray-50">
+                <img src={currentQuestion.imageUrl} alt={`Hình ảnh cho câu ${currentQuestionIndex + 1}`} className="max-w-full max-h-[400px] mx-auto object-contain" />
               </div>
             )}
 
@@ -391,10 +391,10 @@ export default function QuizTakingPage() {
                 <div key={res.questionId} className={`border text-gray-600 border-gray-200 rounded-lg p-5 ${!wasAnswered ? 'bg-gray-200' : 'bg-white'}`}>
                   <p className="font-semibold mb-3">Câu {index + 1}: {res.questionText}</p>
 
-                  {/* Hiển thị hình ảnh nếu có */}
+                  {/* Hiển thị hình ảnh nếu có (thay đổi class để ảnh hiển thị lớn và rõ hơn) */}
                   {res.imageUrl && (
-                    <div className="mb-4 border rounded-lg overflow-hidden">
-                      <img src={res.imageUrl} alt={`Hình ảnh cho câu ${index + 1}`} className="max-w-full h-auto mx-auto" />
+                    <div className="mb-4 p-2 border rounded-lg bg-gray-50">
+                      <img src={res.imageUrl} alt={`Hình ảnh cho câu ${index + 1}`} className="max-w-full max-h-[400px] mx-auto object-contain" />
                     </div>
                   )}
 

@@ -150,10 +150,12 @@ export const quizService = {
         return response.data;
     },
 
-    uploadQuestionImage: async (questionId, imageFile) => {
+    uploadQuestionImage: async (imageFile) => {
         const formData = new FormData();
-        formData.append('image', imageFile);
-        const response = await api.post(`/api/quiz-submissions/questions/${questionId}/image`, formData);
-        return response.data;
+        // Key 'file' phải khớp với @RequestParam("file") ở backend
+        formData.append('file', imageFile);
+        const response = await api.post(`/api/quiz-submissions/questions/image`, formData);
+        // Trả về trực tiếp URL thay vì cả object response
+        return response.data.imageUrl;
     }
 };

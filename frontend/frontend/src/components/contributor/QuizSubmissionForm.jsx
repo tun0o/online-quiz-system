@@ -360,12 +360,12 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
                     Hình ảnh (tùy chọn)
                   </label>
                   {question.imageUrl ? (
-                    <div className="relative group w-48 h-32 border border-gray-300 rounded-lg p-2">
-                      <img src={question.imageUrl} alt="Xem trước" className="w-full h-full object-contain rounded" />
+                    <div className="relative group w-full max-w-md border border-gray-300 rounded-lg p-2 bg-gray-50">
+                      <img src={question.imageUrl} alt="Xem trước" className="w-full h-auto max-h-80 object-contain rounded" />
                       <button
                         type="button"
                         onClick={() => updateQuestion(qIndex, 'imageUrl', null)}
-                        className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute item-center justify-center top-1 right-1 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         <X size={14} />
                       </button>
@@ -534,8 +534,6 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
         </div>
 
         {/* Submit Button */}
-
-
         <div className="flex justify-end">
           <button
             type="submit"

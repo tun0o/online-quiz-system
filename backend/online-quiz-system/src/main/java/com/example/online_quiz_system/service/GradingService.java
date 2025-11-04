@@ -57,7 +57,8 @@ public class GradingService {
                         ua.getQuestion().getQuestionText(),
                         ua.getAnswerText(),
                         ua.getQuestion().getEssayGuidelines(),
-                        ua.getQuestion().getMaxScore()
+                        ua.getQuestion().getMaxScore(),
+                        ua.getQuestion().getImageUrl()
                 ))
                 .collect(Collectors.toList());
 

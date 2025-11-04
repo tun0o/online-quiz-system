@@ -14,4 +14,5 @@ public class EssayQuestionToGradeDTO {
     private String userAnswerText;
     private String essayGuidelines;
     private BigDecimal maxScore;
+    private String imageUrl;
 }

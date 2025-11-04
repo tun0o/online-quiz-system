@@ -58,8 +58,6 @@ public class MinioService {
             }
             String objectName = subfolder + "/" + UUID.randomUUID() + fileExtension;
 
-            System.out.println("✅ Uploaded to bucket: " + bucketName + " | object: " + objectName);
-
             minioClient.putObject(
                     PutObjectArgs.builder()
                             .bucket(bucketName)

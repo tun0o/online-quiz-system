@@ -102,10 +102,9 @@ export default function GradingDetailPage() {
             <h3 className="font-bold text-lg text-gray-800 mb-2">Câu {index + 1}: {q.questionText}</h3>
             {q.essayGuidelines && <div className="mb-4 p-3 bg-blue-50 border-l-4 border-blue-300 text-sm text-blue-800">{q.essayGuidelines}</div>}
 
-            {/* Hiển thị hình ảnh nếu có */}
-            {question.imageUrl && (
-              <div className="mb-4 border rounded-lg overflow-hidden">
-                <img src={question.imageUrl} alt={`Hình ảnh cho câu ${index + 1}`} className="max-w-full h-auto mx-auto" />
+            {q.imageUrl && ( // Thay đổi class để ảnh hiển thị lớn và rõ hơn
+              <div className="mb-4 p-2 border rounded-lg bg-gray-50">
+                <img src={q.imageUrl} alt={`Hình ảnh cho câu ${index + 1}`} className="max-w-full max-h-[500px] mx-auto object-contain" />
               </div>
             )}
 

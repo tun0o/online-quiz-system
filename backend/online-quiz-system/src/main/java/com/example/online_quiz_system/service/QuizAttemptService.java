@@ -62,6 +62,7 @@ public class QuizAttemptService {
                     qDTO.setQuestionText(q.getQuestionText());
                     qDTO.setQuestionType(q.getQuestionType());
                     qDTO.setEssayGuidelines(q.getEssayGuidelines());
+                    qDTO.setImageUrl(q.getImageUrl());
 
                     List<AnswerOptionForTakingDTO> optionDTOs = q.getAnswerOptions().stream()
                             .map(o -> {
@@ -161,6 +162,7 @@ public class QuizAttemptService {
                     questionResult.setQuestionText(question.getQuestionText());
                     questionResult.setExplanation(question.getExplanation());
                     questionResult.setUserAnswer(userAnswerMap.get(question.getId()));
+                    questionResult.setImageUrl(question.getImageUrl());
 
                     SubmissionAnswerOption correctOption = question.getAnswerOptions().stream()
                             .filter(SubmissionAnswerOption::getIsCorrect).findFirst().orElse(null);

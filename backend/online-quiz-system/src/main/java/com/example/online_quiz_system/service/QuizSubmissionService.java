@@ -63,6 +63,7 @@ public class QuizSubmissionService {
         question.setQuestionType(dto.getQuestionType());
         question.setExplanation(dto.getExplanation());
         question.setMaxScore(dto.getMaxScore());
+        question.setImageUrl(dto.getImageUrl());
         question.setEssayGuidelines(dto.getEssayGuidelines());
 
         if(dto.getAnswerOptions() != null && dto.getQuestionType() != QuestionType.ESSAY){
@@ -161,6 +162,7 @@ public class QuizSubmissionService {
         submission.setDescription(dto.getDescription());
         submission.setSubject(dto.getSubject());
         submission.setDurationMinutes(dto.getDurationMinutes());
+        submission.setDifficultyLevel(dto.getDifficultyLevel());
 
         submission.getQuestions().clear();
         if(dto.getQuestions() != null){

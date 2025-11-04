@@ -65,10 +65,10 @@ export default function SubmissionDetailView({ submission }) {
             </div>
             <p className="mb-4 whitespace-pre-wrap">{question.questionText}</p>
 
-            {/* Hiển thị hình ảnh nếu có */}
+            {/* Hiển thị hình ảnh nếu có (thay đổi class để ảnh hiển thị lớn và rõ hơn) */}
             {question.imageUrl && (
-              <div className="mb-4 border rounded-lg overflow-hidden">
-                <img src={question.imageUrl} alt={`Hình ảnh cho câu ${qIndex + 1}`} className="max-w-full h-auto mx-auto" />
+              <div className="mb-4 p-2 border rounded-lg bg-gray-100">
+                <img src={question.imageUrl} alt={`Hình ảnh cho câu ${qIndex + 1}`} className="max-w-full max-h-[500px] mx-auto object-contain" />
               </div>
             )}
             

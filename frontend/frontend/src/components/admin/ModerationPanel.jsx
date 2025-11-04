@@ -244,7 +244,7 @@ export default function ModerationPanel() {
                       {/* Hiển thị hình ảnh nếu có */}
                       {question.imageUrl && (
                         <div className="mb-4 border rounded-lg overflow-hidden">
-                          <img src={question.imageUrl} alt={`Hình ảnh cho câu ${index + 1}`} className="max-w-full h-auto mx-auto" />
+                          <img src={question.imageUrl} alt={`Hình ảnh cho câu ${index + 1}`} className="max-w-full h-48 mx-auto object-cover" />
                         </div>
                       )}
 

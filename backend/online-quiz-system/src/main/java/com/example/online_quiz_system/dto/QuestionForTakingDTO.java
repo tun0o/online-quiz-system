@@ -11,5 +11,6 @@ public class QuestionForTakingDTO {
     private String questionText;
     private QuestionType questionType;
     private String essayGuidelines;
+    private String imageUrl;
     private List<AnswerOptionForTakingDTO> answerOptions;
 }

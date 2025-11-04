@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { User, Mail, Calendar, BookOpen, Target, Award, Star, TrendingUp, DollarSign, ChartBar, Edit, Link2, Chrome, Facebook } from 'lucide-react';
+import { User, Mail, BookOpen, Target, DollarSign, ChartBar, Edit, Link2, Chrome, Facebook} from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { userService } from '@/services/userService';
 import EditProfileModal from './EditProfileModal'; // Import the new modal component
@@ -35,7 +35,17 @@ const UserProfilePage = () => {
     const handleSaveProfile = async (updatedData) => {
         setIsSavingProfile(true);
         try {
-            const response = await userService.updateUserProfile(updatedData);
+            let finalUserData = { ...updatedData };
+
+            if (updatedData.avatarFile) {
+                // Nếu có file avatar mới, tải lên server trước
+                const avatarUrl = await userService.uploadUserAvatar(updatedData.avatarFile);
+                finalUserData.avatarUrl = avatarUrl;
+            }
+
+            delete finalUserData.avatarFile; // Xoá trường không cần thiết trước khi gửi
+
+            const response = await userService.updateUserProfile(finalUserData);
             // Update the user in the auth context
             updateUser(response); // Assuming response contains the updated user object
             toast.success("Cập nhật hồ sơ thành công!");
@@ -69,8 +79,25 @@ const UserProfilePage = () => {
 
     return (
         <div className="min-h-screen bg-gray-50 p-6">
-            <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-xl p-8">
-                <h1 className="text-3xl font-extrabold text-gray-900 mb-8 text-center">Hồ sơ của tôi</h1>
+            <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl p-8">
+                <div className="flex flex-col items-center mb-8">
+                    <div className="relative">
+                        <img
+                            src={user.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || user.email)}&background=0D89EC&color=fff&size=128`}
+                            alt="Avatar"
+                            className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
+                        />
+                        <button
+                            onClick={() => setIsEditModalOpen(true)}
+                            className="absolute bottom-0 right-0 bg-green-600 text-white p-2 rounded-full hover:bg-green-700 transition-transform duration-200 hover:scale-110 shadow-md"
+                            title="Chỉnh sửa hồ sơ"
+                        >
+                            <Edit size={16} />
+                        </button>
+                    </div>
+                    <h1 className="text-3xl font-extrabold text-gray-900 mt-4">{user.name || user.email}</h1>
+                    <p className="text-gray-500">Thành viên từ {user.createdAt ? new Date(user.createdAt).toLocaleDateString('vi-VN') : 'Không xác định'}</p>
+                </div>
 
                 <div className="space-y-8">
                     {/* Thông tin cá nhân */}
@@ -81,13 +108,8 @@ const UserProfilePage = () => {
                         <div className="space-y-2">
                             <InfoItem icon={<Mail className="h-5 w-5 text-gray-400" />} label="Email" value={user.email} />
                             <InfoItem icon={<User className="h-5 w-5 text-gray-400" />} label="Tên hiển thị" value={user.name} />
-                            <InfoItem icon={<BookOpen className="h-5 w-5 text-gray-400" />} label="Lớp học" value={user.grade} />
+                            <InfoItem icon={<BookOpen className="h-5 w-5 text-gray-400" />} label="Lớp học" value={user.grade || 'Chưa cập nhật'} />
                             <InfoItem icon={<Target className="h-5 w-5 text-gray-400" />} label="Mục tiêu" value={goalDisplayMap[user.goal] || 'Chưa cập nhật'} />
-                            <InfoItem
-                                icon={<Calendar className="h-5 w-5 text-gray-400" />}
-                                label="Ngày tham gia"
-                                value={user.createdAt ? new Date(user.createdAt).toLocaleDateString('vi-VN') : 'Không xác định'}
-                            />
                             {user.provider && user.provider !== 'local' && (
                                 <div className="!my-4"> {/* Thêm khoảng trống trên và dưới */}
                                     <div className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700">
@@ -109,20 +131,13 @@ const UserProfilePage = () => {
                                 </div>
                             )}
                         </div>
-                        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="mt-8 grid grid-cols-1 gap-4">
                             <Link
                                 to="/user/dashboard"
                                 className="w-full flex items-center justify-center px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200"
                             >
                                 <ChartBar size={16} className="mr-2" /> Thống kê
                             </Link>
-                            <button
-                                onClick={() => setIsEditModalOpen(true)}
-                                className="w-full flex items-center justify-center px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-white bg-white hover:bg-gray-50 transition-colors duration-200"
-                            >
-                                <Edit size={16} className="mr-2" />
-                                Chỉnh sửa hồ sơ
-                            </button>
                         </div>
                     </div>
 

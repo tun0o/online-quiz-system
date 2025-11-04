@@ -97,4 +97,17 @@ export const userService = {
         // Trả về response để có thể xử lý tiếp nếu cần
         return await api.post('/api/notifications/read-all');
     },
+
+    /**
+     * Tải lên avatar của người dùng và trả về URL của ảnh.
+     * @param {File} avatarFile - File ảnh để tải lên.
+     * @returns {Promise<string>} URL của avatar đã được tải lên.
+     */
+    uploadUserAvatar: async (avatarFile) => {
+        const formData = new FormData();
+        // Key 'file' phải khớp với @RequestParam("file") ở backend
+        formData.append('file', avatarFile);
+        const response = await api.post('/api/user/me/avatar', formData);
+        return response.data.avatarUrl; // Trả về trực tiếp URL
+    },
 };

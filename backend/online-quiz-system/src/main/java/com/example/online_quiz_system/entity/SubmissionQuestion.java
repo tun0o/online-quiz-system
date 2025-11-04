@@ -44,6 +44,9 @@ public class SubmissionQuestion {
     @Column(name = "essay_guidelines", columnDefinition = "TEXT")
     private String essayGuidelines;
 
+    @Column(name = "image_url")
+    private String imageUrl;
+
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private List<SubmissionAnswerOption> answerOptions = new ArrayList<>();
 }

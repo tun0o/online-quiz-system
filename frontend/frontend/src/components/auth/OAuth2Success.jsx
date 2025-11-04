@@ -51,7 +51,8 @@ const OAuth2Success = () => {
                     createdAt: createdAt || null,
                     name: name ? decodeURIComponent(name) : email.split('@')[0], // Fallback name
                     roles: rolesParam ? JSON.parse(decodeURIComponent(rolesParam)) : ['ROLE_USER'],
-                    verified: verifiedParam === 'true'
+                    verified: verifiedParam === 'true',
+                    avatarUrl: searchParams.get('avatarUrl') || null,
                 };
 
                 setUserData(user);

@@ -17,6 +17,7 @@ public class QuestionDTO {
     private String explanation;
     private BigDecimal maxScore = BigDecimal.valueOf(10.0);
     private String essayGuidelines;
+    private String imageUrl;
 
     @Valid
     private List<AnswerOptionDTO> answerOptions;

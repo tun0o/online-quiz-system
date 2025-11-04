@@ -2,10 +2,7 @@ import axios from 'axios';
 import { useAuthStore } from '@/hooks/useAuth';
 
 const api = axios.create({
-    baseURL: 'http://localhost:8080',
-    headers: {
-        'Content-Type': 'application/json',
-    },
+    baseURL: 'http://localhost:8080'
 });
 
 // Request interceptor để thêm token vào header

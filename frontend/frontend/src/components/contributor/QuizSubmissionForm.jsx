@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Plus, Trash2, Save } from 'lucide-react';
+import { Plus, Trash2, Save, UploadCloud, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { quizService } from '@/services/quizService';
 
@@ -75,6 +75,8 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
     return {
       clientKey: `q_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
       questionText: '',
+      imageUrl: null,
+      imageFile: null, // Dùng để lưu file ảnh tạm thời ở client
       questionType: 'MULTIPLE_CHOICE',
       explanation: '',
       maxScore: 10.0,
@@ -125,6 +127,21 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
     }));
   };
 
+  const handleQuestionImageChange = (qIndex, file) => {
+    if (file && file.type.startsWith('image/')) {
+      // Tạo URL tạm thời để xem trước
+      const previewUrl = URL.createObjectURL(file);
+      const updatedQuestions = [...formData.questions];
+      updatedQuestions[qIndex] = {
+        ...updatedQuestions[qIndex],
+        imageFile: file,
+        imageUrl: previewUrl, // Dùng imageUrl để hiển thị preview
+      };
+      setFormData(prev => ({ ...prev, questions: updatedQuestions }));
+    } else if (file) {
+      toast.warn('Vui lòng chọn một file ảnh hợp lệ.');
+    }
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -151,16 +168,32 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
       return;
     }
 
-    // Chuẩn bị dữ liệu để gửi đi: loại bỏ các trường chỉ dùng ở client (như clientKey)
-    const payload = {
-      ...formData,
-      questions: formData.questions.map(q => {
-        // Loại bỏ clientKey và difficultyLevel khỏi mỗi câu hỏi
+    // Xử lý tải ảnh lên
+    const questionsWithImageUrls = await Promise.all(
+      formData.questions.map(async (q) => {
+        let finalImageUrl = q.imageUrl;
+
+        // Nếu có file ảnh mới (imageFile), tải nó lên
+        if (q.imageFile) {
+          try {
+            finalImageUrl = await quizService.uploadQuestionImage(q.imageFile);
+          } catch (uploadError) {
+            toast.error(`Lỗi tải ảnh cho câu hỏi: ${q.questionText.substring(0, 20)}...`);
+            throw uploadError; // Dừng quá trình submit
+          }
+        }
+
         // eslint-disable-next-line no-unused-vars
-        const { clientKey, difficultyLevel, ...questionData } = q;
-        return questionData;
+        const { clientKey, imageFile, ...questionData } = q;
+        return {
+          ...questionData,
+          imageUrl: finalImageUrl,
+        };
       })
-    };
+    );
+
+    // Chuẩn bị payload cuối cùng
+    const payload = { ...formData, questions: questionsWithImageUrls };
 
     try {
       if (formData.id) {
@@ -320,6 +353,37 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
                     placeholder="Nhập câu hỏi..."
                   />
                 </div>
+
+                {/* Image Upload Section */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Hình ảnh (tùy chọn)
+                  </label>
+                  {question.imageUrl ? (
+                    <div className="relative group w-48 h-32 border border-gray-300 rounded-lg p-2">
+                      <img src={question.imageUrl} alt="Xem trước" className="w-full h-full object-contain rounded" />
+                      <button
+                        type="button"
+                        onClick={() => updateQuestion(qIndex, 'imageUrl', null)}
+                        className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="w-full flex flex-col items-center px-4 py-6 bg-white text-blue rounded-lg shadow-sm tracking-wide uppercase border border-blue-500 border-dashed cursor-pointer hover:bg-blue-50 hover:text-blue-700">
+                      <UploadCloud size={24} />
+                      <span className="mt-2 text-sm leading-normal">Chọn ảnh</span>
+                      <input
+                        type='file'
+                        className="hidden"
+                        accept="image/*"
+                        onChange={(e) => handleQuestionImageChange(qIndex, e.target.files[0])}
+                      />
+                    </label>
+                  )}
+                </div>
+
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>

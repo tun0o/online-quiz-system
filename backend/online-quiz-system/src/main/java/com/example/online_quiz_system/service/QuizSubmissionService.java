@@ -84,11 +84,6 @@ public class QuizSubmissionService {
     }
 
     @Transactional(readOnly = true)
-    public Page<QuizSubmission> getAllSubmissions(Pageable pageable){
-        return submissionRepository.findAll(pageable);
-    }
-
-    @Transactional(readOnly = true)
     public Page<QuizSubmission> findPublicQuizzes(String keyword, String subject, String difficulty, Pageable pageable){
         Specification<QuizSubmission> spec = isApproved();
 

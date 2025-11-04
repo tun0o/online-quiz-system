@@ -4,6 +4,7 @@ import com.example.online_quiz_system.dto.QuizSubmissionDTO;
 import com.example.online_quiz_system.dto.RejectSubmissionDTO;
 import com.example.online_quiz_system.entity.QuizSubmission;
 import com.example.online_quiz_system.security.UserPrincipal;
+import com.example.online_quiz_system.service.MinioService;
 import com.example.online_quiz_system.service.QuizSubmissionService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("api/quiz-submissions")
@@ -23,6 +27,9 @@ public class QuizSubmissionController {
 
     @Autowired
     private QuizSubmissionService submissionService;
+
+    @Autowired
+    private MinioService minioService;
 
     // Helper để lấy userId từ SecurityContext
     private Long getCurrentUserId() {
@@ -129,5 +136,19 @@ public class QuizSubmissionController {
 
         QuizSubmission submission = submissionService.rejectSubmission(id, dto.getReason(), adminId);
         return ResponseEntity.ok(submission);
+    }
+
+    @PostMapping("/questions/image")
+    public ResponseEntity<?> uploadQuestionImage(@RequestParam("file")MultipartFile file) {
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "File không được để trống"));
+        }
+        try {
+            String imageUrl = minioService.uploadFile(file, "question-images");
+            return ResponseEntity.ok(Map.of("imageUrl", imageUrl));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Lỗi khi tải ảnh lên: " + e.getMessage()));
+        }
     }
 }

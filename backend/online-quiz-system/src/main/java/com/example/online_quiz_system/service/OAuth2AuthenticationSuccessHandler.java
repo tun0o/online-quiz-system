@@ -146,6 +146,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                 .queryParam("createdAt", user.getCreatedAt() != null ? user.getCreatedAt().toString() : "")
                 .queryParam("roles", URLEncoder.encode(rolesJson, StandardCharsets.UTF_8))
                 .queryParam("verified", String.valueOf(user.isVerified()))
+                .queryParam("avatarUrl", user.getAvatarUrl() != null ? user.getAvatarUrl() : "")
                 .build().toUriString();
 
         OAuth2Logger.logAuthSuccess(user.getProvider(), user.getEmail(), user.getId().toString());

@@ -307,7 +307,8 @@ public class AuthController {
                 user.getGoal(),
                 user.getCreatedAt(),
                 roles,
-                user.isVerified()
+                user.isVerified(),
+                user.getAvatarUrl()
         );
 
         return new JwtResponseDTO(accessToken, refreshToken, userDTO);

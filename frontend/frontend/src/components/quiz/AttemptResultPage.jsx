@@ -91,6 +91,13 @@ const AttemptResultPage = () => {
                                 {isCorrect === null && <HelpCircle className="text-yellow-500 flex-shrink-0 ml-4" />}
                             </div>
 
+                            {/* Hiển thị hình ảnh nếu có */}
+                            {question.imageUrl && (
+                                <div className="mb-4 border rounded-lg overflow-hidden">
+                                    <img src={question.imageUrl} alt={`Hình ảnh cho câu ${index + 1}`} className="max-w-full h-auto mx-auto" />
+                                </div>
+                            )}
+
                             {question.questionType !== 'ESSAY' ? (
                                 <div className="space-y-3 text-gray-700">
                                     {question.options.map(option => (

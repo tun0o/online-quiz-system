@@ -299,9 +299,11 @@ function AppLayout() {
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center text-white font-bold">
-                        {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()}
-                      </div>
+                      <img
+                        src={user.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || user.email)}&background=28a745&color=fff`}
+                        alt="Avatar"
+                        className="w-10 h-10 rounded-full object-cover border-2 border-green-200"
+                      />
                       <div>
                         <p className="font-medium text-gray-800">{user?.name || user?.email}</p>
                       </div>

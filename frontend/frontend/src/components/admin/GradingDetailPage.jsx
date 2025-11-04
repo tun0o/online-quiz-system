@@ -101,7 +101,14 @@ export default function GradingDetailPage() {
           <div key={q.userAnswerId} className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <h3 className="font-bold text-lg text-gray-800 mb-2">Câu {index + 1}: {q.questionText}</h3>
             {q.essayGuidelines && <div className="mb-4 p-3 bg-blue-50 border-l-4 border-blue-300 text-sm text-blue-800">{q.essayGuidelines}</div>}
-            
+
+            {/* Hiển thị hình ảnh nếu có */}
+            {question.imageUrl && (
+              <div className="mb-4 border rounded-lg overflow-hidden">
+                <img src={question.imageUrl} alt={`Hình ảnh cho câu ${index + 1}`} className="max-w-full h-auto mx-auto" />
+              </div>
+            )}
+
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">Câu trả lời của người dùng:</label>
               <div className="p-4 bg-gray-50 text-gray-800 border border-gray-200 rounded-md whitespace-pre-wrap">{q.userAnswerText || <i className="text-gray-400">Không trả lời</i>}</div>

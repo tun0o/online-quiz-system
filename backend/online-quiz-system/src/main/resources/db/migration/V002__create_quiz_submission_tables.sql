@@ -21,7 +21,7 @@ CREATE TABLE submission_questions (
     question_text TEXT NOT NULL,
     question_type VARCHAR(20) DEFAULT 'MULTIPLE_CHOICE',
     explanation TEXT,
-    difficulty_level INTEGER DEFAULT 1,
+    image_url VARCHAR(255),
     FOREIGN KEY (submission_id) REFERENCES quiz_submissions(id) ON DELETE CASCADE
 );
 

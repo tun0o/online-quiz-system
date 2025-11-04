@@ -33,5 +33,6 @@ public class JwtResponseDTO {
         private final LocalDateTime createdAt;
         private final List<String> roles;
         private final boolean verified;
+        private final String avatarUrl;
     }
 }

@@ -149,4 +149,11 @@ export const quizService = {
         const response = await api.get(`/api/attempts/${attemptId}/result`);
         return response.data;
     },
+
+    uploadQuestionImage: async (questionId, imageFile) => {
+        const formData = new FormData();
+        formData.append('image', imageFile);
+        const response = await api.post(`/api/quiz-submissions/questions/${questionId}/image`, formData);
+        return response.data;
+    }
 };

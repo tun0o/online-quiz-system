@@ -122,7 +122,7 @@ export default function ModerationPanel() {
           <div className="p-4 border-b border-gray-200">
             <h2 className="font-semibold text-gray-800">Đề chờ duyệt</h2>
           </div>
-          
+
           <div className="max-h-96 overflow-y-auto">
             {loading ? (
               <div className="p-4 text-center text-gray-500">Đang tải...</div>
@@ -133,9 +133,8 @@ export default function ModerationPanel() {
                 <div
                   key={submission.id}
                   onClick={() => loadSubmissionDetail(submission.id)}
-                  className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition ${
-                    selectedSubmission?.id === submission.id ? 'bg-blue-50 border-l-4 border-blue-500' : ''
-                  }`}
+                  className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition ${selectedSubmission?.id === submission.id ? 'bg-blue-50 border-l-4 border-blue-500' : ''
+                    }`}
                 >
                   <div className="flex justify-between items-start gap-4">
                     <div className="flex-1">
@@ -227,13 +226,12 @@ export default function ModerationPanel() {
                           Câu {index + 1}: {question.questionText}
                         </div>
                         <div className="flex gap-2 text-xs items-center">
-                          <span className={`px-2 py-1 rounded ${
-                            question.questionType === 'MULTIPLE_CHOICE' ? 'bg-blue-100 text-blue-800' :
+                          <span className={`px-2 py-1 rounded ${question.questionType === 'MULTIPLE_CHOICE' ? 'bg-blue-100 text-blue-800' :
                             question.questionType === 'TRUE_FALSE' ? 'bg-green-100 text-green-800' :
-                            'bg-purple-100 text-purple-800'
-                          }`}>
+                              'bg-purple-100 text-purple-800'
+                            }`}>
                             {question.questionType === 'MULTIPLE_CHOICE' ? 'Trắc nghiệm' :
-                             question.questionType === 'TRUE_FALSE' ? 'Đúng/Sai' : 'Tự luận'}
+                              question.questionType === 'TRUE_FALSE' ? 'Đúng/Sai' : 'Tự luận'}
                           </span>
                           {question.questionType === 'ESSAY' && (
                             <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded">
@@ -243,17 +241,23 @@ export default function ModerationPanel() {
                         </div>
                       </div>
 
+                      {/* Hiển thị hình ảnh nếu có */}
+                      {question.imageUrl && (
+                        <div className="mb-4 border rounded-lg overflow-hidden">
+                          <img src={question.imageUrl} alt={`Hình ảnh cho câu ${index + 1}`} className="max-w-full h-auto mx-auto" />
+                        </div>
+                      )}
+
                       {/* Hiển thị đáp án cho câu trắc nghiệm và đúng/sai */}
                       {question.questionType !== 'ESSAY' && (
                         <div className="space-y-1">
                           {question.answerOptions?.map((option, optIndex) => (
                             <div
                               key={option.id}
-                              className={`text-sm px-2 py-1 rounded ${
-                                option.isCorrect
-                                  ? 'bg-green-100 text-green-800 font-medium'
-                                  : 'text-gray-600'
-                              }`}
+                              className={`text-sm px-2 py-1 rounded ${option.isCorrect
+                                ? 'bg-green-100 text-green-800 font-medium'
+                                : 'text-gray-600'
+                                }`}
                             >
                               {String.fromCharCode(65 + optIndex)}. {option.optionText}
                               {option.isCorrect && ' ✓'}

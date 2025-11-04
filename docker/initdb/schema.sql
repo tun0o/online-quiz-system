@@ -84,9 +84,11 @@ CREATE TABLE quiz_submissions (
 CREATE TABLE submission_questions (
     id BIGSERIAL PRIMARY KEY,
     submission_id BIGINT NOT NULL,
-    question_text TEXT NOT NULL,
+    question_text TEXT NOT NULL,    
     question_type question_type NOT NULL DEFAULT 'MULTIPLE_CHOICE',
     explanation TEXT,
+    max_score DECIMAL(5,2) DEFAULT 10.0,
+    essay_guidelines TEXT,
     image_url VARCHAR(255),
     FOREIGN KEY (submission_id) REFERENCES quiz_submissions(id) ON DELETE CASCADE
 );

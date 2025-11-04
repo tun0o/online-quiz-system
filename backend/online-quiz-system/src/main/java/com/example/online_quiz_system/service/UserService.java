@@ -367,6 +367,7 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng với ID: " + userId));
 
+        user.setAvatarUrl(updateDTO.getAvatarUrl());
         user.setName(updateDTO.getName());
         user.setGrade(updateDTO.getGrade());
         user.setGoal(updateDTO.getGoal());
@@ -459,5 +460,13 @@ public class UserService {
                 .toList();
 
         return new PageImpl<>(dtoList, pageable, attemptsPage.getTotalElements());
+    }
+
+    @Transactional
+    public void updateAvatar(Long userId, String avatarUrl) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+        user.setAvatarUrl(avatarUrl);
+        userRepository.save(user);
     }
 }

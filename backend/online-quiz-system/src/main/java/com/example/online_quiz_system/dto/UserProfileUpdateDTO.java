@@ -13,6 +13,8 @@ import jakarta.validation.constraints.Size;
 @Builder
 public class UserProfileUpdateDTO {
 
+    private String avatarUrl;
+
     @Size(max = 100, message = "Tên không được vượt quá 100 ký tự")
     private String name;
 

@@ -29,3 +29,21 @@ export const goalDisplayMap = {
   KNOWLEDGE_IMPROVEMENT: 'Nâng cao kiến thức',
   FUN: 'Học cho vui'
 };
+
+export const getStatusColor = (status) => {
+  const colors = {
+    PENDING: 'text-yellow-600 bg-yellow-100',
+    APPROVED: 'text-green-600 bg-green-100',
+    REJECTED: 'text-red-600 bg-red-100'
+  };
+  return colors[status] || 'text-gray-600 bg-gray-100';
+};
+
+export const getStatusText = (status) => {
+  const statusTextMap = {
+    PENDING: 'Đang chờ duyệt',
+    APPROVED: 'Đã duyệt',
+    REJECTED: 'Bị từ chối'
+  };
+  return statusTextMap[status] || 'Không xác định';
+};

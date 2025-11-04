@@ -1,5 +1,5 @@
 import React from 'react';
-import { subjectDisplayMap, difficultyDisplayMap, getDifficultyColor } from '@/utils/displayMaps';
+import { subjectDisplayMap, difficultyDisplayMap, getDifficultyColor, getStatusText, getStatusColor } from '@/utils/displayMaps';
 import { CheckCircle } from 'lucide-react';
 
 export default function SubmissionDetailView({ submission }) {
@@ -20,6 +20,16 @@ export default function SubmissionDetailView({ submission }) {
     }
   };
 
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Không xác định';
+    return new Date(dateString).toLocaleDateString('vi-VN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
   return (
     <div className="space-y-6">
       {/* Header Info */}
@@ -54,6 +64,13 @@ export default function SubmissionDetailView({ submission }) {
               </div>
             </div>
             <p className="mb-4 whitespace-pre-wrap">{question.questionText}</p>
+
+            {/* Hiển thị hình ảnh nếu có */}
+            {question.imageUrl && (
+              <div className="mb-4 border rounded-lg overflow-hidden">
+                <img src={question.imageUrl} alt={`Hình ảnh cho câu ${qIndex + 1}`} className="max-w-full h-auto mx-auto" />
+              </div>
+            )}
             
             {/* Hiển thị đáp án cho câu trắc nghiệm và đúng/sai */}
             {question.questionType !== 'ESSAY' && question.answerOptions && (
@@ -111,6 +128,31 @@ export default function SubmissionDetailView({ submission }) {
           </div>
         ))}
       </div>
+
+      {/* Status and Feedback */}
+      <div className="border-t pt-4 mt-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <span className="text-gray-500 text-sm">Trạng thái:</span>
+            <span className={`ml-2 px-2 py-1 rounded text-xs font-medium ${getStatusColor(submission.status)}`}>
+              {getStatusText(submission.status)}
+            </span>
+          </div>
+          <div className="text-sm text-gray-500">
+            Ngày tạo: {formatDate(submission.createdAt)}
+          </div>
+        </div>
+
+        {submission.status === 'REJECTED' && submission.adminFeedback && (
+          <div className="mt-4">
+            <span className="text-gray-500 text-sm font-medium">Phản hồi từ admin:</span>
+            <p className="mt-1 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-800">
+              {submission.adminFeedback}
+            </p>
+          </div>
+        )}
+      </div>
+
     </div>
   );
 }

@@ -2,10 +2,7 @@ package com.example.online_quiz_system.entity;
 
 import com.example.online_quiz_system.enums.Role;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -31,6 +28,10 @@ public class User {
     @Column(nullable=false)
     private String passwordHash;
 
+    @Column(name = "avatar_url")
+    private String avatarUrl;
+
+    @Getter
     @Builder.Default
     @Column(nullable=false)
     private boolean verified = false;
@@ -61,4 +62,5 @@ public class User {
     private List<VerificationToken> verificationTokens = new ArrayList<>();
 
     private String name;
+
 }

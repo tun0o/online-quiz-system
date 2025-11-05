@@ -18,12 +18,14 @@ public class MinioService {
     private final MinioClient minioClient;
     private final String bucketName;
     private final String endpointUrl;
+    private final String publicUrl;
 
     public MinioService(
             @Value("${minio.url}") String url,
             @Value("${minio.access-key}") String accessKey,
             @Value("${minio.secret-key}") String secretKey,
-            @Value("${minio.bucket-name}") String bucketName
+            @Value("${minio.bucket-name}") String bucketName,
+            @Value("${minio.public-url}") String publicUrl
     ) {
         this.minioClient =  MinioClient.builder()
                 .endpoint(url)
@@ -31,6 +33,7 @@ public class MinioService {
                 .build();
         this.bucketName = bucketName;
         this.endpointUrl = url;
+        this.publicUrl = publicUrl;
     }
 
     @PostConstruct
@@ -67,7 +70,7 @@ public class MinioService {
                             .build()
             );
 
-            return endpointUrl + "/" + bucketName + "/" + objectName;
+            return publicUrl + "/" + bucketName + "/" + objectName;
         } catch (Exception e) {
             throw new RuntimeException("Error uploading file to MinIO: " + e.getMessage(), e);
         }

@@ -70,6 +70,7 @@ CREATE TABLE quiz_submissions (
     title VARCHAR(255) NOT NULL,
     description TEXT,
     subject subject_enum NOT NULL,
+    difficulty_level difficulty_level,
     duration_minutes INTEGER NOT NULL,
     contributor_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     status status_enum DEFAULT 'PENDING',
@@ -196,13 +197,6 @@ CREATE TABLE essay_grading_requests (
     total_essay_questions INTEGER DEFAULT 0,
     graded_questions INTEGER DEFAULT 0
 );
-
--- Cập nhật bảng submission_questions để hỗ trợ essay
-ALTER TABLE submission_questions ADD COLUMN max_score DECIMAL(5,2) DEFAULT 10.0;
-ALTER TABLE submission_questions ADD COLUMN essay_guidelines TEXT;
-
--- Thêm cột difficulty_level vào bảng quizzes
-ALTER TABLE quiz_submissions ADD COLUMN difficulty_level difficulty_level;
 
 -- Bảng lưu lại mỗi lần người dùng làm một đề thi
 CREATE TABLE quiz_attempts (

@@ -4,11 +4,13 @@ import com.example.online_quiz_system.entity.Notification;
 import com.example.online_quiz_system.security.UserPrincipal;
 import com.example.online_quiz_system.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/notifications")
@@ -18,8 +20,9 @@ public class NotificationController {
     private NotificationService notificationService;
 
     @GetMapping
-    public ResponseEntity<List<Notification>> getNotificationsForUser(@AuthenticationPrincipal UserPrincipal userPrincipal){
-        List<Notification> notifications = notificationService.getAllNotifications(userPrincipal.getId());
+    public ResponseEntity<Page<Notification>> getNotificationsForUser(@AuthenticationPrincipal UserPrincipal userPrincipal,
+                                                                      @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable){
+        Page<Notification> notifications = notificationService.getAllNotifications(userPrincipal.getId(), pageable);
         return ResponseEntity.ok(notifications);
     }
 

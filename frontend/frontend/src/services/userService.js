@@ -68,8 +68,8 @@ export const userService = {
     /**
      * Lấy danh sách thông báo của người dùng hiện tại.
      */
-    getNotifications: async () => {
-        const response = await api.get('/api/notifications');
+    getNotifications: async (params) => {
+        const response = await api.get('/api/notifications', { params });
         return response.data;
     },
 

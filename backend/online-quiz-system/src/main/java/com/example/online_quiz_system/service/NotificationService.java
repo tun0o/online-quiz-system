@@ -5,6 +5,8 @@ import com.example.online_quiz_system.entity.User;
 import com.example.online_quiz_system.enums.NotificationType;
 import com.example.online_quiz_system.repository.NotificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,8 +25,8 @@ public class NotificationService {
     }
 
     @Transactional(readOnly = true)
-    public List<Notification> getAllNotifications(Long userId){
-        return notificationRepository.findByRecipientIdOrderByCreatedAtDesc(userId);
+    public Page<Notification> getAllNotifications(Long userId, Pageable pageable){
+        return notificationRepository.findByRecipientIdOrderByCreatedAtDesc(userId, pageable);
     }
 
     @Transactional(readOnly = true)

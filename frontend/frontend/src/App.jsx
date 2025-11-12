@@ -305,7 +305,7 @@ function AppLayout() {
                         className="w-10 h-10 rounded-full object-cover border-2 border-green-200"
                       />
                       <div>
-                        <p className="font-medium text-gray-800">{user?.name || user?.email}</p>
+                        <p className="font-medium text-gray-800">{user?.name}</p>
                       </div>
                     </div>
                   </div>

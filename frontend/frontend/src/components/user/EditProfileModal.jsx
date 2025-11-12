@@ -5,6 +5,7 @@ import { UploadCloud, X } from 'lucide-react';
 const EditProfileModal = ({ user, isOpen, onClose, onSave, isLoading }) => {
     const [formData, setFormData] = useState({
         name: '',
+        avatarUrl: '',
         grade: '',
         goal: '',
     });
@@ -16,6 +17,7 @@ const EditProfileModal = ({ user, isOpen, onClose, onSave, isLoading }) => {
         if (isOpen && user) {
             setFormData({
                 name: user.name || '',
+                avatarUrl: user.avatarUrl || '',
                 grade: user.grade || '',
                 goal: user.goal || '',
             });
@@ -57,6 +59,10 @@ const EditProfileModal = ({ user, isOpen, onClose, onSave, isLoading }) => {
     const removeAvatar = () => {
         setAvatarFile(null);
         setAvatarPreview(null);
+        setFormData(prev => ({
+            ...prev,
+            avatarUrl: null // Đặt avatarUrl thành null khi xóa
+        }));
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }

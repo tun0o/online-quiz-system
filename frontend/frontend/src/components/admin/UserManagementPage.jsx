@@ -1,12 +1,21 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
-import { Edit, UserCheck, UserX, Shield, User, UserPlus, CheckCircle, XCircle } from 'lucide-react';
+import { Edit, UserCheck, UserX, Shield, User, UserPlus, CheckCircle, XCircle, ShieldCheck } from 'lucide-react';
 import { userService } from '@/services/userService';
 import ConfirmationModal from '@/components/common/ConfirmationModal';
 import Pagination from '@/components/common/Pagination';
 
 const RoleBadge = ({ role }) => {
     const isAdmin = role === 'ADMIN';
+    const isModerator = role === 'MODERATOR';
+    if (isModerator) {
+        return (
+            <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800`}>
+                <ShieldCheck size={14} />
+                Moderator
+            </span>
+        );
+    }
     return (
         <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${isAdmin ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'
             }`}>
@@ -111,6 +120,7 @@ const UserEditModal = ({ user, isOpen, onClose, onSave }) => {
                             className="appearance-none block w-full px-3 py-3 border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
                             >
                                 <option value="USER">User</option>
+                                <option value="MODERATOR">Moderator</option>
                                 <option value="ADMIN">Admin</option>
                             </select>
                         </div>
@@ -138,7 +148,7 @@ const UserCreateModal = ({ isOpen, onClose, onSave }) => {
         email: '',
         password: '',
         name: '',
-        role: 'ADMIN',
+        role: '',
         grade: '',
         goal: ''
     };
@@ -176,9 +186,15 @@ const UserCreateModal = ({ isOpen, onClose, onSave }) => {
                         <input name="email" value={formData.email} onChange={handleChange} placeholder="Email" required className="w-full p-3 border rounded-lg text-gray-800" />
                         <input type="password" name="password" value={formData.password} onChange={handleChange} placeholder="Mật khẩu (ít nhất 8 ký tự)" required className="w-full p-3 border rounded-lg text-gray-800" />
                         <input name="name" value={formData.name} onChange={handleChange} placeholder="Tên hiển thị" required className="w-full p-3 border rounded-lg text-gray-800" />
-                        <div className="w-full p-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-500">
-                            <span className="font-medium">Vai trò: </span>
-                            <span className="font-semibold text-gray-800">ADMIN</span>
+                        <div>
+                            <select name="role" 
+                            value={formData.role || 'ADMIN'} 
+                            onChange={handleChange} placeholder="Vai trò" required
+                            className="appearance-none block w-full px-3 py-3 border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                            >
+                                <option value="ADMIN">Admin</option>
+                                <option value="MODERATOR">Moderator</option>
+                            </select>
                         </div>
                     </div>
                     <div className="mt-6 flex justify-end gap-3">
@@ -325,7 +341,7 @@ export default function UserManagementPage() {
                     className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition shadow-sm"
                 >
                     <UserPlus size={18} />
-                    Thêm tài khoản ADMIN
+                    Tạo tài khoản
                 </button>
             </div>
 
@@ -346,6 +362,7 @@ export default function UserManagementPage() {
                     >
                         <option value="">Tất cả vai trò</option>
                         <option value="USER">User</option>
+                        <option value="MODERATOR">Moderator</option>
                         <option value="ADMIN">Admin</option>
                     </select>
                     <select

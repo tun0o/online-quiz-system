@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { quizService } from '@/services/quizService';
-import { Edit, Trash2, BookOpen } from 'lucide-react';
+import { Edit, Trash2, BookOpen, Plus } from 'lucide-react';
 import { subjectDisplayMap, difficultyDisplayMap, getDifficultyColor } from '@/utils/displayMaps';
 import Pagination from '@/components/common/Pagination';
 import ConfirmationModal from '@/components/common/ConfirmationModal';
@@ -94,7 +94,16 @@ export default function AllSubmissionsTable() {
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <h1 className="text-3xl font-bold text-gray-800 mb-4">Quản lý Đề thi Đã Duyệt</h1>
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-4">
+        <h1 className="text-3xl font-bold text-gray-800">Quản lý Đề thi</h1>
+        <button
+          onClick={() => navigate('/admin/management/create')}
+          className="flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition shadow-sm"
+        >
+          <Plus size={18} />
+          Tạo đề mới
+        </button>
+      </div>
 
       <div className="flex flex-wrap gap-4 mb-4 items-end">
         <input

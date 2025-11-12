@@ -8,6 +8,8 @@ import com.example.online_quiz_system.enums.*;
 import com.example.online_quiz_system.repository.QuizSubmissionRepository;
 import com.example.online_quiz_system.repository.UserRankingRepository;
 import com.example.online_quiz_system.repository.UserRepository;
+import com.example.online_quiz_system.security.UserPrincipal;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -35,15 +37,24 @@ public class QuizSubmissionService {
     @Autowired
     private UserRepository userRepository;
 
-    public QuizSubmission submitQuiz(QuizSubmissionDTO dto, Long contributorId){
+    public QuizSubmission submitQuiz(QuizSubmissionDTO dto, UserPrincipal principal){
+        Long contributorId = principal.getId();
         QuizSubmission submission = new QuizSubmission();
         submission.setTitle(dto.getTitle());
         submission.setDescription(dto.getDescription());
         submission.setSubject(dto.getSubject());
         submission.setDurationMinutes(dto.getDurationMinutes());
         submission.setContributorId(contributorId);
-        submission.setStatus(SubmissionStatus.PENDING);
         submission.setDifficultyLevel(dto.getDifficultyLevel());
+
+        // Nếu người tạo là Admin hoặc Moderator, tự động duyệt đề thi
+        if (principal.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_MODERATOR"))) {
+            submission.setStatus(SubmissionStatus.APPROVED);
+            submission.setApprovedAt(LocalDateTime.now());
+            submission.setApprovedBy(contributorId);
+        } else {
+            submission.setStatus(SubmissionStatus.PENDING);
+        }
 
         // THÊM LOGIC XỬ LÝ CÂU HỎI
         if (dto.getQuestions() != null && !dto.getQuestions().isEmpty()) {

@@ -15,6 +15,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,7 +35,8 @@ public class QuizSubmissionController {
     // Helper để lấy userId từ SecurityContext
     private Long getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) return null;
+        if (authentication == null || !authentication.isAuthenticated())
+            return null;
         Object principal = authentication.getPrincipal();
         if (principal instanceof UserPrincipal) {
             return ((UserPrincipal) principal).getId();
@@ -43,13 +45,9 @@ public class QuizSubmissionController {
     }
 
     @PostMapping
-    public ResponseEntity<QuizSubmission> submitQuiz(@Valid @RequestBody QuizSubmissionDTO dto) {
-        Long userId = getCurrentUserId();
-        if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        QuizSubmission submission = submissionService.submitQuiz(dto, userId);
+    public ResponseEntity<QuizSubmission> submitQuiz(@AuthenticationPrincipal UserPrincipal principal,
+                                                    @Valid @RequestBody QuizSubmissionDTO dto) {
+        QuizSubmission submission = submissionService.submitQuiz(dto, principal);
         return ResponseEntity.ok(submission);
     }
 
@@ -68,9 +66,10 @@ public class QuizSubmissionController {
 
     @GetMapping("/my-submissions")
     public ResponseEntity<Page<QuizSubmission>> getSubmissionsByContributor(@RequestParam(defaultValue = "0") int page,
-                                                                            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size) {
         Long userId = getCurrentUserId();
-        if(userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (userId == null)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<QuizSubmission> submissions = submissionService.getSubmissionsByContributor(userId, pageable);
@@ -79,22 +78,23 @@ public class QuizSubmissionController {
 
     @GetMapping("/pending")
     public ResponseEntity<Page<QuizSubmission>> getPendingSubmissions(@RequestParam(defaultValue = "0") int page,
-                                                                      @RequestParam(defaultValue = "10") int size){
+            @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<QuizSubmission> submissions = submissionService.getPendingSubmissions(pageable);
         return ResponseEntity.ok(submissions);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<QuizSubmission> getSubmissionDetail(@PathVariable Long id){
+    public ResponseEntity<QuizSubmission> getSubmissionDetail(@PathVariable Long id) {
         QuizSubmission submission = submissionService.getSubmissionById(id);
-        if(submission == null) return ResponseEntity.notFound().build();
+        if (submission == null)
+            return ResponseEntity.notFound().build();
         return ResponseEntity.ok(submission);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<QuizSubmission> updateSubmission(@PathVariable Long id,
-                                                           @Valid @RequestBody QuizSubmissionDTO dto){
+            @Valid @RequestBody QuizSubmissionDTO dto) {
         Long userId = getCurrentUserId();
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -105,7 +105,7 @@ public class QuizSubmissionController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteSubmission(@PathVariable Long id){
+    public ResponseEntity<Void> deleteSubmission(@PathVariable Long id) {
         Long userId = getCurrentUserId();
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -116,7 +116,7 @@ public class QuizSubmissionController {
     }
 
     @PutMapping("/{id}/approve")
-    public ResponseEntity<QuizSubmission> approveSubmission(@PathVariable Long id){
+    public ResponseEntity<QuizSubmission> approveSubmission(@PathVariable Long id) {
         Long adminId = getCurrentUserId();
         if (adminId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -128,7 +128,7 @@ public class QuizSubmissionController {
 
     @PutMapping("/{id}/reject")
     public ResponseEntity<QuizSubmission> rejectSubmission(@PathVariable Long id,
-                                                           @Valid @RequestBody RejectSubmissionDTO dto){
+            @Valid @RequestBody RejectSubmissionDTO dto) {
         Long adminId = getCurrentUserId();
         if (adminId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -139,7 +139,7 @@ public class QuizSubmissionController {
     }
 
     @PostMapping("/questions/image")
-    public ResponseEntity<?> uploadQuestionImage(@RequestParam("file")MultipartFile file) {
+    public ResponseEntity<?> uploadQuestionImage(@RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("message", "File không được để trống"));
         }

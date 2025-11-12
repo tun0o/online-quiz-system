@@ -36,6 +36,7 @@ import Logout from "@/components/auth/Logout";
 import NotFoundPage from "@/components/common/NotFoundPage";
 import UserDashboard from "@/components/user/UserDashboard";
 import AdminDashboard from "@/components/admin/AdminDashboard";
+import ModeratorDashboard from "@/components/admin/ModeratorDashboard"; // Thêm import
 import UserManagementPage from "@/components/admin/UserManagementPage";
 import { useAdminView } from "./contexts/AdminViewContext";
 import AttemptResultPage from "./components/quiz/AttemptResultPage.jsx";
@@ -624,16 +625,20 @@ function AppRoutes() {
       <Route
         path="/admin"
         element={
-          <ProtectedRoute requiredRole="ADMIN">
+          <ProtectedRoute requiredRole={['ADMIN', 'MODERATOR']}>
             <AdminLayout />
           </ProtectedRoute>
         }
       >
-        <Route index element={<Navigate to="dashboard" replace />} />
-        <Route path="dashboard" element={<AdminDashboard />} />
-        <Route path="users" element={<UserManagementPage />} />
+        <Route index element={<RoleBasedRedirect />} />
+
+        <Route path="dashboard" element={<ProtectedRoute requiredRole="ADMIN"><AdminDashboard /></ProtectedRoute>} />
+        <Route path="mod-dashboard" element={<ProtectedRoute requiredRole={['ADMIN', 'MODERATOR']}><ModeratorDashboard /></ProtectedRoute>} />
+        <Route path="users" element={<ProtectedRoute requiredRole="ADMIN"><UserManagementPage /></ProtectedRoute>} />
+
         <Route path="moderation" element={<ModerationPanel />} />
         <Route path="management" element={<AllSubmissionsTable />} />
+        <Route path="management/create" element={<QuizSubmissionForm onSuccess={() => navigate("/admin/management")} />} />
         <Route path="management/edit/:submissionId" element={<QuizSubmissionForm onSuccess={() => navigate("/admin/management")} />} />
         <Route path="grading" element={<GradingListPage />} />
         <Route path="grading/:attemptId" element={<GradingDetailPage />} />
@@ -665,6 +670,19 @@ function AppRoutes() {
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
+}
+
+function RoleBasedRedirect() {
+  const { hasRole } = useAuthStore.getState(); // Dùng getState để truy cập tức thì
+  const isAdmin = hasRole('ADMIN');
+  const isModerator = hasRole('MODERATOR');
+
+  if (isAdmin) {
+    return <Navigate to="/admin/dashboard"/>;
+  } else if (isModerator) {
+    return <Navigate to="/admin/mod-dashboard" />;
+  }
+  return <Navigate to="/admin/moderation" />;
 }
 
 function App() {

@@ -76,14 +76,26 @@ const Login = () => {
         if (result.success) {
             toast.success('Đăng nhập thành công!');
 
-            // Điều hướng ngay lập tức sau khi đăng nhập thành công
-            if (from) {
-                navigate(from, { replace: true });
-            } else {
-                const roles = normalizeRoles(result.user?.roles);
-                const isAdmin = roles.some(r => r.includes('ROLE_ADMIN'));
-                navigate(isAdmin ? '/admin' : '/', { replace: true });
+            const roles = normalizeRoles(result.user?.roles);
+            let redirectPath = '/'; // Đường dẫn mặc định dự phòng
+
+            // Ưu tiên điều hướng cho Admin
+            if (roles.some(r => r.includes('ROLE_ADMIN'))) {
+                redirectPath = '/admin/dashboard';
             }
+            // Sau đó là điều hướng cho Moderator
+            else if (roles.some(r => r.includes('MODERATOR'))) {
+                redirectPath = '/admin/mod-dashboard';
+            }
+            // Đối với người dùng thông thường (USER), cố gắng điều hướng về trang 'from'
+            // nếu trang đó không phải là một trang admin.
+            else if (from && !from.startsWith('/admin')) {
+                redirectPath = from;
+            } else {
+                // Mặc định cho người dùng thông thường nếu không có trang 'from' cụ thể hoặc đó là trang admin
+                redirectPath = '/user/dashboard'; // Hoặc '/' nếu bạn muốn về trang chủ
+            }
+            navigate(redirectPath, { replace: true });
         } else if (result.error?.toLowerCase().includes('chưa được xác thực')) {
             // Xử lý đặc biệt cho lỗi tài khoản chưa xác thực
             toast.error(<div>{result.error} <ResendVerificationButton email={formData.email} closeToast={toast.dismiss} /></div>, {

@@ -21,5 +21,5 @@ public class UserCreateRequest {
     private String name;
 
     @NotNull(message = "Vai trò không được để trống")
-    private Role role = Role.ADMIN;
+    private Role role;
 }

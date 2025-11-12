@@ -1,15 +1,19 @@
 
 import { NavLink, Outlet, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { ShieldCheck, ListChecks, LogOut, BarChart3, Home, User, Inbox, Users } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth, useAuthStore } from '@/hooks/useAuth';
 import { useAdminView } from '@/contexts/AdminViewContext';
 
-const adminMenu = [
-    { to: '/admin/dashboard', label: 'Tổng quan', icon: <BarChart3 size={20} /> },
-    { to: '/admin/users', label: 'Người dùng', icon: <Users size={20} /> },
-    { to: '/admin/moderation', label: 'Kiểm duyệt', icon: <ShieldCheck size={20} /> },
-    { to: '/admin/management', label: 'Quản lý Đề thi', icon: <ListChecks size={20} /> },
-    { to: '/admin/grading', label: 'Chấm bài', icon: <Inbox size={20} /> },
+// Menu đầy đủ cho Admin Panel
+const fullAdminMenu = [
+    // Admin-only
+    { to: '/admin/dashboard', label: 'Tổng quan', icon: <BarChart3 size={20} />, roles: ['ADMIN'] },
+    { to: '/admin/users', label: 'Người dùng', icon: <Users size={20} />, roles: ['ADMIN'] },
+    // Moderator & Admin
+    { to: '/admin/mod-dashboard', label: 'Tổng quan', icon: <BarChart3 size={20} />, roles: ['MODERATOR'] },
+    { to: '/admin/moderation', label: 'Kiểm duyệt', icon: <ShieldCheck size={20} />, roles: ['ADMIN', 'MODERATOR'] },
+    { to: '/admin/management', label: 'Quản lý Đề thi', icon: <ListChecks size={20} />, roles: ['ADMIN', 'MODERATOR'] },
+    { to: '/admin/grading', label: 'Chấm bài', icon: <Inbox size={20} />, roles: ['ADMIN', 'MODERATOR'] },
 ];
 
 const navLinkClasses = ({ isActive }) =>
@@ -23,7 +27,7 @@ const DefaultLoader = () => (
 );
 
 export default function AdminLayout() {
-    const { user, isAuthenticated, logout } = useAuth();
+    const { user, isAuthenticated, logout, hasRole } = useAuthStore();
     const { switchToUserView } = useAdminView();
     const location = useLocation();
     const navigate = useNavigate();
@@ -35,20 +39,31 @@ export default function AdminLayout() {
 
     if (!isAuthenticated()) return <Navigate to="/login" state={{ from: location }} replace />;
 
-    const isAdmin = user?.roles?.some(role =>
-        role === 'ADMIN' || role === 'ROLE_ADMIN'
-    );
+    const isAdmin = hasRole('ADMIN');
+    const isModerator = hasRole('MODERATOR');
 
-    if (!isAdmin) return <Navigate to="/unauthorized" replace />;
+    // Nếu không phải Admin hoặc Moderator, không cho phép truy cập
+    if (!isAdmin && !isModerator) return <Navigate to="/unauthorized" replace />;
+
+    // Xây dựng menu dựa trên vai trò
+    const menuItems = fullAdminMenu.filter(item => {
+        if (isAdmin) {
+            // Admin thấy tất cả các mục, trừ dashboard của Mod
+            return item.roles.includes('ADMIN');
+        }
+        if (isModerator) {
+            return item.roles.includes('MODERATOR');
+        }
+    });
 
     return (
         <div className="flex min-h-screen bg-gray-100 font-sans">
             <aside className="w-64 bg-gray-800 text-white flex flex-col flex-shrink-0">
                 <div className="h-16 flex items-center justify-center text-2xl font-bold border-b border-gray-700">
-                    <a href="/admin">Practizz Admin Panel</a>
+                    <a href="/admin">Practizz Panel</a>
                 </div>
                 <nav className="flex-1 p-4 space-y-2">
-                    {adminMenu.map(item => (
+                    {menuItems.map(item => (
                         <NavLink key={item.to} to={item.to} className={navLinkClasses} end>
                             {item.icon}
                             <span>{item.label}</span>
@@ -56,13 +71,16 @@ export default function AdminLayout() {
                     ))}
                 </nav>
                 <div className="p-4 border-t border-gray-700 space-y-2">
-                    <button
-                        onClick={switchToUserView}
-                        className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
-                    >
-                        <User size={20} />
-                        <span>Xem giao diện User</span>
-                    </button>
+                    {/* Chỉ Admin mới có nút chuyển đổi giao diện */}
+                    {isAdmin && (
+                        <button
+                            onClick={switchToUserView}
+                            className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
+                        >
+                            <User size={20} />
+                            <span>Xem giao diện User</span>
+                        </button>
+                    )}
                     <button
                         onClick={handleLogout}
                         type="button"

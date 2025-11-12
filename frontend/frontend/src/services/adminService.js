@@ -8,4 +8,9 @@ export const adminService = {
         const response = await api.get('/api/admin/dashboard-stats');
         return response.data;
     },
+
+    getModeratorDashboardStats: async () => {
+        const response = await api.get('/api/admin/moderator-stats');
+        return response.data;
+    }
 };

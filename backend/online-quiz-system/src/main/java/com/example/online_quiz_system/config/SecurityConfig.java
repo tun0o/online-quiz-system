@@ -87,7 +87,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**", "/api/payment/vnpay-return").permitAll()
                         .requestMatchers("/api/oauth2/test/**").permitAll() // OAuth2 test endpoints
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/moderation/**", "/api/admin/grading/**", "/api/admin/management/**").hasAnyRole("ADMIN", "MODERATOR")
+                        .requestMatchers("/api/admin/users/**", "/api/admin/dashboard/**").hasRole("ADMIN")
                         .requestMatchers("/api/user/**").hasRole("USER")
                         .requestMatchers("/api/quiz-submissions/public").permitAll()
                         .requestMatchers("/api/challenges/leaderboard").permitAll() // Cho phép xem bảng xếp hạng công khai

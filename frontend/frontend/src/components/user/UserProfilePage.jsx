@@ -37,12 +37,15 @@ const UserProfilePage = () => {
         try {
             let finalUserData = { ...updatedData };
 
+            // Nếu người dùng chọn file mới, tải lên và lấy URL
             if (updatedData.avatarFile) {
-                // Nếu có file avatar mới, tải lên server trước
                 const avatarUrl = await userService.uploadUserAvatar(updatedData.avatarFile);
                 finalUserData.avatarUrl = avatarUrl;
+            } else {
+                // Nếu không có file mới, giữ lại URL cũ (hoặc null nếu đã bị xóa)
+                finalUserData.avatarUrl = updatedData.avatarUrl;
             }
-
+            
             delete finalUserData.avatarFile; // Xoá trường không cần thiết trước khi gửi
 
             const response = await userService.updateUserProfile(finalUserData);

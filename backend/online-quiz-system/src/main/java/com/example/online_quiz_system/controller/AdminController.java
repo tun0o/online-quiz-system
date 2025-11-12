@@ -1,6 +1,7 @@
 package com.example.online_quiz_system.controller;
 
 import com.example.online_quiz_system.dto.AdminDashboardStatsDTO;
+import com.example.online_quiz_system.dto.ModeratorDashboardStatsDto;
 import com.example.online_quiz_system.dto.UserAdminDTO;
 import com.example.online_quiz_system.dto.UserCreateRequest;
 import com.example.online_quiz_system.dto.UserUpdateRequest;
@@ -20,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/admin")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
 public class AdminController {
 
     @Autowired
@@ -66,4 +67,9 @@ public class AdminController {
         return ResponseEntity.status(201).body(newUser);
     }
 
+    @GetMapping("/moderator-stats")
+    public ResponseEntity<ModeratorDashboardStatsDto> getModeratorDashboardStats() {
+        ModeratorDashboardStatsDto stats = adminService.getModeratorDashboardStats();
+        return ResponseEntity.ok(stats);
+    }
 }

@@ -2,7 +2,7 @@
 -- 1. CREATE TYPES (ENUM)
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'role_enum') THEN
-        CREATE TYPE role_enum AS ENUM ('USER', 'ADMIN');
+        CREATE TYPE role_enum AS ENUM ('USER', 'ADMIN', 'MODERATOR');
     END IF;
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'subject_enum') THEN
         CREATE TYPE subject_enum AS ENUM ('MATH', 'PHYSICS', 'CHEMISTRY', 'BIOLOGY', 'LITERATURE', 'ENGLISH');

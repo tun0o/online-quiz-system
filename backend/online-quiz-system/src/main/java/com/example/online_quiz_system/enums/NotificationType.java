@@ -6,5 +6,6 @@ public enum NotificationType {
     PAYMENT_FAILURE,
     SUBMISSION_APPROVED,
     SUBMISSION_REJECTED,
+    RANKING_REWARD,
     WELCOME
 }

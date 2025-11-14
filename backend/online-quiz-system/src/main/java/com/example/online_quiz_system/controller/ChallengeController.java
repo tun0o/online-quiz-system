@@ -55,17 +55,17 @@ public class ChallengeController {
     }
 
     @GetMapping("/leaderboard")
-    public ResponseEntity<List<LeaderBoardEntryDTO>> getLeaderBoard() {
-        List<LeaderBoardEntryDTO> leaderboard = challengeService.getLeaderBoard();
+    public ResponseEntity<List<LeaderBoardEntryDTO>> getLeaderBoard(@RequestParam(required = false, defaultValue = "total") String period) {
+        List<LeaderBoardEntryDTO> leaderboard = challengeService.getLeaderBoard(period);
         return ResponseEntity.ok(leaderboard);
     }
 
     @GetMapping("/my-rank")
-    public ResponseEntity<LeaderBoardEntryDTO> getMyRank() {
+    public ResponseEntity<LeaderBoardEntryDTO> getMyRank(@RequestParam(required = false, defaultValue = "total") String period) {
         Long userId = getCurrentUserId();
         if(userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
-        LeaderBoardEntryDTO myRank = challengeService.getUserRank(userId);
+        LeaderBoardEntryDTO myRank = challengeService.getUserRank(userId, period);
         return ResponseEntity.ok(myRank);
     }
 }

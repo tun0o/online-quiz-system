@@ -177,8 +177,22 @@ public class ChallengeService {
         pointHistoryRepository.save(history);
     }
 
-    public List<LeaderBoardEntryDTO> getLeaderBoard(){
-        List<UserRanking> rankings = rankingRepository.findTop10ByOrderByTotalPointsDesc();
+    public List<LeaderBoardEntryDTO> getLeaderBoard(String period){
+        List<UserRanking> rankings;
+        switch (period.toLowerCase()) {
+            case "daily":
+                rankings = rankingRepository.findTop10ByOrderByDailyPointsDesc();
+                break;
+            case "weekly":
+                rankings = rankingRepository.findTop10ByOrderByWeeklyPointsDesc();
+                break;
+            case "monthly":
+                rankings = rankingRepository.findTop10ByOrderByMonthlyPointsDesc();
+                break;
+            default: // "total"
+                rankings = rankingRepository.findTop10ByOrderByTotalPointsDesc();
+                break;
+        }
         return IntStream.range(0, rankings.size())
                 .mapToObj(i -> {
                     UserRanking ranking = rankings.get(i);
@@ -188,6 +202,8 @@ public class ChallengeService {
                     dto.setUserId(ranking.getUserId());
                     dto.setUserName(userName);
                     dto.setTotalPoints(ranking.getTotalPoints());
+                    dto.setDailyPoints(ranking.getDailyPoints());
+                    dto.setMonthlyPoints(ranking.getMonthlyPoints());
                     dto.setWeeklyPoints(ranking.getWeeklyPoints());
                     dto.setCurrentStreak(ranking.getCurrentStreak());
 
@@ -205,29 +221,48 @@ public class ChallengeService {
                 }).toList();
     }
 
-    public LeaderBoardEntryDTO getUserRank(Long userId){
+    public LeaderBoardEntryDTO getUserRank(Long userId, String period){
         UserRanking ranking = rankingRepository.findByUserId(userId)
                 .orElse(new UserRanking());
 
         if(ranking.getUserId() == null) ranking.setUserId(userId);
 
-        Integer userRank = rankingRepository.findUserRankByUserId(userId);
+        Integer userRank;
+        switch (period.toLowerCase()) {
+            case "daily":
+                userRank = rankingRepository.findUserRankByDailyPoints(userId);
+                break;
+            case "weekly":
+                userRank = rankingRepository.findUserRankByWeeklyPoints(userId);
+                break;
+            case "monthly":
+                userRank = rankingRepository.findUserRankByMonthlyPoints(userId);
+                break;
+            default: // "total"
+                userRank = rankingRepository.findUserRankByUserId(userId);
+                break;
+        }
+
         LeaderBoardEntryDTO dto = new LeaderBoardEntryDTO();
-        dto.setRank(userRank);
+        dto.setRank(userRank != null ? userRank : 0);
         dto.setUserId(ranking.getUserId());
         dto.setUserName(userRepository.findById(userId).get().getName());
         dto.setTotalPoints(ranking.getTotalPoints());
+        dto.setDailyPoints(ranking.getDailyPoints());
+        dto.setMonthlyPoints(ranking.getMonthlyPoints());
         dto.setWeeklyPoints(ranking.getWeeklyPoints());
         dto.setCurrentStreak(ranking.getCurrentStreak());
 
-        switch (userRank) {
-            case 0 : dto.setMedal("🥇");
-                break;
-            case 1 : dto.setMedal("🥈");
-                break;
-            case 2 : dto.setMedal("🥉");
-                break;
-            default: dto.setMedal("");
+        if (userRank != null) {
+            switch (userRank) {
+                case 1 : dto.setMedal("🥇");
+                    break;
+                case 2 : dto.setMedal("🥈");
+                    break;
+                case 3 : dto.setMedal("🥉");
+                    break;
+                default: dto.setMedal("");
+            }
         }
 
 

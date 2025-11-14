@@ -12,7 +12,9 @@ public class LeaderBoardEntryDTO {
     private Long userId;
     private String userName;
     private Integer totalPoints;
+    private Integer dailyPoints;
     private Integer weeklyPoints;
+    private Integer monthlyPoints;
     private Integer currentStreak;
     private String medal;
 }

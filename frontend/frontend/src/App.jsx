@@ -360,7 +360,8 @@ function AppLayout() {
               <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-5 border border-yellow-200">
                 <div className="flex items-center gap-2 mb-4">
                   <TrophyIcon className="text-yellow-600" size={20} />
-                  <h3 className="font-bold text-gray-800">Bảng xếp hạng</h3>
+                  <h3 className="font-bold text-gray-800">Bảng xếp hạng tổng</h3>
+                  <Link to="/ranking" className="ml-auto text-blue-600 text-sm font-medium hover:text-blue-700">XEM TẤT CẢ</Link>
                 </div>
                 <div className="space-y-3">
                   {loadingRankings ? (

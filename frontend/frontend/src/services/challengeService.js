@@ -19,9 +19,9 @@ export const challengeService = {
     }
   },
   
-  getLeaderboard: async () => {
+  getLeaderboard: async (period) => {
     try {
-      const response = await api.get('/api/challenges/leaderboard');
+      const response = await api.get(`/api/challenges/leaderboard?period=${period}`);
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Không thể tải bảng xếp hạng.');
@@ -32,9 +32,9 @@ export const challengeService = {
    * Fetches the current user's ranking details.
    * @returns {Promise<any>} A promise that resolves to the user's rank data.
    */
-  getMyRank: async () => {
+  getMyRank: async (period) => {
     try {
-      const response = await api.get('/api/challenges/my-rank');
+      const response = await api.get(`/api/challenges/my-rank?period=${period}`);
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Không thể tải xếp hạng của bạn.');

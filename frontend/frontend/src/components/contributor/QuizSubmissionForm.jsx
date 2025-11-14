@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Plus, Trash2, Save, UploadCloud, X, XCircle } from 'lucide-react';
+import { Plus, Trash2, Save, UploadCloud, X, XCircle, Sigma } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { quizService } from '@/services/quizService';
+import MathEditorModal from '../common/MathEditorModal';
 
 export default function QuizSubmissionForm({ submission, onSuccess, onCancel }) {
   const [formData, setFormData] = useState({
@@ -19,6 +20,13 @@ export default function QuizSubmissionForm({ submission, onSuccess, onCancel }) 
   const prevQuestionsLength = useRef(formData.questions.length);
   const { submissionId } = useParams();
   const navigate = useNavigate();
+
+  // State for Math Editor Modal
+  const [isMathModalOpen, setIsMathModalOpen] = useState(false);
+  const [mathInputTarget, setMathInputTarget] = useState(null); // { type, qIndex, oIndex }
+  const [initialMathValue, setInitialMathValue] = useState('');
+  const textareaRefs = useRef({});
+
 
   useEffect(() => {
     const loadSubmissionForEdit = async (id) => {
@@ -232,6 +240,43 @@ export default function QuizSubmissionForm({ submission, onSuccess, onCancel }) 
     }
   };
 
+  const openMathEditor = (type, qIndex, oIndex = null) => {
+    let initialValue = '';
+    if (type === 'questionText') initialValue = formData.questions[qIndex].questionText;
+    if (type === 'explanation') initialValue = formData.questions[qIndex].explanation;
+    if (type === 'optionText') initialValue = formData.questions[qIndex].answerOptions[oIndex].optionText;
+    if (type === 'essayGuidelines') initialValue = formData.questions[qIndex].essayGuidelines;
+    if (type === 'description') initialValue = formData.description;
+
+    setInitialMathValue(initialValue);
+    setMathInputTarget({ type, qIndex, oIndex });
+    setIsMathModalOpen(true);
+  };
+
+  const handleInsertMath = (latex) => {
+    const { type, qIndex, oIndex } = mathInputTarget;
+    const formula = `$$${latex}$$`; // Wrap in block format
+
+    if (type === 'description') {
+      setFormData(prev => ({ ...prev, description: prev.description + formula }));
+      return;
+    }
+
+    const targetTextareaRef = textareaRefs.current[`${type}_${qIndex}_${oIndex}`];
+
+    if (targetTextareaRef) {
+        const start = targetTextareaRef.selectionStart;
+        const end = targetTextareaRef.selectionEnd;
+        const currentValue = targetTextareaRef.value;
+        const newValue = currentValue.substring(0, start) + formula + currentValue.substring(end);
+
+        if (type === 'optionText') {
+            updateAnswerOption(qIndex, oIndex, 'optionText', newValue);
+        } else {
+            updateQuestion(qIndex, type, newValue);
+        }
+    }
+  };
 
   return (
     <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
@@ -316,14 +361,24 @@ export default function QuizSubmissionForm({ submission, onSuccess, onCancel }) 
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Mô tả
           </label>
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800"
-            rows="3"
-            placeholder="Mô tả ngắn về đề thi..."
-          />
+          <div className="relative">
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800"
+              rows="3"
+              placeholder="Mô tả ngắn về đề thi..."
+            />
+             <button
+                type="button"
+                onClick={() => openMathEditor('description')}
+                className="absolute bottom-2 right-2 p-1.5 bg-gray-100 text-white rounded-md hover:bg-gray-200"
+                title="Chèn công thức"
+              >
+                <Sigma size={16} />
+              </button>
+          </div>
         </div>
 
         {/* Questions */}
@@ -354,17 +409,25 @@ export default function QuizSubmissionForm({ submission, onSuccess, onCancel }) 
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Nội dung câu hỏi *
                   </label>
-                  <textarea
-                    required
-                    value={question.questionText}
-                    onChange={(e) => updateQuestion(qIndex, 'questionText', e.target.value)}
-                    className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800"
-                    rows="2"
-                    placeholder="Nhập câu hỏi..."
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Sử dụng `\(` và `\)` cho công thức inline (VD: `\(x^2\)`), và `$$` cho công thức dạng khối.
-                  </p>
+                  <div className="relative">
+                    <textarea
+                      ref={el => textareaRefs.current[`questionText_${qIndex}_null`] = el}
+                      required
+                      value={question.questionText}
+                      onChange={(e) => updateQuestion(qIndex, 'questionText', e.target.value)}                      
+                      className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800"
+                      rows="2"
+                      placeholder="Nhập câu hỏi..."
+                    />
+                    <button
+                      type="button"
+                      onClick={() => openMathEditor('questionText', qIndex)}
+                      className="absolute bottom-2 right-2 p-1.5 bg-gray-100 text-white rounded-md hover:bg-gray-200"
+                      title="Chèn công thức"
+                    >
+                      <Sigma size={16} />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Image Upload Section */}
@@ -463,13 +526,24 @@ export default function QuizSubmissionForm({ submission, onSuccess, onCancel }) 
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Hướng dẫn trả lời (tùy chọn)
                     </label>
-                    <textarea
-                      value={question.essayGuidelines}
-                      onChange={(e) => updateQuestion(qIndex, 'essayGuidelines', e.target.value)}
-                      className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800"
-                      rows="3"
-                      placeholder="VD: Trả lời trong khoảng 200-300 từ, nêu rõ luận điểm và dẫn chứng..."
-                    />
+                    <div className="relative">
+                      <textarea
+                        ref={el => textareaRefs.current[`essayGuidelines_${qIndex}_null`] = el}
+                        value={question.essayGuidelines}
+                        onChange={(e) => updateQuestion(qIndex, 'essayGuidelines', e.target.value)}                        
+                        className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800"
+                        rows="3"
+                        placeholder="VD: Trả lời trong khoảng 200-300 từ, nêu rõ luận điểm và dẫn chứng..."
+                      />
+                      <button
+                        type="button"
+                        onClick={() => openMathEditor('essayGuidelines', qIndex)}
+                        className="absolute bottom-2 right-2 p-1.5 bg-gray-100 text-white rounded-md hover:bg-gray-200"
+                        title="Chèn công thức"
+                      >
+                        <Sigma size={16} />
+                      </button>
+                    </div>
                   </div>
                 )}
 
@@ -494,22 +568,33 @@ export default function QuizSubmissionForm({ submission, onSuccess, onCancel }) 
                           }}
                           className="text-green-600 focus:ring-green-500"
                         />
-                        <input
-                          type="text"
-                          required
-                          value={option.optionText}
-                          onChange={(e) => {
-                            const newOptions = [...question.answerOptions];
-                            newOptions[oIndex].optionText = e.target.value;
-                            updateQuestion(qIndex, 'answerOptions', newOptions);
-                          }}
-                          className="flex-1 p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800"
-                          placeholder={question.questionType === 'TRUE_FALSE' ?
-                            (oIndex === 0 ? 'Đúng' : 'Sai') :
-                            `Đáp án ${String.fromCharCode(65 + oIndex)}`
-                          }
-                          readOnly={question.questionType === 'TRUE_FALSE'}
-                        />
+                        <div className="relative flex-1">
+                          <input
+                            ref={el => textareaRefs.current[`optionText_${qIndex}_${oIndex}`] = el}
+                            type="text"
+                            required
+                            value={option.optionText}
+                            onChange={(e) => {
+                              const newOptions = [...question.answerOptions];
+                              newOptions[oIndex].optionText = e.target.value;
+                              updateQuestion(qIndex, 'answerOptions', newOptions);
+                            }}
+                            className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800"                            
+                            placeholder={question.questionType === 'TRUE_FALSE' ?
+                              (oIndex === 0 ? 'Đúng' : 'Sai') :
+                              `Đáp án ${String.fromCharCode(65 + oIndex)}`
+                            }
+                            readOnly={question.questionType === 'TRUE_FALSE'}
+                          />
+                          {question.questionType !== 'TRUE_FALSE' && <button
+                            type="button"
+                            onClick={() => openMathEditor('optionText', qIndex, oIndex)}
+                            className="absolute top-1/2 right-2 -translate-y-1/2 p-1.5 bg-gray-100 text-white rounded-md hover:bg-gray-200"
+                            title="Chèn công thức"
+                          >
+                            <Sigma size={16} />
+                          </button>}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -519,16 +604,24 @@ export default function QuizSubmissionForm({ submission, onSuccess, onCancel }) 
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Giải thích (tùy chọn)
                   </label>
-                  <textarea
-                    value={question.explanation}
-                    onChange={(e) => updateQuestion(qIndex, 'explanation', e.target.value)}
-                    className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800"
-                    rows="2"
-                    placeholder="Giải thích đáp án đúng..."
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Hỗ trợ công thức toán học bằng cú pháp LaTeX.
-                  </p>
+                  <div className="relative">
+                    <textarea
+                      ref={el => textareaRefs.current[`explanation_${qIndex}_null`] = el}
+                      value={question.explanation}
+                      onChange={(e) => updateQuestion(qIndex, 'explanation', e.target.value)}                      
+                      className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800"
+                      rows="2"
+                      placeholder="Giải thích đáp án đúng..."
+                    />
+                    <button
+                      type="button"
+                      onClick={() => openMathEditor('explanation', qIndex)}
+                      className="absolute bottom-2 right-2 p-1.5 bg-gray-100 text-white rounded-md hover:bg-gray-200"
+                      title="Chèn công thức"
+                    >
+                      <Sigma size={16} />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -540,7 +633,7 @@ export default function QuizSubmissionForm({ submission, onSuccess, onCancel }) 
             <button
               type="button"
               onClick={addQuestion}
-              className="flex items-center gap-2 px-4 py-2 bg-white text-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+              className="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
             >
               <Plus size={16} />
               Thêm câu hỏi
@@ -572,6 +665,13 @@ export default function QuizSubmissionForm({ submission, onSuccess, onCancel }) 
           </button>
         </div>
       </form>
+
+      <MathEditorModal
+        isOpen={isMathModalOpen}
+        onClose={() => setIsMathModalOpen(false)}
+        onInsert={handleInsertMath}
+        initialValue={initialMathValue}
+      />
     </div>
   );
 }

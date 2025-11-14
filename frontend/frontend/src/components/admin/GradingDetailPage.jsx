@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { gradingService } from '@/services/gradingService';
 import { Loader2, CheckCircle, ArrowLeft } from 'lucide-react';
+import MathRenderer from '../common/MathRenderer';
 
 export default function GradingDetailPage() {
   const { attemptId } = useParams();
@@ -99,8 +100,12 @@ export default function GradingDetailPage() {
       <div className="space-y-6">
         {details.essayQuestions.map((q, index) => (
           <div key={q.userAnswerId} className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h3 className="font-bold text-lg text-gray-800 mb-2">Câu {index + 1}: {q.questionText}</h3>
-            {q.essayGuidelines && <div className="mb-4 p-3 bg-blue-50 border-l-4 border-blue-300 text-sm text-blue-800">{q.essayGuidelines}</div>}
+            <div className="font-bold text-lg text-gray-800 mb-2">
+              Câu {index + 1}: <MathRenderer text={q.questionText} />
+            </div>
+            {q.essayGuidelines && <div className="mb-4 p-3 bg-blue-50 border-l-4 border-blue-300 text-sm text-blue-800">
+              <MathRenderer text={q.essayGuidelines} />
+            </div>}
 
             {q.imageUrl && ( // Thay đổi class để ảnh hiển thị lớn và rõ hơn
               <div className="mb-4 p-2 border rounded-lg bg-gray-50">
@@ -110,7 +115,9 @@ export default function GradingDetailPage() {
 
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">Câu trả lời của người dùng:</label>
-              <div className="p-4 bg-gray-50 text-gray-800 border border-gray-200 rounded-md whitespace-pre-wrap">{q.userAnswerText || <i className="text-gray-400">Không trả lời</i>}</div>
+              <div className="p-4 bg-gray-50 text-gray-800 border border-gray-200 rounded-md">
+                {q.userAnswerText ? <MathRenderer text={q.userAnswerText} /> : <i className="text-gray-400">Không trả lời</i>}
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

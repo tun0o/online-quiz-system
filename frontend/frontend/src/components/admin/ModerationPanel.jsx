@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import { quizService } from '@/services/quizService';
 import ConfirmationModal from '@/components/common/ConfirmationModal';
 import { subjectDisplayMap, difficultyDisplayMap, getDifficultyColor } from '@/utils/displayMaps';
+import MathRenderer from '../common/MathRenderer';
 
 export default function ModerationPanel() {
   const [pendingSubmissions, setPendingSubmissions] = useState([]);
@@ -138,8 +139,8 @@ export default function ModerationPanel() {
                 >
                   <div className="flex justify-between items-start gap-4">
                     <div className="flex-1">
-                      <h3 className="font-medium text-gray-800 mb-1">{submission.title}</h3>
-                      <p className="text-sm text-gray-600 mb-2">{submission.description}</p>
+                      <h3 className="font-medium text-gray-800 mb-1"><MathRenderer text={submission.title} /></h3>
+                      <div className="text-sm text-gray-600 mb-2"><MathRenderer text={submission.description} /></div>
                       <div className="flex items-center gap-4 text-xs text-gray-500">
                         <span>Môn: <strong>{subjectDisplayMap[submission.subject] || submission.subject}</strong></span>
                         <span>Thời gian: <strong>{submission.durationMinutes} phút</strong></span>
@@ -164,8 +165,8 @@ export default function ModerationPanel() {
               <div className="p-4 border-b border-gray-200">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h2 className="font-semibold text-gray-800 mb-1">{selectedSubmission.title}</h2>
-                    <p className="text-sm text-gray-600">{selectedSubmission.description}</p>
+                    <h2 className="font-semibold text-gray-800 mb-1"><MathRenderer text={selectedSubmission.title} /></h2>
+                    <div className="text-sm text-gray-600"><MathRenderer text={selectedSubmission.description} /></div>
                   </div>
                   <div className="flex gap-2">
                     <button
@@ -223,7 +224,7 @@ export default function ModerationPanel() {
                     <div key={question.id} className="mb-4 p-3 bg-gray-50 rounded">
                       <div className="flex justify-between items-start mb-2">
                         <div className="font-medium text-gray-800">
-                          Câu {index + 1}: {question.questionText}
+                          Câu {index + 1}: <MathRenderer text={question.questionText} />
                         </div>
                         <div className="flex gap-2 text-xs items-center">
                           <span className={`px-2 py-1 rounded ${question.questionType === 'MULTIPLE_CHOICE' ? 'bg-blue-100 text-blue-800' :
@@ -259,7 +260,7 @@ export default function ModerationPanel() {
                                 : 'text-gray-600'
                                 }`}
                             >
-                              {String.fromCharCode(65 + optIndex)}. {option.optionText}
+                              {String.fromCharCode(65 + optIndex)}. <MathRenderer text={option.optionText} />
                               {option.isCorrect && ' ✓'}
                             </div>
                           ))}
@@ -276,7 +277,7 @@ export default function ModerationPanel() {
                             <div className="text-sm text-gray-600">
                               <strong>Hướng dẫn trả lời:</strong>
                               <div className="mt-1 p-2 bg-blue-50 rounded text-gray-700">
-                                {question.essayGuidelines}
+                                <MathRenderer text={question.essayGuidelines} />
                               </div>
                             </div>
                           )}
@@ -286,7 +287,7 @@ export default function ModerationPanel() {
                       {/* Hiển thị giải thích nếu có */}
                       {question.explanation && (
                         <div className="mt-2 text-sm text-gray-600">
-                          <strong>Giải thích:</strong> {question.explanation}
+                          <strong>Giải thích:</strong> <MathRenderer text={question.explanation} />
                         </div>
                       )}
                     </div>

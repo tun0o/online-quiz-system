@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import './index.css';
 import App from './App.jsx';
+import 'katex/dist/katex.min.css'; // Thêm dòng này để import CSS cho KaTeX
 import { AdminViewProvider } from '@/contexts/AdminViewContext';
 import { useAuthStore } from './hooks/useAuth';
 import api from './services/api';

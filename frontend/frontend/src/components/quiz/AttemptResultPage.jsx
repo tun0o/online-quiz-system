@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { CheckCircle, XCircle, HelpCircle, ArrowLeft, Edit2 } from 'lucide-react';
 import { quizService } from '@/services/quizService';
+import MathRenderer from '../common/MathRenderer';
 
 const getAnswerColor = (option, userAnswer) => {
     const isSelected = userAnswer?.selectedOptionId === option.id;
@@ -85,7 +86,9 @@ const AttemptResultPage = () => {
                     return (
                         <div key={question.id} className="bg-white p-6 rounded-lg shadow-md">
                             <div className="flex justify-between items-start mb-4">
-                                <p className="font-semibold text-gray-800">Câu {index + 1}: {question.questionText}</p>
+                                <div className="font-semibold text-gray-800">
+                                    Câu {index + 1}: <MathRenderer text={question.questionText} />
+                                </div>
                                 {isCorrect === true && <CheckCircle className="text-green-500 flex-shrink-0 ml-4" />}
                                 {isCorrect === false && <XCircle className="text-red-500 flex-shrink-0 ml-4" />}
                                 {isCorrect === null && <HelpCircle className="text-yellow-500 flex-shrink-0 ml-4" />}
@@ -105,7 +108,7 @@ const AttemptResultPage = () => {
                                             key={option.id}
                                             className={`p-3 border rounded-lg ${getAnswerColor(option, userAnswer)}`}
                                         >
-                                            {option.optionText}
+                                            <MathRenderer text={option.optionText} />
                                         </div>
                                     ))}
                                 </div>
@@ -114,7 +117,7 @@ const AttemptResultPage = () => {
                                     <div>
                                         <p className="text-sm font-medium text-gray-600 mb-1">Câu trả lời của bạn:</p>
                                         <div className="p-3 bg-gray-50 border border-gray-200 rounded-md text-gray-800 whitespace-pre-wrap">
-                                            {userAnswer?.answerText || <i className="text-gray-400">Không trả lời</i>}
+                                            {userAnswer?.answerText ? <MathRenderer text={userAnswer.answerText} /> : <i className="text-gray-400">Không trả lời</i>}
                                         </div>
                                     </div>
                                     {userAnswer?.isGraded ? (
@@ -142,7 +145,9 @@ const AttemptResultPage = () => {
                             {question.explanation && (
                                 <div className="mt-4 p-3 bg-gray-100 border-l-4 border-gray-400 rounded-r-lg">
                                     <p className="font-semibold text-sm text-gray-700">Giải thích:</p>
-                                    <p className="text-sm text-gray-600">{question.explanation}</p>
+                                    <div className="text-sm text-gray-600">
+                                        <MathRenderer text={question.explanation} />
+                                    </div>
                                 </div>
                             )}
                         </div>

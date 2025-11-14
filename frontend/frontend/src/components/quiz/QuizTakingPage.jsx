@@ -6,6 +6,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { subjectDisplayMap, difficultyDisplayMap, getDifficultyColor } from "@/utils/displayMaps";
 import { quizService } from "@/services/quizService";
 import ConfirmationModal from "@/components/common/ConfirmationModal";
+import MathRenderer from "@/components/common/MathRenderer";
 
 export default function QuizTakingPage() {
   const { quizId } = useParams();
@@ -234,7 +235,9 @@ export default function QuizTakingPage() {
 
           {/* Question Body */}
           <div className="p-6 min-h-[300px]">
-            <h2 className="text-xl font-semibold mb-6 text-gray-800">{currentQuestion.questionText}</h2>
+            <div className="text-xl font-semibold mb-6 text-gray-800">
+              <MathRenderer text={currentQuestion.questionText} />
+            </div>
 
             {/* Hiển thị hình ảnh nếu có (thay đổi class để ảnh hiển thị lớn và rõ hơn) */}
             {currentQuestion.imageUrl && (
@@ -279,7 +282,9 @@ export default function QuizTakingPage() {
             {question.answerOptions.map(option => (
               <label key={option.id} className={`flex items-center p-4 border rounded-lg cursor-pointer transition ${answer == option.id ? 'bg-green-50 border-green-400 shadow-sm' : 'bg-white border-gray-200 hover:border-gray-400'}`}>
                 <input type="radio" name={`question-${question.id}`} value={option.id} checked={answer == option.id} onChange={(e) => handleAnswerChange(question.id, e.target.value)} className="h-4 w-4 text-green-600 border-gray-300 focus:ring-green-500" />
-                <span className="ml-3 text-gray-700">{option.optionText}</span>
+                <div className="ml-3 text-gray-700">
+                  <MathRenderer text={option.optionText} />
+                </div>
               </label>
             ))}
           </div>
@@ -287,7 +292,9 @@ export default function QuizTakingPage() {
       case 'ESSAY':
         return (
           <div>
-            <p className="mb-4 text-gray-600">Hướng dẫn trả lời: {question.essayGuidelines || 'Không có hướng dẫn'}</p>
+            <div className="mb-4 text-gray-600">
+              Hướng dẫn trả lời: <MathRenderer text={question.essayGuidelines || 'Không có hướng dẫn'} />
+            </div>
             <textarea
               value={answer || ''}
               onChange={(e) => handleAnswerChange(question.id, e.target.value)}
@@ -389,7 +396,9 @@ export default function QuizTakingPage() {
               const wasAnswered = !!res.userAnswer;
               return (
                 <div key={res.questionId} className={`border text-gray-600 border-gray-200 rounded-lg p-5 ${!wasAnswered ? 'bg-gray-200' : 'bg-white'}`}>
-                  <p className="font-semibold mb-3">Câu {index + 1}: {res.questionText}</p>
+                  <div className="font-semibold mb-3">
+                    Câu {index + 1}: <MathRenderer text={res.questionText} />
+                  </div>
 
                   {/* Hiển thị hình ảnh nếu có (thay đổi class để ảnh hiển thị lớn và rõ hơn) */}
                   {res.imageUrl && (
@@ -418,7 +427,9 @@ export default function QuizTakingPage() {
 
                       return (
                         <div key={option.id} className={`flex items-center justify-between p-3 mt-2 border rounded-lg ${style}`}>
-                          <span>{option.optionText}</span>
+                          <div>
+                            <MathRenderer text={option.optionText} />
+                          </div>
                           {icon}
                         </div>
                       );
@@ -435,7 +446,9 @@ export default function QuizTakingPage() {
                   {res.explanation && (
                     <div className="mt-4 p-3 bg-blue-50 border-l-4 border-blue-300">
                       <p className="font-semibold text-blue-800">Giải thích:</p>
-                      <p className="text-blue-700 mt-1">{res.explanation}</p>
+                      <div className="text-blue-700 mt-1">
+                        <MathRenderer text={res.explanation} />
+                      </div>
                     </div>
                   )}
                 </div>

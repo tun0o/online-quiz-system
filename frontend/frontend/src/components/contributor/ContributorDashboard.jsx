@@ -243,6 +243,10 @@ export default function ContributorDashboard() {
             setActiveTab('list');
             loadSubmissions();
           }}
+          onCancel={() => {
+            setEditingSubmission(null);
+            setActiveTab('list');
+          }}
         />
       ) : (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">

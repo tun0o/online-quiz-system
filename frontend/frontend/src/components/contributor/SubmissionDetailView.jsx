@@ -1,6 +1,7 @@
 import React from 'react';
 import { subjectDisplayMap, difficultyDisplayMap, getDifficultyColor, getStatusText, getStatusColor } from '@/utils/displayMaps';
 import { CheckCircle } from 'lucide-react';
+import MathRenderer from '../common/MathRenderer';
 
 export default function SubmissionDetailView({ submission }) {
   if (!submission) {
@@ -35,7 +36,7 @@ export default function SubmissionDetailView({ submission }) {
       {/* Header Info */}
       <div>
         <h3 className="text-2xl font-bold text-gray-800">{submission.title}</h3>
-        <p className="text-gray-600 mt-1">{submission.description}</p>
+        <div className="text-gray-600 mt-1"><MathRenderer text={submission.description} /></div>
         <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-700">
           <span className="font-medium">Môn học: <span className="font-normal">{subjectDisplayMap[submission.subject] || submission.subject}</span></span>
           {submission.difficultyLevel && (
@@ -63,7 +64,7 @@ export default function SubmissionDetailView({ submission }) {
                 )}
               </div>
             </div>
-            <p className="mb-4 whitespace-pre-wrap">{question.questionText}</p>
+            <div className="mb-4"><MathRenderer text={question.questionText} /></div>
 
             {/* Hiển thị hình ảnh nếu có (thay đổi class để ảnh hiển thị lớn và rõ hơn) */}
             {question.imageUrl && (
@@ -84,7 +85,7 @@ export default function SubmissionDetailView({ submission }) {
                     <span className={`font-mono text-sm font-bold ${option.isCorrect ? '' : 'text-gray-500'}`}>
                       {String.fromCharCode(65 + oIndex)}.
                     </span>
-                    <p className="flex-1">{option.optionText}</p>
+                    <div className="flex-1"><MathRenderer text={option.optionText} /></div>
                     {option.isCorrect && <span className="text-xs text-green-600 font-medium">✓ Đáp án đúng</span>}
                   </div>
                 ))}
@@ -105,7 +106,7 @@ export default function SubmissionDetailView({ submission }) {
                   <div>
                     <p className="text-sm font-medium text-gray-700 mb-2">Hướng dẫn trả lời:</p>
                     <div className="p-3 bg-blue-50 border-l-4 border-blue-200 rounded text-sm text-gray-700">
-                      <p className="whitespace-pre-wrap">{question.essayGuidelines}</p>
+                      <MathRenderer text={question.essayGuidelines} />
                     </div>
                   </div>
                 )}
@@ -122,7 +123,7 @@ export default function SubmissionDetailView({ submission }) {
             {question.explanation && (
               <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
                 <h5 className="font-semibold text-sm text-blue-800 mb-1">Giải thích:</h5>
-                <p className="text-sm text-blue-700 whitespace-pre-wrap">{question.explanation}</p>
+                <div className="text-sm text-blue-700"><MathRenderer text={question.explanation} /></div>
               </div>
             )}
           </div>

@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Plus, Trash2, Save, UploadCloud, X } from 'lucide-react';
+import { Plus, Trash2, Save, UploadCloud, X, XCircle } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { quizService } from '@/services/quizService';
 
-export default function QuizSubmissionForm({ submission, onSuccess }) {
+export default function QuizSubmissionForm({ submission, onSuccess, onCancel }) {
   const [formData, setFormData] = useState({
     id: null,
     title: '',
@@ -222,6 +222,16 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
     }
   };
 
+  const handleCancel = () => {
+    // Nếu có hàm onCancel được truyền vào (từ ContributorDashboard), gọi nó
+    if (onCancel) {
+      onCancel();
+    } else {
+      // Nếu không, quay lại trang trước (dùng cho trang admin)
+      navigate(-1);
+    }
+  };
+
 
   return (
     <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
@@ -352,6 +362,9 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
                     rows="2"
                     placeholder="Nhập câu hỏi..."
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Sử dụng `\(` và `\)` cho công thức inline (VD: `\(x^2\)`), và `$$` cho công thức dạng khối.
+                  </p>
                 </div>
 
                 {/* Image Upload Section */}
@@ -513,6 +526,9 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
                     rows="2"
                     placeholder="Giải thích đáp án đúng..."
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Hỗ trợ công thức toán học bằng cú pháp LaTeX.
+                  </p>
                 </div>
               </div>
             </div>
@@ -534,14 +550,25 @@ export default function QuizSubmissionForm({ submission, onSuccess }) {
         </div>
 
         {/* Submit Button */}
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-4">
+          {/* Nút Hủy chỉ hiển thị ở chế độ chỉnh sửa */}
+          {formData.id && (
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="flex items-center gap-2 px-6 py-3 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+            >
+              <XCircle size={16} />
+              Hủy
+            </button>
+          )}
           <button
             type="submit"
             disabled={loading}
             className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50"
           >
             <Save size={16} />
-            {loading ? 'Đang gửi...' : 'Gửi đề thi'}
+            {loading ? 'Đang xử lý...' : (formData.id ? 'Lưu thay đổi' : 'Gửi đề thi')}
           </button>
         </div>
       </form>

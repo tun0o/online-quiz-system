@@ -6,6 +6,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { subjectDisplayMap, difficultyDisplayMap, getDifficultyColor } from "@/utils/displayMaps";
 import { quizService } from "@/services/quizService";
 import ConfirmationModal from "@/components/common/ConfirmationModal";
+import CustomAudioPlayer from "@/components/common/CustomAudioPlayer";
 import MathRenderer from "@/components/common/MathRenderer";
 
 export default function QuizTakingPage() {
@@ -166,12 +167,7 @@ export default function QuizTakingPage() {
     if (!quiz?.audioUrl) {
       return null;
     }
-    return (
-      <div className="mb-4 p-4 bg-gray-100 border border-gray-200 rounded-lg">
-        <p className="font-medium text-gray-700 mb-2">Audio cho phần thi nghe</p>
-        <audio src={quiz.audioUrl} controls className="w-full" />
-      </div>
-    );
+    return <CustomAudioPlayer src={quiz.audioUrl} />;
   }, [quiz?.audioUrl]); // Chỉ re-render khi audioUrl thay đổi
 
   const renderInProgress = () => {

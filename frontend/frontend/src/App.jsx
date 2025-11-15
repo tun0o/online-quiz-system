@@ -1,7 +1,7 @@
 // App.jsx
 import { Routes, Route, NavLink, Outlet, useLocation, Navigate, useNavigate, Link, useParams } from "react-router-dom";
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Home, Star, Shield, ClipboardList, User, UserPlus, LogIn, TrophyIcon, TargetIcon, LogOut, Bell, ChartBar, History } from "lucide-react";
+import { Home, Star, Shield, ClipboardList, User, UserPlus, LogIn, TrophyIcon, TargetIcon, LogOut, Bell, ChartBar, History, KeyRound } from "lucide-react";
 import { QuizProvider } from "@/contexts/QuizContext";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -294,33 +294,51 @@ function AppLayout() {
                 </div>
 
               ) : (
-                <div className="relative" ref={dropdownRef}>
-                  <div
-                    className="bg-green-50 p-4 rounded-lg border border-green-200 cursor-pointer hover:bg-green-100 transition"
-                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={user.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || user.email)}&background=28a745&color=fff`}
-                        alt="Avatar"
-                        className="w-10 h-10 rounded-full object-cover border-2 border-green-200"
-                      />
-                      <div>
-                        <p className="font-medium text-gray-800">{user?.name}</p>
+                <div className="flex items-center gap-2">
+                  {/* Notification Bell */}
+                  <Link to="/notifications" className="relative p-3 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition">
+                    <Bell size={20} className="text-gray-600" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </Link>
+
+                  {/* User Dropdown */}
+                  <div className="relative flex-1" ref={dropdownRef}>
+                    <div
+                      className="bg-green-50 p-3 rounded-lg border border-green-200 cursor-pointer hover:bg-green-100 transition"
+                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={user.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || user.email)}&background=28a745&color=fff`}
+                          alt="Avatar"
+                          className="w-8 h-8 rounded-full object-cover border-2 border-green-200"
+                        />
+                        <div>
+                          <p className="font-medium text-gray-800 text-sm">{user?.name}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {isDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20 border border-gray-200">
-                      <Link
-                        to="/user/profile"
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={() => setIsDropdownOpen(false)}
-                      >
-                        <User size={16} className="inline mr-2" /> Hồ sơ
-                      </Link>
-                      {/* Placeholder for Notifications - you might want to create a dedicated /notifications page */}
+                    {isDropdownOpen && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20 border border-gray-200">
+                        <Link
+                          to="/user/profile"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => setIsDropdownOpen(false)}
+                        >
+                          <User size={16} className="inline mr-2" /> Hồ sơ
+                        </Link>
+                        <Link
+                          to="/change-password"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => setIsDropdownOpen(false)}
+                        >
+                          <KeyRound size={16} className="inline mr-2" /> Đổi mật khẩu
+                        </Link>
                       <Link
                         to="/notifications"
                         className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -328,31 +346,25 @@ function AppLayout() {
                       >
                         <div className="flex items-center">
                           <Bell size={16} className="inline mr-2" />
-                          <span className="relative pr-6">
-                            Thông báo
-                          {unreadCount > 0 && (
-                            <span className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
-                              {unreadCount}
-                            </span>
-                          )}
-                          </span>
+                          Thông báo
                         </div>
                       </Link>
-                      <Link
-                        to="/history"
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={() => setIsDropdownOpen(false)}
-                      >
-                        <History size={16} className="inline mr-2" /> Lịch sử
-                      </Link> 
-                      <button
-                        onClick={() => { handleLogout(); setIsDropdownOpen(false); }}
-                        className="w-full text-left flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                      >
-                        <LogOut size={16} className="inline mr-2" /> Đăng xuất
-                      </button>
-                    </div>
-                  )}
+                        <Link
+                          to="/history"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => setIsDropdownOpen(false)}
+                        >
+                          <History size={16} className="inline mr-2" /> Lịch sử
+                        </Link>
+                        <button
+                          onClick={() => { handleLogout(); setIsDropdownOpen(false); }}
+                          className="w-full text-left flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                        >
+                          <LogOut size={16} className="inline mr-2" /> Đăng xuất
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 

@@ -4,6 +4,7 @@ import { Plus, Trash2, Save, UploadCloud, X, XCircle, Sigma, FileAudio, Loader2 
 import { toast } from 'react-toastify';
 import { quizService } from '@/services/quizService';
 import MathEditorModal from '../common/MathEditorModal';
+import CustomAudioPlayer from '../quiz/CustomAudioPlayer';
 
 export default function QuizSubmissionForm({ submission, onSuccess, onCancel }) {
   const [formData, setFormData] = useState({
@@ -440,7 +441,7 @@ export default function QuizSubmissionForm({ submission, onSuccess, onCancel }) 
                   <XCircle size={18} />
                 </button>
               </div>
-              <audio src={formData.audioUrl} controls className="w-full mt-3" />
+              <CustomAudioPlayer src={formData.audioUrl} title="Audio đã tải lên" />
             </div>
           ) : (
             <label className="w-full flex flex-col items-center px-4 py-6 bg-white text-blue rounded-lg shadow-sm tracking-wide uppercase border border-blue-500 border-dashed cursor-pointer hover:bg-blue-50 hover:text-blue-700">

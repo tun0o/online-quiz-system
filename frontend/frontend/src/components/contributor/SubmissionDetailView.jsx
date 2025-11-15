@@ -2,6 +2,7 @@ import React from 'react';
 import { subjectDisplayMap, difficultyDisplayMap, getDifficultyColor, getStatusText, getStatusColor } from '@/utils/displayMaps';
 import { CheckCircle } from 'lucide-react';
 import MathRenderer from '../common/MathRenderer';
+import CustomAudioPlayer from '../quiz/CustomAudioPlayer';
 
 export default function SubmissionDetailView({ submission }) {
   if (!submission) {
@@ -49,12 +50,7 @@ export default function SubmissionDetailView({ submission }) {
 
       {/* Audio Player */}
       {submission.audioUrl && (
-        <div className="pt-2">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            File Audio
-          </label>
-          <audio src={submission.audioUrl} controls className="w-full" />
-        </div>
+        <CustomAudioPlayer src={submission.audioUrl} title="File Audio" />
       )}
 
       <hr />

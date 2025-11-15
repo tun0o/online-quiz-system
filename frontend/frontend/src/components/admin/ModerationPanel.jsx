@@ -5,6 +5,7 @@ import { quizService } from '@/services/quizService';
 import ConfirmationModal from '@/components/common/ConfirmationModal';
 import { subjectDisplayMap, difficultyDisplayMap, getDifficultyColor } from '@/utils/displayMaps';
 import MathRenderer from '../common/MathRenderer';
+import CustomAudioPlayer from '../quiz/CustomAudioPlayer';
 
 export default function ModerationPanel() {
   const [pendingSubmissions, setPendingSubmissions] = useState([]);
@@ -219,12 +220,7 @@ export default function ModerationPanel() {
 
                 {/* Audio Player */}
                 {selectedSubmission.audioUrl && (
-                  <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      File Audio đính kèm
-                    </label>
-                    <audio src={selectedSubmission.audioUrl} controls className="w-full" />
-                  </div>
+                  <CustomAudioPlayer src={selectedSubmission.audioUrl} title="File Audio đính kèm" />
                 )}
 
                 {/* Questions Preview */}

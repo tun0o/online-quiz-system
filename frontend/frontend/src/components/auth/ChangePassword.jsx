@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { Lock, Eye, EyeOff, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Lock, Eye, EyeOff, Check, X, Save } from 'lucide-react';
 import api from '@/services/api.js';
 
 const validatePassword = (pwd = '') => {
@@ -31,7 +31,7 @@ const requirementLabels = {
     special: 'Ít nhất một ký tự đặc biệt',
 };
 
-const ChangePassword = () => {
+export default function ChangePassword() {
     const [formData, setFormData] = useState({
         currentPassword: '',
         newPassword: '',
@@ -41,7 +41,6 @@ const ChangePassword = () => {
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [success, setSuccess] = useState(false);
     const navigate = useNavigate();
 
     const pwdValidation = useMemo(() => validatePassword(formData.newPassword), [formData.newPassword]);
@@ -80,12 +79,9 @@ const ChangePassword = () => {
                 newPassword: formData.newPassword
             });
 
-            setSuccess(true);
             toast.success('Đổi mật khẩu thành công!');
-            
-            setTimeout(() => {
-                navigate(-1); // Quay lại trang trước
-            }, 2000);
+            // Reset form sau khi thành công
+            setFormData({ currentPassword: '', newPassword: '', confirmPassword: '' });
         } catch (error) {
             console.error('Change password error:', error);
             const errorMsg = error.response?.data?.error || 'Có lỗi xảy ra khi đổi mật khẩu';
@@ -95,30 +91,6 @@ const ChangePassword = () => {
         }
     };
 
-    if (success) {
-        return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-                <div className="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
-                    <div className="bg-green-600 py-4 px-6">
-                        <h2 className="text-center text-2xl font-extrabold text-white">
-                            Thành công
-                        </h2>
-                    </div>
-
-                    <div className="px-8 py-6 text-center">
-                        <CheckCircle className="mx-auto h-12 w-12 text-green-500 mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">
-                            Mật khẩu đã được thay đổi
-                        </h3>
-                        <p className="text-gray-600 mb-6">
-                            Bạn sẽ được chuyển về trang trước trong giây lát
-                        </p>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
     const isSubmitDisabled = loading || !pwdValidation.valid || 
                            formData.newPassword !== formData.confirmPassword ||
                            !formData.currentPassword ||
@@ -126,24 +98,10 @@ const ChangePassword = () => {
     const barColor = getColorByPercent(pwdValidation.strengthPercent);
 
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
-                <div className="bg-green-600 py-4 px-6">
-                    <div className="flex items-center justify-between">
-                        <button 
-                            onClick={() => navigate(-1)} 
-                            className="text-white hover:text-green-100"
-                        >
-                            <ArrowLeft size={20} />
-                        </button>
-                        <h2 className="text-center text-2xl font-extrabold text-white">
-                            Đổi mật khẩu
-                        </h2>
-                        <div className="w-5"></div>
-                    </div>
-                </div>
-
-                <form onSubmit={handleSubmit} className="px-8 py-6">
+        <div className="max-w-2xl mx-auto">
+            <h1 className="text-2xl font-bold text-gray-800 mb-6">Đổi mật khẩu</h1>
+            <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-200">
+                <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="space-y-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -156,7 +114,7 @@ const ChangePassword = () => {
                                     value={formData.currentPassword}
                                     onChange={handleChange}
                                     required
-                                    className="appearance-none block w-full px-3 py-3 pr-12 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                                    className="appearance-none block w-full px-3 py-3 pr-12 border border-gray-200 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 sm:text-sm"
                                     placeholder="Mật khẩu hiện tại"
                                 />
                                 <button
@@ -180,7 +138,7 @@ const ChangePassword = () => {
                                     value={formData.newPassword}
                                     onChange={handleChange}
                                     required
-                                    className="appearance-none block w-full px-3 py-3 pr-12 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                                    className="appearance-none block w-full px-3 py-3 pr-12 border border-gray-200 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 sm:text-sm"
                                     placeholder="Mật khẩu mới"
                                 />
                                 <button
@@ -204,29 +162,28 @@ const ChangePassword = () => {
                                         aria-hidden="true"
                                     />
                                 </div>
-                                <div className="text-xs text-gray-500 mt-2">
-                                    Độ mạnh mật khẩu: <span className="font-medium">{pwdValidation.strengthPercent}%</span>
-                                </div>
                             </div>
                         </div>
 
                         {/* Chỉ dẫn mật khẩu */}
-                        {formData.password && (
-                            <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                <div className="w-full bg-gray-200 rounded-full h-2 mb-3 overflow-hidden">
+                        {formData.newPassword && (
+                            <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                <div className="flex justify-between items-center mb-2">
+                                    <p className="text-xs text-gray-600">Độ mạnh mật khẩu:</p>
+                                    <p className="text-xs font-medium" style={{ color: barColor }}>
+                                        {pwdValidation.strengthPercent < 50 ? 'Yếu' : pwdValidation.strengthPercent < 80 ? 'Trung bình' : 'Mạnh'}
+                                    </p>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-1.5 mb-3 overflow-hidden">
                                     <div
-                                        className="h-2 rounded-full"
-                                        style={{
-                                            width: `${pwdValidation.strengthPercent}%`,
-                                            background: barColor,
-                                            transition: 'width 250ms ease-in-out, background-color 250ms ease-in-out'
-                                        }}
+                                        className="h-1.5 rounded-full"
+                                        style={{ width: `${pwdValidation.strengthPercent}%`, background: barColor, transition: 'width 250ms ease-in-out, background-color 250ms ease-in-out' }}
                                     />
                                 </div>
                                 <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs">
                                     {Object.entries(requirementLabels).map(([key, label]) => (
                                         <li key={key} className={`flex items-center ${pwdValidation.checks[key] ? 'text-green-600' : 'text-gray-500'}`}>
-                                            {pwdValidation.checks[key] ? <Check size={14} className="mr-1.5" /> : <X size={14} className="mr-1.5" />}
+                                            {pwdValidation.checks[key] ? <Check size={14} className="mr-1.5 flex-shrink-0" /> : <X size={14} className="mr-1.5 flex-shrink-0" />}
                                             {label}
                                         </li>
                                     ))}
@@ -245,7 +202,7 @@ const ChangePassword = () => {
                                     value={formData.confirmPassword}
                                     onChange={handleChange}
                                     required
-                                    className="appearance-none block w-full px-3 py-3 pr-12 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                                    className="appearance-none block w-full px-3 py-3 pr-12 border border-gray-200 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 sm:text-sm"
                                     placeholder="Xác nhận mật khẩu mới"
                                 />
                                 <button
@@ -262,11 +219,11 @@ const ChangePassword = () => {
                         </div>
                     </div>
 
-                    <div className="mt-6">
+                    <div className="pt-2 flex justify-end">
                         <button
                             type="submit"
                             disabled={isSubmitDisabled}
-                            className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-200 disabled:opacity-50"
+                            className="group relative flex justify-center py-3 px-6 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-200 disabled:opacity-50"
                         >
                             {loading ? (
                                 <span className="flex items-center">
@@ -278,8 +235,8 @@ const ChangePassword = () => {
                                 </span>
                             ) : (
                                 <span className="flex items-center">
-                                    <Lock size={16} className="mr-2" />
-                                    Đổi mật khẩu
+                                    <Save size={16} className="mr-2" />
+                                    Lưu thay đổi
                                 </span>
                             )}
                         </button>
@@ -288,7 +245,4 @@ const ChangePassword = () => {
             </div>
         </div>
     );
-};
-
-export default ChangePassword;
-
+}

@@ -272,12 +272,9 @@ public class AuthController {
                         .body(Map.of("error", "Bạn cần đăng nhập để thay đổi mật khẩu"));
             }
 
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            User user = userRepository.findByEmail(userDetails.getUsername())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-
+            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
             passwordResetService.changePassword(
-                    user.getId(),
+                    userPrincipal.getId(),
                     changePasswordDTO.getCurrentPassword(),
                     changePasswordDTO.getNewPassword()
             );

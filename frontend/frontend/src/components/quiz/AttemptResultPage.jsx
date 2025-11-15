@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import { CheckCircle, XCircle, HelpCircle, ArrowLeft, Edit2 } from 'lucide-react';
 import { quizService } from '@/services/quizService';
 import MathRenderer from '../common/MathRenderer';
+import CustomAudioPlayer from './CustomAudioPlayer';
 
 const getAnswerColor = (option, userAnswer) => {
     const isSelected = userAnswer?.selectedOptionId === option.id;
@@ -80,12 +81,7 @@ const AttemptResultPage = () => {
 
             {/* Audio Player */}
             {result.audioUrl && (
-                <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        File Audio đã nghe
-                    </label>
-                    <audio src={result.audioUrl} controls className="w-full" />
-                </div>
+                <CustomAudioPlayer src={result.audioUrl} title="File Audio đã nghe" />
             )}
 
             <div className="space-y-6">

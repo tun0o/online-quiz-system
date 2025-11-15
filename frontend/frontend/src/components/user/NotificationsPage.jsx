@@ -20,7 +20,7 @@ const getNotificationIcon = (notificationType) => {
         case 'SUBMISSION_REJECTED':
             return <X className="text-red-500" size={20} />;
         default:
-            {}
+            { }
             return <Mail className="text-gray-500" size={20} />;
     }
 };
@@ -91,23 +91,26 @@ export default function NotificationsPage() {
     useEffect(() => {
         // Chỉ gọi khi page thay đổi
         loadNotifications(page);
-    }, [page]);
+    }, [page, loadNotifications]);
 
-    // Reset và tải lại từ đầu khi component được mount
-    useEffect(() => {
+    const reloadNotifications = useCallback(() => {
         setNotifications([]);
-        setPage(0);
         setHasMore(true);
-        // `loadNotifications(0)` sẽ được gọi bởi effect ở trên khi page được set về 0
-    }, []);
+        setPage(0);
+    }, [loadNotifications]);
 
     const handleMarkAsRead = async (notificationId) => {
         try {
             await userService.markNotificationAsRead(notificationId);
+
             setNotifications(prev =>
-                prev.map(n => (n.id === notificationId ? { ...n, isRead: true } : n))
+                prev.map(n =>
+                    n.id === notificationId ? { ...n, read: true } : n
+                )
             );
-            fetchUnreadCount(); // Lấy lại số lượng chính xác từ server
+
+            reloadNotifications();
+            fetchUnreadCount(); // Cập nhật lại số lượng ở chuông
         } catch (error) {
             console.error("Failed to mark notification as read:", error);
             toast.error('Không thể cập nhật thông báo.');
@@ -117,9 +120,13 @@ export default function NotificationsPage() {
     const handleMarkAllAsRead = async () => {
         try {
             await userService.markAllNotificationsAsRead();
-            setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-            setUnreadCount(0); // Đặt lại số lượng về 0
             toast.success('Đã đánh dấu tất cả là đã đọc.');
+
+            setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+
+            // Tải lại toàn bộ danh sách từ đầu
+            reloadNotifications();
+            fetchUnreadCount(); // Cập nhật lại số lượng ở chuông
         } catch (error) {
             console.error("Failed to mark all as read:", error);
             toast.error('Không thể cập nhật tất cả thông báo.');
@@ -128,7 +135,7 @@ export default function NotificationsPage() {
 
     const handleNotificationClick = (notification) => {
         // Chỉ đánh dấu đã đọc nếu nó chưa được đọc
-        if (!notification.isRead) {
+        if (!notification.read) {
             handleMarkAsRead(notification.id);
         }
         // Luôn điều hướng nếu có link
@@ -137,7 +144,7 @@ export default function NotificationsPage() {
         }
     };
 
-    const hasUnread = notifications.some(n => !n.isRead);
+    const hasUnread = notifications.some(n => !n.read);
 
     // Hiển thị loading ban đầu
     if (page === 0 && loading) {
@@ -189,7 +196,7 @@ export default function NotificationsPage() {
                                         key={notification.id}
                                         onClick={() => handleNotificationClick(notification)}
                                         className={`flex items-start gap-4 p-4 border-b border-gray-200 transition-colors cursor-pointer
-                                            ${!notification.isRead
+                                            ${!notification.read
                                                 ? 'bg-green-50 hover:bg-green-100'
                                                 : 'bg-white hover:bg-gray-50'
                                             }`
@@ -201,7 +208,7 @@ export default function NotificationsPage() {
                                             <p className="text-xs text-gray-500 mt-1">{formatDate(notification.createdAt)}</p>
                                         </div>
                                         <div className="flex-shrink-0 flex items-center gap-2">
-                                            {!notification.isRead && (
+                                            {!notification.read && (
                                                 <div className="w-2.5 h-2.5 bg-blue-500 rounded-full" title="Chưa đọc"></div>
                                             )}
                                         </div>
@@ -211,7 +218,7 @@ export default function NotificationsPage() {
                         </div>
                     ))
                 )}
-                            </div>
+            </div>
 
             {loading && (
                 <div className="text-center p-4 text-gray-500">
@@ -220,7 +227,7 @@ export default function NotificationsPage() {
             )}
 
             {!hasMore && notifications.length > 0 && (
-                 <div className="text-center p-4 text-gray-500 text-sm">
+                <div className="text-center p-4 text-gray-500 text-sm">
                     Đã tải hết tất cả thông báo.
                 </div>
             )}

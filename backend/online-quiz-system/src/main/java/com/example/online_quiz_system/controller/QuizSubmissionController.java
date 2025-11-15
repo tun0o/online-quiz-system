@@ -20,6 +20,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -31,6 +32,10 @@ public class QuizSubmissionController {
 
     @Autowired
     private MinioService minioService;
+
+    // Constants for audio file validation
+    private static final long MAX_AUDIO_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
+    private static final List<String> ALLOWED_AUDIO_TYPES = List.of("audio/mpeg", "audio/wav", "audio/mp3");
 
     // Helper để lấy userId từ SecurityContext
     private Long getCurrentUserId() {
@@ -149,6 +154,35 @@ public class QuizSubmissionController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("message", "Lỗi khi tải ảnh lên: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/audio")
+    public ResponseEntity<?> uploadQuizAudio(@RequestParam("file") MultipartFile file) {
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "File không được để trống"));
+        }
+
+        // === VALIDATION START ===
+        // 1. Validate file size
+        if (file.getSize() > MAX_AUDIO_FILE_SIZE) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Dung lượng file không được vượt quá 50MB."));
+        }
+
+        // 2. Validate file type (MIME type)
+        String contentType = file.getContentType();
+        if (contentType == null || !ALLOWED_AUDIO_TYPES.contains(contentType.toLowerCase())) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Định dạng file không hợp lệ. Chỉ chấp nhận file MP3 hoặc WAV."));
+        }
+        // === VALIDATION END ===
+
+        try {
+            // Tải file lên thư mục 'quiz-audio' trong MinIO bucket
+            String audioUrl = minioService.uploadFile(file, "quiz-audio");
+            return ResponseEntity.ok(Map.of("audioUrl", audioUrl));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Lỗi khi tải file audio lên: " + e.getMessage()));
         }
     }
 }

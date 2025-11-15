@@ -14,6 +14,7 @@ import java.util.List;
 public class QuizAttemptResultDTO {
     private Long attemptId;
     private String quizTitle;
+    private String audioUrl;
     private LocalDateTime completedAt;
     private BigDecimal score;
     private BigDecimal maxScore = BigDecimal.TEN;

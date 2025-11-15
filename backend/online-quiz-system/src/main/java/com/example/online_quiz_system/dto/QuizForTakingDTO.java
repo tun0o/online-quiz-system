@@ -13,5 +13,6 @@ public class QuizForTakingDTO {
     private String subject;
     private DifficultyLevel difficultyLevel;
     private Integer durationMinutes;
+    private String audioUrl;
     private List<QuestionForTakingDTO> questions;
 }

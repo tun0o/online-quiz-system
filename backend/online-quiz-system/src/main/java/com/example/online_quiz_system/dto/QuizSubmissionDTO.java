@@ -25,6 +25,7 @@ public class QuizSubmissionDTO {
     private Integer durationMinutes;
 
     private DifficultyLevel difficultyLevel;
+    private String audioUrl;
 
     @Valid
     private List<QuestionDTO> questions;

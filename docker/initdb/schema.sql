@@ -72,6 +72,7 @@ CREATE TABLE quiz_submissions (
     subject subject_enum NOT NULL,
     difficulty_level difficulty_level,
     duration_minutes INTEGER NOT NULL,
+    audio_url VARCHAR(255),
     contributor_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     status status_enum DEFAULT 'PENDING',
     admin_feedback TEXT,

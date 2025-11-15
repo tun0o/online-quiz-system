@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from 'react-toastify';
-import { Loader2, Clock, Check, X, Send, ArrowLeft, ArrowRight, Info, LogOut } from "lucide-react";
+import { Loader2, Clock, Check, X, Send, ArrowLeft, ArrowRight, Info, LogOut, Play, Pause, Volume2 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { subjectDisplayMap, difficultyDisplayMap, getDifficultyColor } from "@/utils/displayMaps";
 import { quizService } from "@/services/quizService";
@@ -161,6 +161,19 @@ export default function QuizTakingPage() {
     </div>
   );
 
+  // Memoize AudioPlayer để nó không bị re-render mỗi khi state timeLeft thay đổi
+  const memoizedAudioPlayer = useMemo(() => {
+    if (!quiz?.audioUrl) {
+      return null;
+    }
+    return (
+      <div className="mb-4 p-4 bg-gray-100 border border-gray-200 rounded-lg">
+        <p className="font-medium text-gray-700 mb-2">Audio cho phần thi nghe</p>
+        <audio src={quiz.audioUrl} controls className="w-full" />
+      </div>
+    );
+  }, [quiz?.audioUrl]); // Chỉ re-render khi audioUrl thay đổi
+
   const renderInProgress = () => {
     if (!quiz) return null;
     const currentQuestion = quiz.questions[currentQuestionIndex];
@@ -193,7 +206,7 @@ export default function QuizTakingPage() {
                 className={`h-10 w-10 rounded flex items-center justify-center font-medium border transition ${index === currentQuestionIndex
                   ? 'bg-green-600 text-white border-green-600 ring-2 ring-green-300'
                   : userAnswers[q.id]
-                    ? 'bg-blue-100 text-blue-800 border-blue-200'
+                    ? 'bg-blue-100 text-blue border-blue-200'
                     : 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200'
                   }`}
               >
@@ -232,6 +245,9 @@ export default function QuizTakingPage() {
               <div className="bg-green-600 h-2 rounded-full" style={{ width: `${((Object.keys(userAnswers).length) / quiz.questions.length) * 100}%` }}></div>
             </div>
           </div>
+
+          {/* Hiển thị Audio Player nếu có audioUrl */}
+          {memoizedAudioPlayer}
 
           {/* Question Body */}
           <div className="p-6 min-h-[300px]">

@@ -78,6 +78,16 @@ const AttemptResultPage = () => {
                 </div>
             </div>
 
+            {/* Audio Player */}
+            {result.audioUrl && (
+                <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        File Audio đã nghe
+                    </label>
+                    <audio src={result.audioUrl} controls className="w-full" />
+                </div>
+            )}
+
             <div className="space-y-6">
                 {result.questions.map((question, index) => {
                     const userAnswer = result.userAnswers.find(a => a.questionId === question.id);

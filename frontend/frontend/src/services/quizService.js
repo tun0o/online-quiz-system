@@ -154,8 +154,23 @@ export const quizService = {
         const formData = new FormData();
         // Key 'file' phải khớp với @RequestParam("file") ở backend
         formData.append('file', imageFile);
-        const response = await api.post(`/api/quiz-submissions/questions/image`, formData);
-        // Trả về trực tiếp URL thay vì cả object response
-        return response.data.imageUrl;
+        try {
+          const response = await api.post(`/api/quiz-submissions/questions/image`, formData);
+          // Trả về trực tiếp URL thay vì cả object response
+          return response.data.imageUrl;
+        } catch (error) {
+          throw new Error(error.response?.data?.message || 'Không thể tải ảnh câu hỏi.');
+        }
+    },
+
+    uploadQuizAudio: async (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        try {
+          const response = await api.post(`/api/quiz-submissions/audio`, formData);
+          return response.data.audioUrl;
+        } catch (error) {
+          throw new Error(error.response?.data?.message || 'Không thể tải file audio.');
+        }
     }
 };

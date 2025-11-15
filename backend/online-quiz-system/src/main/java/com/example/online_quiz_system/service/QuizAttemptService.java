@@ -54,6 +54,7 @@ public class QuizAttemptService {
         quizDTO.setSubject(submission.getSubject());
         quizDTO.setDifficultyLevel(submission.getDifficultyLevel());
         quizDTO.setDurationMinutes(submission.getDurationMinutes());
+        quizDTO.setAudioUrl(submission.getAudioUrl()); // Thêm dòng này
 
         List<QuestionForTakingDTO> questionDTOs = submission.getQuestions().stream()
                 .map(q -> {
@@ -302,6 +303,7 @@ public class QuizAttemptService {
         QuizAttemptResultDTO resultDTO = new QuizAttemptResultDTO();
         resultDTO.setAttemptId(attempt.getId());
         resultDTO.setQuizTitle(quiz.getTitle());
+        resultDTO.setAudioUrl(quiz.getAudioUrl());
         resultDTO.setCompletedAt(attempt.getEndTime());
         resultDTO.setScore(attempt.getScore());
         resultDTO.setMaxScore(totalMaxScore);

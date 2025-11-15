@@ -41,6 +41,9 @@ public class QuizSubmission {
     @Column(name = "difficulty_level")
     private DifficultyLevel difficultyLevel;
 
+    @Column(name = "audio_url")
+    private String audioUrl;
+
     @Column(name = "contributor_id", nullable = false)
     private Long contributorId;
 

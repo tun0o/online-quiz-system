@@ -46,6 +46,7 @@ public class QuizSubmissionService {
         submission.setDurationMinutes(dto.getDurationMinutes());
         submission.setContributorId(contributorId);
         submission.setDifficultyLevel(dto.getDifficultyLevel());
+        submission.setAudioUrl(dto.getAudioUrl());
 
         // Nếu người tạo là Admin hoặc Moderator, tự động duyệt đề thi
         if (principal.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_MODERATOR"))) {

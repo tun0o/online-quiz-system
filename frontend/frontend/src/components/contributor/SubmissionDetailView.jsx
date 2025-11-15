@@ -47,6 +47,16 @@ export default function SubmissionDetailView({ submission }) {
         </div>
       </div>
 
+      {/* Audio Player */}
+      {submission.audioUrl && (
+        <div className="pt-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            File Audio
+          </label>
+          <audio src={submission.audioUrl} controls className="w-full" />
+        </div>
+      )}
+
       <hr />
 
       {/* Questions List */}

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Plus, Trash2, Save, UploadCloud, X, XCircle, Sigma } from 'lucide-react';
+import { Plus, Trash2, Save, UploadCloud, X, XCircle, Sigma, FileAudio, Loader2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { quizService } from '@/services/quizService';
 import MathEditorModal from '../common/MathEditorModal';
@@ -13,9 +13,11 @@ export default function QuizSubmissionForm({ submission, onSuccess, onCancel }) 
     subject: '',
     difficultyLevel: 'EASY',
     durationMinutes: 60,
+    audioUrl: null,
     questions: [createEmptyQuestion()]
   });
   const [loading, setLoading] = useState(false);
+  const [isUploadingAudio, setIsUploadingAudio] = useState(false);
   const questionsEndRef = useRef(null);
   const prevQuestionsLength = useRef(formData.questions.length);
   const { submissionId } = useParams();
@@ -55,6 +57,7 @@ export default function QuizSubmissionForm({ submission, onSuccess, onCancel }) 
         subject: '',
         difficultyLevel: 'EASY',
         durationMinutes: 60,
+        audioUrl: null,
         questions: [createEmptyQuestion()]
       });
     }
@@ -85,6 +88,7 @@ export default function QuizSubmissionForm({ submission, onSuccess, onCancel }) 
       questionText: '',
       imageUrl: null,
       imageFile: null, // Dùng để lưu file ảnh tạm thời ở client
+      audioUrl: null,
       questionType: 'MULTIPLE_CHOICE',
       explanation: '',
       maxScore: 10.0,
@@ -150,6 +154,34 @@ export default function QuizSubmissionForm({ submission, onSuccess, onCancel }) 
       toast.warn('Vui lòng chọn một file ảnh hợp lệ.');
     }
   };
+
+  const handleAudioFileChange = async (file) => {
+    if (!file) return;
+
+    // Frontend validation (optional but recommended)
+    const allowedTypes = ['audio/mpeg', 'audio/wav', 'audio/mp3'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Định dạng file không hợp lệ. Chỉ chấp nhận file MP3 hoặc WAV.');
+      return;
+    }
+    const maxSize = 50 * 1024 * 1024; // 50MB
+    if (file.size > maxSize) {
+      toast.error('Dung lượng file không được vượt quá 50MB.');
+      return;
+    }
+
+    setIsUploadingAudio(true);
+    try {
+      const uploadedUrl = await quizService.uploadQuizAudio(file);
+      setFormData(prev => ({ ...prev, audioUrl: uploadedUrl }));
+      toast.success('Tải file audio thành công!');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Lỗi khi tải file audio.');
+    } finally {
+      setIsUploadingAudio(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -220,6 +252,7 @@ export default function QuizSubmissionForm({ submission, onSuccess, onCancel }) 
           subject: '',
           difficultyLevel: 'EASY',
           durationMinutes: 60,
+          audioUrl: null,
           questions: [createEmptyQuestion()]
         });
       }
@@ -379,6 +412,48 @@ export default function QuizSubmissionForm({ submission, onSuccess, onCancel }) 
                 <Sigma size={16} />
               </button>
           </div>
+        </div>
+
+        {/* Audio Upload Section */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            File Audio cho bài nghe (tùy chọn)
+          </label>
+          {isUploadingAudio ? (
+            <div className="flex items-center gap-2 p-3 border border-gray-200 rounded-lg bg-gray-50">
+              <Loader2 className="animate-spin text-green-600" size={20} />
+              <span className="text-gray-600">Đang tải lên...</span>
+            </div>
+          ) : formData.audioUrl ? (
+            <div className="p-3 border border-gray-200 rounded-lg bg-gray-50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-green-700">
+                  <FileAudio size={20} />
+                  <span className="font-medium">Đã tải lên file audio.</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, audioUrl: null }))}
+                  className="text-red-600 hover:text-red-800"
+                  title="Xóa file audio"
+                >
+                  <XCircle size={18} />
+                </button>
+              </div>
+              <audio src={formData.audioUrl} controls className="w-full mt-3" />
+            </div>
+          ) : (
+            <label className="w-full flex flex-col items-center px-4 py-6 bg-white text-blue rounded-lg shadow-sm tracking-wide uppercase border border-blue-500 border-dashed cursor-pointer hover:bg-blue-50 hover:text-blue-700">
+              <UploadCloud size={24} />
+              <span className="mt-2 text-sm leading-normal">Chọn file MP3, WAV (tối đa 50MB)</span>
+              <input
+                type='file'
+                className="hidden"
+                accept="audio/mpeg,audio/wav,audio/mp3"
+                onChange={(e) => handleAudioFileChange(e.target.files[0])}
+              />
+            </label>
+          )}
         </div>
 
         {/* Questions */}

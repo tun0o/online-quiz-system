@@ -217,6 +217,16 @@ export default function ModerationPanel() {
                   </div>
                 </div>
 
+                {/* Audio Player */}
+                {selectedSubmission.audioUrl && (
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      File Audio đính kèm
+                    </label>
+                    <audio src={selectedSubmission.audioUrl} controls className="w-full" />
+                  </div>
+                )}
+
                 {/* Questions Preview */}
                 <div>
                   <h3 className="font-medium text-gray-800 mb-3">Nội dung câu hỏi:</h3>

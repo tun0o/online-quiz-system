@@ -121,7 +121,6 @@ const UserEditModal = ({ user, isOpen, onClose, onSave }) => {
                             >
                                 <option value="USER">User</option>
                                 <option value="MODERATOR">Moderator</option>
-                                <option value="ADMIN">Admin</option>
                             </select>
                         </div>
                         <div className="flex items-center space-x-4">
@@ -321,9 +320,6 @@ export default function UserManagementPage() {
             setIsSubmitting(false);
         }
     };
-
-
-
 
     const formatDate = (dateString) => {
         if (!dateString) return 'N/A';

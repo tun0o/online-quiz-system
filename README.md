@@ -1,6 +1,6 @@
 # Online Quiz System (Practizz)
 
-Dự án đồ án tốt nghiệp — Hệ thống ôn luyện trắc nghiệm trực tuyến tích hợp AI cá nhân hóa gợi ý bài học.
+Đồ án tốt nghiệp — Hệ thống ôn luyện trắc nghiệm trực tuyến tích hợp AI cá nhân hóa gợi ý bài học.
 
 ---
 
@@ -97,28 +97,13 @@ mc anonymous set download myminio/practizz-bucket
 
 ---
 
-## Biến môi trường mẫu
-Backend (application.yml / .env):
-- SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/quizdb
-- SPRING_DATASOURCE_USERNAME=postgres
-- SPRING_DATASOURCE_PASSWORD=123456
-- SPRING_PROFILES_ACTIVE=dev
-- JWT_SECRET=your_jwt_secret_here
-- OAUTH2_CLIENT_ID=...
-- OAUTH2_CLIENT_SECRET=...
-- MAIL_HOST=smtp.example.com
-- MAIL_PORT=587
-- MAIL_USERNAME=...
-- MAIL_PASSWORD=...
-
-Frontend (frontend/.env):
-- VITE_API_BASE_URL=http://localhost:8080/api
-- VITE_OTHER_CONFIG=...
-
----
-
 ## Database & Seed
 - Script tạo schema: docker\initdb\schema.sql (bao gồm enum types như role_enum, subject_enum, status_enum và bảng users, questions, quizzes...)
 - Backend có DataInitializer (backend/.../DataInitializer.java) dùng để tạo default admin nếu chưa có (email admin@quiz.com).
-
+- Thông tin tài khoản thanh toán Demo thành công (Thẻ nội địa và tài khoản ngân hàng):
+    Ngân hàng: NCB
+    Số thẻ: 9704198526191432198
+    Tên chủ thẻ:NGUYEN VAN A
+    Ngày phát hành:07/15
+    Mật khẩu OTP:123456
 ---

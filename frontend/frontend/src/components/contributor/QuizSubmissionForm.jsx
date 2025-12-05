@@ -275,21 +275,14 @@ export default function QuizSubmissionForm({ submission, onSuccess, onCancel }) 
   };
 
   const openMathEditor = (type, qIndex, oIndex = null) => {
-    let initialValue = '';
-    if (type === 'questionText') initialValue = formData.questions[qIndex].questionText;
-    if (type === 'explanation') initialValue = formData.questions[qIndex].explanation;
-    if (type === 'optionText') initialValue = formData.questions[qIndex].answerOptions[oIndex].optionText;
-    if (type === 'essayGuidelines') initialValue = formData.questions[qIndex].essayGuidelines;
-    if (type === 'description') initialValue = formData.description;
-
-    setInitialMathValue(initialValue);
+    setInitialMathValue('');
     setMathInputTarget({ type, qIndex, oIndex });
     setIsMathModalOpen(true);
   };
 
   const handleInsertMath = (latex) => {
     const { type, qIndex, oIndex } = mathInputTarget;
-    const formula = `$$${latex}$$`; // Wrap in block format
+    const formula = `\(${latex}\)`; // Wrap in block format
 
     if (type === 'description') {
       setFormData(prev => ({ ...prev, description: prev.description + formula }));

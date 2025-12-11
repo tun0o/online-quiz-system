@@ -282,7 +282,7 @@ export default function QuizSubmissionForm({ submission, onSuccess, onCancel }) 
 
   const handleInsertMath = (latex) => {
     const { type, qIndex, oIndex } = mathInputTarget;
-    const formula = `\(${latex}\)`; // Wrap in block format
+    const formula = `\\(${latex}\\)`; // Wrap in block format
 
     if (type === 'description') {
       setFormData(prev => ({ ...prev, description: prev.description + formula }));

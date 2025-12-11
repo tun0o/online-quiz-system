@@ -1,0 +1,94 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor Guest
+actor User as Student
+actor Admin
+actor Moderator
+actor System
+actor "Payment Gateway\n(VNPAY)" as VNPAY
+actor OAuthProvider
+
+rectangle "Online Quiz System (based on code)" {
+  (Register / Login / OAuth2 Login) as UC_Auth
+  (Verify Email) as UC_Verify
+  (Password Reset) as UC_PasswordReset
+  (Browse Quizzes/Courses) as UC_Browse
+  (Contribute Quiz Submission) as UC_Contribute
+  (Moderate Submission: Approve/Reject) as UC_Moderate
+  (Create / Manage Quiz & Questions) as UC_ManageQuiz
+  (Assign / Schedule Quiz) as UC_Schedule
+  (Start / Take Quiz) as UC_TakeQuiz
+  (Submit Quiz / Auto-submit on Timeout) as UC_Submit
+  (Auto-grade MCQ/TF) as UC_AutoGrade
+  (Manual-grade Essay) as UC_ManualGrade
+  (View Results / Review) as UC_ViewResults
+  (Payment / Checkout) as UC_Payment
+  (VnPay Return Callback) as UC_VnpayReturn
+  (Send Notifications) as UC_Notify
+  (Analytics & Reports) as UC_Analytics
+  (Manage Users & Roles) as UC_UserMgmt
+
+  ' Gamification / Ranking
+  (Participate in Daily Missions / Challenges) as UC_ParticipateMissions
+  (Complete Challenge / Mission) as UC_CompleteMission
+  (Earn Points / Badges) as UC_EarnPoints
+  (View Leaderboard / Ranking) as UC_Leaderboard
+  (Claim Rewards / Certificates) as UC_ClaimRewards
+  (Configure Missions & Rewards) as UC_ConfigMissions
+  (System: Compute Leaderboard / Expire Missions) as UC_SystemMissions
+}
+
+' Actors relationships (based on code roles)
+Guest --> UC_Browse
+Guest --> UC_Auth
+
+Student --> UC_Auth
+Student --> UC_Verify
+Student --> UC_PasswordReset
+Student --> UC_Browse
+Student --> UC_TakeQuiz
+Student --> UC_Submit
+Student --> UC_ViewResults
+Student --> UC_Payment
+
+User --> UC_Contribute
+
+Admin --> UC_UserMgmt
+Admin --> UC_Moderate
+Admin --> UC_ManageQuiz
+Admin --> UC_Analytics
+Admin --> UC_ConfigMissions
+
+Moderator --> UC_Moderate
+Moderator --> UC_ManualGrade
+Moderator --> UC_ManageQuiz
+
+System --> UC_AutoGrade
+System --> UC_Notify
+System --> UC_VnpayReturn
+System --> UC_SystemMissions
+VNPAY --> UC_VnpayReturn
+OAuthProvider --> UC_Auth
+
+' Gamification flows
+Student --> UC_ParticipateMissions
+Student --> UC_CompleteMission
+Student --> UC_EarnPoints
+Student --> UC_Leaderboard
+Student --> UC_ClaimRewards
+
+UC_CompleteMission .> UC_EarnPoints : results in
+UC_EarnPoints .> UC_Leaderboard : contributes to
+UC_ConfigMissions .> UC_CompleteMission : defines
+UC_SystemMissions .> UC_Leaderboard : computes
+UC_Notify .> UC_ClaimRewards : informs
+
+' Use-case relationships
+UC_Contribute .> UC_Moderate : submits (status PENDING)
+UC_Submit .> UC_AutoGrade : includes
+UC_Submit .> UC_ManualGrade : includes (for ESSAY)
+UC_TakeQuiz .> UC_Schedule : depends on
+UC_Payment .> UC_VnpayReturn : includes
+@enduml

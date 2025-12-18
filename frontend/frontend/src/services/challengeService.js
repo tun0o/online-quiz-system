@@ -1,0 +1,43 @@
+import api from "./api";
+
+export const challengeService = {
+  getTodayChallenges: async () => {
+    try {
+      const response = await api.get('/api/challenges/daily');
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Không thể tải nhiệm vụ hằng ngày.');
+    }
+  },
+  
+  updateProgress: async (challengeId, progressValue) => {
+    try {
+      const response = await api.post(`/api/challenges/${challengeId}/progress`, { progressValue });
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Không thể cập nhật tiến độ nhiệm vụ.');
+    }
+  },
+  
+  getLeaderboard: async (period) => {
+    try {
+      const response = await api.get(`/api/challenges/leaderboard?period=${period}`);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Không thể tải bảng xếp hạng.');
+    }
+  },
+
+  /**
+   * Fetches the current user's ranking details.
+   * @returns {Promise<any>} A promise that resolves to the user's rank data.
+   */
+  getMyRank: async (period) => {
+    try {
+      const response = await api.get(`/api/challenges/my-rank?period=${period}`);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Không thể tải xếp hạng của bạn.');
+    }
+  },
+};

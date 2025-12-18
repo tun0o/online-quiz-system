@@ -1,0 +1,71 @@
+version: "3.8"
+
+services:
+  # Dịch vụ Backend (Spring Boot)
+  backend:
+    build: ../backend/online-quiz-system
+    container_name: quiz_backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      # Sử dụng service name 'db' làm hostname
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      # Sử dụng service name 'minio' làm hostname
+      MINIO_URL: "http://minio:9000"
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      # Các biến môi trường khác
+      APP_JWT_SECRET: ${JWT_SECRET}
+      APP_FRONTEND_URL: ${APP_FRONTEND_URL}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # Dịch vụ Frontend (React + Nginx)
+  frontend:
+    build: ../frontend/frontend
+    container_name: quiz_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80" # Truy cập frontend qua http://localhost:3000
+
+  # Dịch vụ Database (PostgreSQL)
+  db:
+    image: postgres:15
+    container_name: quiz_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./initdb/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  minio:
+    image: minio/minio:latest
+    container_name: quiz_minio
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    ports:
+      - "9000:9000"   # API
+      - "9001:9001"   # Console UI
+    volumes:
+      - minio_data:/data
+
+volumes:
+  db_data:
+  minio_data:

@@ -1,0 +1,16 @@
+package com.example.online_quiz_system.dto;
+
+import com.example.online_quiz_system.enums.QuestionType;
+import lombok.Data;
+
+import java.util.List;
+
+@Data
+public class QuestionForTakingDTO {
+    private Long id;
+    private String questionText;
+    private QuestionType questionType;
+    private String essayGuidelines;
+    private String imageUrl;
+    private List<AnswerOptionForTakingDTO> answerOptions;
+}

@@ -1,0 +1,10 @@
+- Môn học hỗ trợ: 2–3 môn (Toán, Lý, Hóa).
+- Người dùng: User, Contributor, Admin.
+- Chức năng bắt buộc:
+  - Đăng ký/đăng nhập,
+  - CRUD câu hỏi/quiz cơ bản,
+  - Làm bài + chấm điểm,
+  - Thống kê cá nhân,
+  - Đóng góp & duyệt câu hỏi,
+  - AI gợi ý mức đơn giản (rule-based).
+- Các chức năng khác (BXH, thử thách, A/B test) sẽ phát triển ở tuần sau

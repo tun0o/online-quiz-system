@@ -89,7 +89,8 @@ export default function QuizTakingPage() {
         }
         setQuizState('IN_PROGRESS');
       } catch (error) {
-        toast.error("Không thể tải đề thi. Vui lòng thử lại.");
+        const errorMessage = error.response?.data?.message || "Không thể tải đề thi. Vui lòng thử lại.";
+        toast.error(errorMessage);
         console.error(error);
         navigate('/');
       }

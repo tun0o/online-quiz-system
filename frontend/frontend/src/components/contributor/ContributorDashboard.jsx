@@ -229,7 +229,7 @@ export default function ContributorDashboard() {
               }`}
           >
             <Plus size={16} className="inline mr-2" />
-            Tạo đề mới
+            Đóng góp đề mới
           </button>
         </div>
       </div>

@@ -1,18 +1,18 @@
 # Online Quiz System (Practizz)
 
-Đồ án tốt nghiệp — Hệ thống ôn luyện trắc nghiệm trực tuyến tích hợp AI cá nhân hóa gợi ý bài học.
+Đồ án tốt nghiệp — Hệ thống ôn luyện đề thi trực tuyến tích hợp cá nhân hóa gợi ý bài học.
 
 ---
 
 ## Tổng quan
-Online Quiz System (Practizz) là một nền tảng ôn luyện trắc nghiệm trực tuyến dành cho học sinh/độc giả. Hệ thống hỗ trợ:
+Online Quiz System (Practizz) là một nền tảng ôn luyện trực tuyến dành cho học sinh/độc giả. Hệ thống hỗ trợ:
 - Đăng ký / đăng nhập (bao gồm OAuth2),
 - Tạo / quản lý câu hỏi và đề thi (CRUD),
 - Làm bài trực tuyến, chấm điểm tự động và yêu cầu chấm bài tự luận,
 - Thống kê cá nhân, lịch sử làm bài, thông báo hệ thống,
-- Hệ thống đóng góp câu hỏi và quy trình kiểm duyệt cho admin,
+- Hệ thống đóng góp câu hỏi và quy trình kiểm duyệt cho moderator/admin,
 - Mua điểm (gói nạp điểm), bảng xếp hạng, nhiệm vụ và các tính năng gamification,
-- Hệ thống gợi ý AI ở mức rule-based ban đầu, dự kiến nâng cấp bằng collaborative/content-based recommendation.
+- Hệ thống gợi ý AI ở mức rule-based.
 
 ---
 
@@ -26,13 +26,6 @@ Online Quiz System (Practizz) là một nền tảng ôn luyện trắc nghiệm
 - docs — Tài liệu nội bộ: MVP scope, hướng dẫn reset mật khẩu, v.v.
 - README.md — (file này) mô tả tổng quan.
 
-Một số file bạn có thể tham khảo trực tiếp:
-- frontend vite config: frontend/frontend/vite.config.js
-- frontend entry: frontend/frontend/index.html
-- docker init script: docker/initdb/01-init-schema.sql
-- backend seed admin: backend/online-quiz-system/src/main/java/.../DataInitializer.java
-- docs: docs/MVP_scope.md, docs/PASSWORD_RESET_GUIDE.md
-
 ---
 
 ## Stack chính
@@ -40,14 +33,14 @@ Một số file bạn có thể tham khảo trực tiếp:
 - Frontend: React, Vite, TailwindCSS
 - DB: PostgreSQL, MinIO(S3)
 - Hệ thống thanh toán (ví điểm): module frontend + backend services, tích hợp thanh toán VNPAY
-- AI Recommendation: bước đầu là rule-based, hướng tới content-based & collaborative filtering
+- Recommender System (Rule based)
 
 ---
 
 ## Tính năng chính
-- Role: USER, ADMIN (enum trong DB)
+- Role: USER, MODERATOR, ADMIN
 - Xác thực: email/password, OAuth2 (OAuth2Success / OAuth2Error components)
-- Quản trị: giao diện admin để duyệt/cấp quyền, chấm bài, quản lý người dùng và đề thi
+- Quản trị: giao diện moderator/admin để duyệt/cấp quyền, chấm bài, quản lý người dùng và đề thi
 - Người dùng: làm quiz, xem thống kê, nhiệm vụ, bảng xếp hạng, đóng góp câu hỏi, mua điểm tiêu dùng, yêu cầu chấm câu hỏi tự luận
 - Hệ thống kiểm duyệt: đóng góp câu hỏi -> queue kiểm duyệt (status enum PENDING/APPROVED/REJECTED)
 - Seed data: default admin được tạo tự động khi khởi động backend (email: admin@quiz.com, mật khẩu: admin)

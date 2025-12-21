@@ -11,6 +11,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/quizzes")
 public class QuizTakingController {
@@ -28,9 +30,12 @@ public class QuizTakingController {
     }
 
     @PostMapping("/{quizId}/start")
-    public ResponseEntity<QuizStartResponseDTO> startQuiz(@PathVariable Long quizId) {
+    public ResponseEntity<?> startQuiz(@PathVariable Long quizId) {
         Long userId = getCurrentUserId();
-        if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Bạn cần đăng nhập để bắt đầu bài thi."));
+        }
 
         QuizAttempt attempt = quizAttemptService.startQuizAttempt(quizId, userId);
         QuizForTakingDTO quizData = quizAttemptService.getQuizForTaking(quizId);

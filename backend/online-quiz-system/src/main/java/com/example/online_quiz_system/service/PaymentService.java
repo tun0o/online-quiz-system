@@ -85,6 +85,7 @@ public class PaymentService {
         vnp_Params.put("vnp_Command", "pay");
         vnp_Params.put("vnp_TmnCode", vnpayConfig.getTmnCode());
         vnp_Params.put("vnp_Amount", String.valueOf(amount));
+        vnp_Params.put("vnp_BankCode", "VNBANK");
         vnp_Params.put("vnp_CurrCode", "VND");
         vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
         vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang:" + vnp_TxnRef);

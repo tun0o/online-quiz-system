@@ -77,6 +77,17 @@ export const quizService = {
     }
   },
 
+  uploadQuizFromJson: async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await api.post('/api/quiz-submissions/upload-json', formData);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Không thể upload đề thi từ file JSON.');
+    }
+  },
+
   // Admin APIs
   getPendingSubmissions: async (page = 0, size = 10) => {
     try {

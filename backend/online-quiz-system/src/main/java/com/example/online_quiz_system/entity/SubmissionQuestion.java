@@ -36,6 +36,7 @@ public class SubmissionQuestion {
     @Column(name = "question_type")
     private QuestionType questionType;
 
+    @Column(name = "explanation", columnDefinition = "TEXT")
     private String explanation;
 
     @Column(name = "max_score")

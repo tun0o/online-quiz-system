@@ -4,10 +4,14 @@ import com.example.online_quiz_system.dto.JwtResponseDTO;
 import com.example.online_quiz_system.dto.RecentAttemptDTO;
 import com.example.online_quiz_system.dto.UserDashboardStatsDTO;
 import com.example.online_quiz_system.dto.UserProfileUpdateDTO;
+import com.example.online_quiz_system.dto.RecommendedQuizDTO;
+import com.example.online_quiz_system.dto.RecommendationAnalyticsDTO;
 import com.example.online_quiz_system.entity.User;
 import com.example.online_quiz_system.security.UserPrincipal;
 import com.example.online_quiz_system.service.MinioService;
 import com.example.online_quiz_system.service.UserService;
+import com.example.online_quiz_system.service.RecommendationAnalyticsService;
+import com.example.online_quiz_system.service.recommendation.SimpleRecommendationService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -23,6 +27,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -38,6 +43,12 @@ public class UserController {
     @Autowired
     private MinioService minioService;
 
+    @Autowired
+    private SimpleRecommendationService simpleRecommendationService;
+
+    @Autowired
+    private RecommendationAnalyticsService recommendationAnalyticsService;
+
     @GetMapping("/me/dashboard-stats")
     public ResponseEntity<UserDashboardStatsDTO> getMyDashboardStats(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -45,6 +56,20 @@ public class UserController {
 
         UserDashboardStatsDTO statsDTO = userService.getDashboardStatsForUser(userPrincipal.getId());
         return ResponseEntity.ok(statsDTO);
+    }
+
+    @GetMapping("/me/recommendations")
+    public ResponseEntity<List<RecommendedQuizDTO>> getMyQuizRecommendations() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+
+        List<RecommendedQuizDTO> recommendations = simpleRecommendationService
+                .getPersonalizedQuizzes(userPrincipal.getId(), 10)
+                .stream()
+                .map(RecommendedQuizDTO::fromEntity)
+                .toList();
+
+        return ResponseEntity.ok(recommendations);
     }
 
     @PutMapping("/me")
@@ -69,6 +94,19 @@ public class UserController {
 
         Page<RecentAttemptDTO> recentAttemptDTOS = userService.getAttemptsHistory(userPrincipal.getId(), pageable);
         return ResponseEntity.ok(recentAttemptDTOS);
+    }
+
+    @GetMapping("/me/recommendation-analytics")
+    public ResponseEntity<RecommendationAnalyticsDTO> getMyRecommendationAnalytics(
+            @RequestParam(value = "since", required = false) LocalDate since) {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+
+        RecommendationAnalyticsDTO analytics = recommendationAnalyticsService
+                .getUserAnalytics(userPrincipal.getId(), since);
+
+        return ResponseEntity.ok(analytics);
     }
 
     @PostMapping("/me/avatar")

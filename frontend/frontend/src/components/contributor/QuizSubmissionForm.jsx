@@ -19,6 +19,7 @@ export default function QuizSubmissionForm({ submission, onSuccess, onCancel }) 
   });
   const [loading, setLoading] = useState(false);
   const [isUploadingAudio, setIsUploadingAudio] = useState(false);
+  const [isImportingJson, setIsImportingJson] = useState(false);
   const questionsEndRef = useRef(null);
   const prevQuestionsLength = useRef(formData.questions.length);
   const { submissionId } = useParams();
@@ -81,6 +82,71 @@ export default function QuizSubmissionForm({ submission, onSuccess, onCancel }) 
       // Chuyển đổi giá trị cho input number một cách an toàn
       [name]: type === 'number' ? parseInt(value, 10) || 0 : value
     }));
+  };
+
+  const handleImportJson = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.toLowerCase().endsWith('.json')) {
+      toast.warn('Vui lòng chọn file .json hợp lệ.');
+      return;
+    }
+
+    const reader = new FileReader();
+    setIsImportingJson(true);
+
+    reader.onload = (e) => {
+      try {
+        const content = e.target.result;
+        const data = JSON.parse(content);
+
+        const normalizedQuestions = (data.questions || []).map((q) => ({
+          clientKey: `q_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+          questionText: q.questionText || '',
+          imageUrl: q.imageUrl || null,
+          imageFile: null,
+          audioUrl: q.audioUrl || null,
+          questionType: q.questionType || 'MULTIPLE_CHOICE',
+          explanation: q.explanation || '',
+          maxScore: q.maxScore ?? 10.0,
+          essayGuidelines: q.essayGuidelines || '',
+          answerOptions: (q.answerOptions || []).map((opt) => ({
+            id: opt.id ?? null,
+            optionText: opt.optionText || '',
+            isCorrect: opt.isCorrect ?? false,
+            clientKey: `ans_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+          })),
+        }));
+
+        setFormData((prev) => ({
+          ...prev,
+          title: data.title || '',
+          description: data.description || '',
+          subject: data.subject || '',
+          difficultyLevel: data.difficultyLevel || 'EASY',
+          durationMinutes: data.durationMinutes || 60,
+          audioUrl: data.audioUrl || null,
+          questions: normalizedQuestions.length > 0 ? normalizedQuestions : [createEmptyQuestion()],
+        }));
+
+        toast.success('Đã nhập dữ liệu từ file JSON vào form. Bạn có thể chỉnh sửa rồi bấm Lưu.');
+      } catch (error) {
+        console.error('JSON import error:', error);
+        toast.error('File JSON không hợp lệ hoặc không đúng cấu trúc.');
+      } finally {
+        setIsImportingJson(false);
+        // Reset lại input để có thể chọn lại cùng một file nếu cần
+        event.target.value = '';
+      }
+    };
+
+    reader.onerror = () => {
+      toast.error('Không thể đọc file JSON.');
+      setIsImportingJson(false);
+    };
+
+    reader.readAsText(file, 'utf-8');
   };
 
   function createEmptyQuestion() {
@@ -307,7 +373,24 @@ export default function QuizSubmissionForm({ submission, onSuccess, onCancel }) 
 
   return (
     <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-      <h2 className="text-xl font-semibold mb-6 text-gray-800">{formData.id ? 'Chỉnh sửa đề thi' : 'Đóng góp đề thi mới'}</h2>
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4">
+        <h2 className="text-xl font-semibold text-gray-800">{formData.id ? 'Chỉnh sửa đề thi' : 'Đóng góp đề thi mới'}</h2>
+        {!formData.id && (
+          <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+            <label className="flex items-center justify-center px-3 py-2 border border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 text-sm text-gray-700">
+              <UploadCloud size={16} className="mr-2 text-blue-500" />
+              <span>{isImportingJson ? 'Đang nhập JSON...' : 'Nhập từ file JSON'}</span>
+              <input
+                type="file"
+                accept=".json,application/json"
+                onChange={handleImportJson}
+                className="hidden"
+                disabled={isImportingJson}
+              />
+            </label>
+          </div>
+        )}
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Info */}

@@ -16,6 +16,7 @@ import ModerationPanel from "@/components/admin/ModerationPanel";
 import AllSubmissionsTable from "@/components/admin/AllSubmissionsTable";
 import QuizSubmissionForm from "@/components/contributor/QuizSubmissionForm";
 import { quizService } from "@/services/quizService";
+import api from "@/services/api";
 import QuizTakingPage from "@/components/quiz/QuizTakingPage";
 import { subjectDisplayMap, difficultyDisplayMap, getDifficultyColor } from "@/utils/displayMaps";
 import { challengeService } from "@/services/challengeService";
@@ -472,6 +473,36 @@ function HomePage() {
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [pagination, setPagination] = useState({ size: 12, totalPages: 0 });
+  const [featuredQuizzes, setFeaturedQuizzes] = useState([]);
+  const [loadingFeatured, setLoadingFeatured] = useState(false);
+
+  const formatQuizTitle = (title) => {
+    if (!title) return { main: '', code: '' };
+
+    const trimmed = title.trim();
+
+    // Ưu tiên tách theo các cụm quen thuộc như "Đề số" hoặc "Mã đề"
+    const codeKeywords = ["Đề số", "Mã đề"];
+    for (const keyword of codeKeywords) {
+      const idx = trimmed.lastIndexOf(keyword);
+      if (idx > 0) {
+        let main = trimmed.substring(0, idx).trim();
+        // Nếu trước đó kết thúc bằng dấu gạch ngang hoặc en-dash thì bỏ đi cho gọn
+        main = main.replace(/[\-–]\s*$/, '').trim();
+        const code = trimmed.substring(idx).trim();
+        return { main, code };
+      }
+    }
+
+    // Fallback: tách theo dấu '-' hoặc '–'
+    const parts = trimmed.split(/[\-–]\s*/);
+    if (parts.length <= 1) {
+      return { main: trimmed, code: '' };
+    }
+    const code = parts.pop();
+    const main = parts.join(' - ');
+    return { main, code };
+  };
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -506,6 +537,26 @@ function HomePage() {
 
     fetchQuizzes();
   }, [query, pagination.size]);
+
+    // Load personalized featured quizzes for the current user (if authenticated)
+  useEffect(() => {
+    const fetchFeatured = async () => {
+      try {
+        setLoadingFeatured(true);
+        const response = await api.get('/api/user/me/recommendations');
+        const data = response.data || [];
+        // Lưu toàn bộ danh sách gợi ý, hiển thị tất cả trong một hàng
+        setFeaturedQuizzes(data);
+      } catch (error) {
+        // Nếu chưa đăng nhập hoặc lỗi khác, chỉ cần bỏ qua, không hiển thị toast
+        setFeaturedQuizzes([]);
+      } finally {
+        setLoadingFeatured(false);
+      }
+    };
+
+    fetchFeatured();
+  }, []);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -557,18 +608,50 @@ function HomePage() {
       {/* Đề thi nổi bật */}
       <section className="mb-6">
         <h2 className="text-xl font-semibold mb-4 text-gray-800">Đề thi nổi bật</h2>
-        <div className="flex gap-4 overflow-x-auto pb-4">
-          {["Ôn luyện đạo hàm", "Ôn luyện điện tử", "Hóa hữu cơ"].map(
-            (title, i) => (
+
+        <div className="flex gap-3 overflow-x-auto pb-4">
+          {loadingFeatured ? (
+            <div className="text-gray-500">Đang tải gợi ý...</div>
+          ) : featuredQuizzes.length === 0 ? (
+            <div className="text-gray-500">Hiện chưa có gợi ý, hãy làm thử một vài đề nhé.</div>
+          ) : (
+            featuredQuizzes.map((quiz) => (
               <div
-                key={i}
-                className="min-w-[220px] border border-gray-200 rounded-lg p-4 bg-white hover:shadow-md transition-shadow cursor-pointer"
+                key={quiz.id}
+                className="min-w-[150px] sm:min-w-[190px] md:min-w-[220px] border border-gray-200 rounded-lg p-4 bg-white hover:shadow-md transition-shadow cursor-pointer"
               >
-                <h3 className="font-bold text-gray-800">{title}</h3>
-                <p className="text-gray-600 text-sm">Thời gian: 50p</p>
-                <p className="text-gray-600 text-sm">50 câu hỏi</p>
+                {(() => {
+                  const { main, code } = formatQuizTitle(quiz.title);
+                  return (
+                    <h3 className="font-bold text-gray-800 leading-snug">
+                      <span className="block truncate">{main}</span>
+                      {code && <span className="block truncate">{code}</span>}
+                    </h3>
+                  );
+                })()}
+                <p className="text-gray-600 text-sm">
+                  Môn: {subjectDisplayMap[quiz.subject] || quiz.subject}
+                </p>
+                {quiz.difficultyLevel && (
+                  <p className="text-gray-600 text-sm">
+                    Độ khó: {difficultyDisplayMap[quiz.difficultyLevel] || quiz.difficultyLevel}
+                  </p>
+                )}
+                {quiz.durationMinutes != null && (
+                  <p className="text-gray-600 text-sm">Thời gian: {quiz.durationMinutes} phút</p>
+                )}
+                <button
+                  type="button"
+                  className="mt-3 inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/quiz/${quiz.id}`);
+                  }}
+                >
+                  Làm đề ngay
+                </button>
               </div>
-            )
+            ))
           )}
         </div>
       </section>

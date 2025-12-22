@@ -6,6 +6,7 @@ import com.example.online_quiz_system.entity.QuizSubmission;
 import com.example.online_quiz_system.security.UserPrincipal;
 import com.example.online_quiz_system.service.MinioService;
 import com.example.online_quiz_system.service.QuizSubmissionService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -33,6 +34,9 @@ public class QuizSubmissionController {
     @Autowired
     private MinioService minioService;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     // Constants for audio file validation
     private static final long MAX_AUDIO_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
     private static final List<String> ALLOWED_AUDIO_TYPES = List.of("audio/mpeg", "audio/wav", "audio/mp3");
@@ -54,6 +58,23 @@ public class QuizSubmissionController {
                                                     @Valid @RequestBody QuizSubmissionDTO dto) {
         QuizSubmission submission = submissionService.submitQuiz(dto, principal);
         return ResponseEntity.ok(submission);
+    }
+
+    @PostMapping("/upload-json")
+    public ResponseEntity<?> uploadQuizSubmissionJson(@RequestParam("file") MultipartFile file,
+                                                      @AuthenticationPrincipal UserPrincipal principal) {
+        if (file == null || file.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "File không được để trống"));
+        }
+
+        try {
+            QuizSubmissionDTO dto = objectMapper.readValue(file.getBytes(), QuizSubmissionDTO.class);
+            QuizSubmission saved = submissionService.submitQuiz(dto, principal);
+            return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", "Không thể parse file JSON: " + e.getMessage()));
+        }
     }
 
     @GetMapping("/public")

@@ -81,7 +81,11 @@ public class UserService {
                 .role(Role.USER)
                 .build();
 
-        userRepository.save(user);
+        Long userId = userRepository.save(user).getId();
+
+        UserRanking userRanking = new UserRanking();
+        userRanking.setUserId(userId);
+        userRankingRepository.save(userRanking);
 
         String rawToken = verificationService.createTokenForUser(user);
         String verificationLink = "http://localhost:3000/confirm?token=" + rawToken;
@@ -216,7 +220,10 @@ public class UserService {
                 .role(Role.USER)
                 .build();
 
-        userRepository.save(newUser);
+        Long userId = userRepository.save(newUser).getId();
+        UserRanking userRanking = new UserRanking();
+        userRanking.setUserId(userId);
+        userRankingRepository.save(userRanking);
         logger.info("Created new OAuth2 user: {} with provider: {}", finalEmail, provider);
         return newUser;
     }

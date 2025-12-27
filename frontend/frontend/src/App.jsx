@@ -112,10 +112,10 @@ function AppLayout() {
   useEffect(() => {
     // Chỉ chạy logic này sau khi store đã được rehydrate
     if (isHydrated) {
-      const isAdminUser = useAuthStore.getState().hasRole('ADMIN');
-      // Nếu là admin, đã đăng nhập, đang ở trang chủ, VÀ KHÔNG trong chế độ xem user,
+      const hasAdminAccess = useAuthStore.getState().hasRole('ADMIN') || useAuthStore.getState().hasRole('MODERATOR');
+      // Nếu là admin hoặc moderator, đã đăng nhập, đang ở trang chủ, VÀ KHÔNG trong chế độ xem user,
       // thì mới điều hướng đến trang admin.
-      if (isAdminUser && isAuthenticated() && location.pathname === '/' && !isViewingAsUser) {
+      if (hasAdminAccess && isAuthenticated() && location.pathname === '/' && !isViewingAsUser) {
         // Dùng `replace: true` để người dùng không thể nhấn "back" quay lại trang chủ
         navigate('/admin', { replace: true });
       }

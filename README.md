@@ -1,6 +1,6 @@
 # Online Quiz System (Practizz)
 
-Đồ án tốt nghiệp — Hệ thống ôn luyện đề thi trực tuyến tích hợp cá nhân hóa gợi ý bài học.
+Đồ án tốt nghiệp — Hệ thống ôn luyện đề thi trực tuyến tích hợp gợi ý cá nhân hóa.
 
 ---
 

@@ -257,8 +257,8 @@ function AppLayout() {
       </aside>
 
       {/* Main content area */}
-      <div className="flex-1 flex">
-        <main className={`flex-1 overflow-y-auto min-h-screen ${showRightSidebar ? 'p-6' : 'p-4'}`}>
+      <div className="flex-1 flex min-w-0">
+        <main className={`flex-1 overflow-y-auto min-h-screen min-w-0 ${showRightSidebar ? 'p-6' : 'p-4'}`}>
           <Outlet />
         </main>
 
@@ -609,7 +609,7 @@ function HomePage() {
       <section className="mb-6">
         <h2 className="text-xl font-semibold mb-4 text-gray-800">Đề thi nổi bật</h2>
 
-        <div className="flex gap-3 overflow-x-auto pb-4">
+        <div className="flex gap-4 overflow-x-auto pb-4 w-full snap-x">
           {loadingFeatured ? (
             <div className="text-gray-500">Đang tải gợi ý...</div>
           ) : featuredQuizzes.length === 0 ? (
@@ -618,7 +618,7 @@ function HomePage() {
             featuredQuizzes.map((quiz) => (
               <div
                 key={quiz.id}
-                className="min-w-[150px] sm:min-w-[190px] md:min-w-[220px] border border-gray-200 rounded-lg p-4 bg-white hover:shadow-md transition-shadow cursor-pointer"
+                className="snap-start min-w-[150px] sm:min-w-[190px] md:min-w-[220px] border border-gray-200 rounded-lg p-4 bg-white hover:shadow-md transition-shadow cursor-pointer"
               >
                 {(() => {
                   const { main, code } = formatQuizTitle(quiz.title);
@@ -670,7 +670,7 @@ function HomePage() {
                     className="border border-gray-200 rounded-lg p-4 bg-white hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer h-full flex flex-col"
                   >
                     <h3 className="font-bold text-gray-800 mb-2">{quiz.title}</h3>
-                    <p className="text-gray-600 text-sm mb-3 flex-grow">{quiz.description}</p>
+                    <p className="text-gray-600 text-sm mb-3 flex-grow line-clamp-4">{quiz.description}</p>
                     <div className="text-sm text-gray-500 border-t border-gray-100 pt-2 mt-auto space-y-1">
                       <p>Môn: {subjectDisplayMap[quiz.subject] || quiz.subject}</p>
                       {quiz.difficultyLevel && (

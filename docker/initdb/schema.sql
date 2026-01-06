@@ -151,7 +151,7 @@ CREATE TABLE user_rankings (
     daily_points INTEGER DEFAULT 0,
     weekly_points INTEGER DEFAULT 0,
     monthly_points INTEGER DEFAULT 0,
-    last_activity_date DATE,
+    last_activity_date TIMESTAMPTZ,
     current_streak INTEGER DEFAULT 0,
     max_streak INTEGER DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -286,6 +286,10 @@ CREATE INDEX IF NOT EXISTS idx_user_challenge_progress_user_date ON user_challen
 CREATE INDEX IF NOT EXISTS idx_user_rankings_total_points ON user_rankings(total_points DESC);
 CREATE INDEX IF NOT EXISTS idx_user_rankings_weekly_points ON user_rankings(weekly_points DESC);
 CREATE INDEX IF NOT EXISTS idx_daily_point_history_user_date ON daily_point_history(user_id, activity_date);
+CREATE INDEX IF NOT EXISTS idx_leaderboard_total_points ON user_rankings (total_points DESC, updated_at ASC);
+CREATE INDEX IF NOT EXISTS idx_leaderboard_daily_points ON user_rankings (daily_points DESC, updated_at ASC);
+CREATE INDEX IF NOT EXISTS idx_leaderboard_weekly_points ON user_rankings (weekly_points DESC, updated_at ASC);
+CREATE INDEX IF NOT EXISTS idx_leaderboard_monthly_points ON user_rankings (monthly_points DESC, updated_at ASC);
 
 CREATE INDEX IF NOT EXISTS idx_essay_grading_requests_status ON essay_grading_requests(status);
 CREATE INDEX IF NOT EXISTS idx_essay_grading_requests_assigned ON essay_grading_requests(assigned_to);

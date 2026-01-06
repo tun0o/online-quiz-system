@@ -390,7 +390,7 @@ public class UserService {
 
         Integer totalPoints = ranking.getTotalPoints();
         Integer currentStreak = ranking.getCurrentStreak();
-        Integer rank = userRankingRepository.findUserRankByUserId(userId);
+        Integer rank = userRankingRepository.findUserRankByTotalPoints(totalPoints, ranking.getUpdatedAt());
         Integer consumptionPoints = ranking.getConsumptionPoints();
 
         long quizzesTaken = quizAttemptRepository.countByUserIdAndStatus(userId, "COMPLETED");

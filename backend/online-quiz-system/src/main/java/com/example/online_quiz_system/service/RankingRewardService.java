@@ -42,7 +42,7 @@ public class RankingRewardService {
     @Transactional
     public void distributeDailyRewards() {
         logger.info("Bắt đầu trao thưởng bảng xếp hạng NGÀY...");
-        List<UserRanking> topUsers = userRankingRepository.findTop10ByOrderByDailyPointsDesc().stream().limit(3).toList();
+        List<UserRanking> topUsers = userRankingRepository.findTop10ByOrderByDailyPointsDescLastActivityDateAsc().stream().limit(3).toList();
         distributeRewards(topUsers, "ngày", DAILY_REWARDS);
         logger.info("Hoàn thành trao thưởng bảng xếp hạng NGÀY.");
     }
@@ -54,7 +54,7 @@ public class RankingRewardService {
     @Transactional
     public void distributeWeeklyRewards() {
         logger.info("Bắt đầu trao thưởng bảng xếp hạng TUẦN...");
-        List<UserRanking> topUsers = userRankingRepository.findTop10ByOrderByWeeklyPointsDesc().stream().limit(3).toList();
+        List<UserRanking> topUsers = userRankingRepository.findTop10ByOrderByWeeklyPointsDescLastActivityDateAsc().stream().limit(3).toList();
         distributeRewards(topUsers, "tuần", WEEKLY_REWARDS);
         logger.info("Hoàn thành trao thưởng bảng xếp hạng TUẦN.");
     }
@@ -66,7 +66,7 @@ public class RankingRewardService {
     @Transactional
     public void distributeMonthlyRewards() {
         logger.info("Bắt đầu trao thưởng bảng xếp hạng THÁNG...");
-        List<UserRanking> topUsers = userRankingRepository.findTop10ByOrderByMonthlyPointsDesc().stream().limit(3).toList();
+        List<UserRanking> topUsers = userRankingRepository.findTop10ByOrderByMonthlyPointsDescLastActivityDateAsc().stream().limit(3).toList();
         distributeRewards(topUsers, "tháng", MONTHLY_REWARDS);
         logger.info("Hoàn thành trao thưởng bảng xếp hạng THÁNG.");
     }

@@ -156,15 +156,15 @@ public class ChallengeService {
         ranking.setConsumptionPoints(ranking.getConsumptionPoints() + points);
 
         LocalDate today = LocalDate.now();
-        if(!today.equals(ranking.getLastActivityDate())){
-            if(ranking.getLastActivityDate() != null && ranking.getLastActivityDate().equals(today.minusDays(1))){
+        if(!today.equals(ranking.getLastActivityDate().toLocalDate())){
+            if(ranking.getLastActivityDate() != null && ranking.getLastActivityDate().toLocalDate().equals(today.minusDays(1))){
                 ranking.setCurrentStreak(ranking.getCurrentStreak() + 1);
             } else {
                 ranking.setCurrentStreak(1);
             }
             ranking.setMaxStreak(Math.max(ranking.getMaxStreak(), ranking.getCurrentStreak()));
         }
-        ranking.setLastActivityDate(today);
+        ranking.setLastActivityDate(LocalDateTime.now());
 
         rankingRepository.save(ranking);
 
@@ -181,16 +181,16 @@ public class ChallengeService {
         List<UserRanking> rankings;
         switch (period.toLowerCase()) {
             case "daily":
-                rankings = rankingRepository.findTop10ByOrderByDailyPointsDesc();
+                rankings = rankingRepository.findTop10ByOrderByDailyPointsDescLastActivityDateAsc();
                 break;
             case "weekly":
-                rankings = rankingRepository.findTop10ByOrderByWeeklyPointsDesc();
+                rankings = rankingRepository.findTop10ByOrderByWeeklyPointsDescLastActivityDateAsc();
                 break;
             case "monthly":
-                rankings = rankingRepository.findTop10ByOrderByMonthlyPointsDesc();
+                rankings = rankingRepository.findTop10ByOrderByMonthlyPointsDescLastActivityDateAsc();
                 break;
             default: // "total"
-                rankings = rankingRepository.findTop10ByOrderByTotalPointsDesc();
+                rankings = rankingRepository.findTop10ByOrderByTotalPointsDescLastActivityDateAsc();
                 break;
         }
         return IntStream.range(0, rankings.size())
@@ -226,20 +226,21 @@ public class ChallengeService {
                 .orElse(new UserRanking());
 
         if(ranking.getUserId() == null) ranking.setUserId(userId);
+        LocalDateTime updatedTime = ranking.getUpdatedAt();
 
         Integer userRank;
         switch (period.toLowerCase()) {
             case "daily":
-                userRank = rankingRepository.findUserRankByDailyPoints(userId);
+                userRank = rankingRepository.findUserRankByDailyPoints(ranking.getDailyPoints(), updatedTime);
                 break;
             case "weekly":
-                userRank = rankingRepository.findUserRankByWeeklyPoints(userId);
+                userRank = rankingRepository.findUserRankByWeeklyPoints(ranking.getWeeklyPoints(), updatedTime);
                 break;
             case "monthly":
-                userRank = rankingRepository.findUserRankByMonthlyPoints(userId);
+                userRank = rankingRepository.findUserRankByMonthlyPoints(ranking.getMonthlyPoints(), updatedTime);
                 break;
             default: // "total"
-                userRank = rankingRepository.findUserRankByUserId(userId);
+                userRank = rankingRepository.findUserRankByTotalPoints(ranking.getTotalPoints(), updatedTime);
                 break;
         }
 

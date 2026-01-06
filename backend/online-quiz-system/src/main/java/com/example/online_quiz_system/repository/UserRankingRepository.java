@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,31 +18,31 @@ public interface UserRankingRepository extends JpaRepository<UserRanking, Long> 
 
     Optional<UserRanking> findByUserId(Long userId);
 
-    List<UserRanking> findTop10ByOrderByTotalPointsDesc();
+    List<UserRanking> findTop10ByOrderByTotalPointsDescLastActivityDateAsc();
 
-    List<UserRanking> findTop10ByOrderByDailyPointsDesc();
+    List<UserRanking> findTop10ByOrderByDailyPointsDescLastActivityDateAsc();
 
     Page<UserRanking> findAllByOrderByTotalPointsDesc(Pageable pageable);
 
-    List<UserRanking> findTop10ByOrderByWeeklyPointsDesc();
+    List<UserRanking> findTop10ByOrderByWeeklyPointsDescLastActivityDateAsc();
 
-    List<UserRanking> findTop10ByOrderByMonthlyPointsDesc();
+    List<UserRanking> findTop10ByOrderByMonthlyPointsDescLastActivityDateAsc();
 
-    @Query("SELECT COUNT(ur) + 1 FROM UserRanking ur WHERE ur.totalPoints > " +
-            "(SELECT ur2.totalPoints FROM UserRanking ur2 WHERE ur2.userId = :userId)")
-    Integer findUserRankByUserId(@Param("userId") Long userId);
+    @Query("SELECT COUNT(ur) + 1 FROM UserRanking ur WHERE ur.totalPoints > :totalPoints " +
+            "OR ( ur.totalPoints = :totalPoints AND ur.updatedAt < :updatedAt)")
+    Integer findUserRankByTotalPoints(@Param("totalPoints") Integer totalPoints, @Param("updatedAt")LocalDateTime updatedAt);
 
-    @Query("SELECT COUNT(ur) + 1 FROM UserRanking ur WHERE ur.dailyPoints > " +
-            "(SELECT ur2.dailyPoints FROM UserRanking ur2 WHERE ur2.userId = :userId)")
-    Integer findUserRankByDailyPoints(@Param("userId") Long userId);
+    @Query("SELECT COUNT(ur) + 1 FROM UserRanking ur WHERE ur.dailyPoints > :dailyPoints " +
+            "OR ( ur.dailyPoints = :dailyPoints AND ur.updatedAt < :updatedAt)")
+    Integer findUserRankByDailyPoints(@Param("dailyPoints") Integer dailyPoints, @Param("updatedAt")LocalDateTime updatedAt);
 
-    @Query("SELECT COUNT(ur) + 1 FROM UserRanking ur WHERE ur.weeklyPoints > " +
-            "(SELECT ur2.weeklyPoints FROM UserRanking ur2 WHERE ur2.userId = :userId)")
-    Integer findUserRankByWeeklyPoints(@Param("userId") Long userId);
+    @Query("SELECT COUNT(ur) + 1 FROM UserRanking ur WHERE ur.weeklyPoints > :weeklyPoints " +
+            "OR ( ur.weeklyPoints = :weeklyPoints AND ur.updatedAt < :updatedAt)")
+    Integer findUserRankByWeeklyPoints(@Param("weeklyPoints") Integer weeklyPoints, @Param("updatedAt")LocalDateTime updatedAt);
 
-    @Query("SELECT COUNT(ur) + 1 FROM UserRanking ur WHERE ur.monthlyPoints > " +
-            "(SELECT ur2.monthlyPoints FROM UserRanking ur2 WHERE ur2.userId = :userId)")
-    Integer findUserRankByMonthlyPoints(@Param("userId") Long userId);
+    @Query("SELECT COUNT(ur) + 1 FROM UserRanking ur WHERE ur.monthlyPoints > :monthlyPoints " +
+            "OR ( ur.monthlyPoints = :monthlyPoints AND ur.updatedAt < :updatedAt)")
+    Integer findUserRankByMonthlyPoints(@Param("monthlyPoints") Integer monthlyPoints, @Param("updatedAt")LocalDateTime updatedAt);
 
     @Query("SELECT ur FROM UserRanking ur WHERE ur.totalPoints > 0 " +
             "ORDER BY ur.totalPoints DESC")

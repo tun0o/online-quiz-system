@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -36,7 +35,7 @@ public class UserRanking {
     private Integer monthlyPoints = 0;
 
     @Column(name = "last_activity_date")
-    private LocalDate lastActivityDate;
+    private LocalDateTime lastActivityDate;
 
     @Column(name = "current_streak")
     private Integer currentStreak = 0;

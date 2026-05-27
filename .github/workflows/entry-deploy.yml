@@ -64,17 +64,17 @@ jobs:
 
       - name: Deploy on server
         uses: appleboy/ssh-action@v1.0.3
-        env:
-          PROD_ENV_B64: ${{ secrets.PROD_ENV_B64 }}
-          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
-          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
-          BACKEND_IMAGE: ${{ env.IMAGE_NAME }}:backend-${{ github.sha }}
-          FRONTEND_IMAGE: ${{ env.IMAGE_NAME }}:frontend-${{ github.sha }}
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           port: ${{ secrets.DEPLOY_PORT }}
+          envs: |
+            PROD_ENV_B64=${{ secrets.PROD_ENV_B64 }}
+            GHCR_USERNAME=${{ secrets.GHCR_USERNAME }}
+            GHCR_TOKEN=${{ secrets.GHCR_TOKEN }}
+            BACKEND_IMAGE=${{ env.IMAGE_NAME }}:backend-${{ github.sha }}
+            FRONTEND_IMAGE=${{ env.IMAGE_NAME }}:frontend-${{ github.sha }}
           script: |
             set -euo pipefail
 

@@ -12,6 +12,8 @@ const OAuth2Error = () => {
     const navigate = useNavigate();
     const [errorDetails, setErrorDetails] = useState(null);
 
+    const backendBaseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8080').replace(/\/$/, '');
+
     useEffect(() => {
         const error = searchParams.get('error');
         const message = searchParams.get('message');
@@ -89,10 +91,10 @@ const OAuth2Error = () => {
                 navigate('/login');
                 break;
             case 'google':
-                window.location.href = 'http://localhost:8080/oauth2/authorization/google';
+                window.location.href = `${backendBaseUrl}/oauth2/authorization/google`;
                 break;
             case 'facebook':
-                window.location.href = 'http://localhost:8080/oauth2/authorization/facebook';
+                window.location.href = `${backendBaseUrl}/oauth2/authorization/facebook`;
                 break;
             case 'home':
                 navigate('/');

@@ -7,6 +7,7 @@ import com.example.online_quiz_system.service.OAuth2AuthenticationSuccessHandler
 import com.example.online_quiz_system.service.OAuth2AuthenticationFailureHandler;
 import com.example.online_quiz_system.security.HttpCookieOAuth2AuthorizationRequestRepository;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -35,6 +36,9 @@ public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
     private final JwtService jwtService;
+
+    @Value("${spring.web.cors.allowed-origins:http://localhost:3000,http://localhost:5173}")
+    private String corsAllowedOrigins;
 
     // Note: we intentionally do NOT inject CustomOAuth2UserService / OAuth2AuthenticationSuccessHandler
     // via the constructor to avoid circular dependencies. They are injected into the filterChain method instead.
@@ -78,7 +82,8 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http,
                                            CustomOAuth2UserService customOAuth2UserService,
                                            OAuth2AuthenticationSuccessHandler oauth2AuthenticationSuccessHandler,
-                                           OAuth2AuthenticationFailureHandler oauth2AuthenticationFailureHandler) throws Exception {
+                           OAuth2AuthenticationFailureHandler oauth2AuthenticationFailureHandler,
+                           OAuth2Configuration oauth2Configuration) throws Exception {
         http
                 .cors(c -> c.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
@@ -104,19 +109,22 @@ public class SecurityConfig {
                         })
                 )
                 .authenticationProvider(authenticationProvider())
-                .oauth2Login(oauth2 -> oauth2
-                        .authorizationEndpoint(authz -> authz
-                                // Sử dụng đường dẫn mặc định của Spring Security để tránh xung đột
-                                .baseUri("/oauth2/authorization")
-                                .authorizationRequestRepository(cookieAuthorizationRequestRepository())
-                        )
-                        .userInfoEndpoint(userInfo -> userInfo
-                                .userService(customOAuth2UserService)
-                        )
-                        .successHandler(oauth2AuthenticationSuccessHandler)
-                        .failureHandler(oauth2AuthenticationFailureHandler)
-                )
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+
+            if (oauth2Configuration != null && oauth2Configuration.isConfigurationValid()) {
+                http.oauth2Login(oauth2 -> oauth2
+                    .authorizationEndpoint(authz -> authz
+                        // Sử dụng đường dẫn mặc định của Spring Security để tránh xung đột
+                        .baseUri("/oauth2/authorization")
+                        .authorizationRequestRepository(cookieAuthorizationRequestRepository())
+                    )
+                    .userInfoEndpoint(userInfo -> userInfo
+                        .userService(customOAuth2UserService)
+                    )
+                    .successHandler(oauth2AuthenticationSuccessHandler)
+                    .failureHandler(oauth2AuthenticationFailureHandler)
+                );
+            }
 
         return http.build();
     }
@@ -125,7 +133,12 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         // When allowCredentials(true) is set, use specific allowed origins instead of "*". Adjust as needed.
-        config.setAllowedOriginPatterns(List.of("http://localhost:3000", "http://localhost:5173")); // Đảm bảo port 3000 có ở đây
+        List<String> allowedOriginPatterns = List.of(corsAllowedOrigins.split(","))
+            .stream()
+            .map(String::trim)
+            .filter(s -> !s.isEmpty())
+            .toList();
+        config.setAllowedOriginPatterns(allowedOriginPatterns);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

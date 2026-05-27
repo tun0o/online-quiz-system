@@ -34,6 +34,8 @@ const Login = () => {
 
     const from = location.state?.from?.pathname || null;
 
+    const backendBaseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8080').replace(/\/$/, '');
+
     useEffect(() => {
         // Nếu người dùng đã đăng nhập và vô tình vào trang Login,
         // điều hướng họ về trang chủ.
@@ -110,12 +112,12 @@ const Login = () => {
 
     // Hàm xử lý đăng nhập bằng Google
     const handleGoogleLogin = () => {
-        window.location.href = 'http://localhost:8080/oauth2/authorization/google';
+        window.location.href = `${backendBaseUrl}/oauth2/authorization/google`;
     };
 
     // Hàm xử lý đăng nhập bằng Facebook
     const handleFacebookLogin = () => {
-        window.location.href = 'http://localhost:8080/oauth2/authorization/facebook';
+        window.location.href = `${backendBaseUrl}/oauth2/authorization/facebook`;
     };
 
     return (

@@ -52,6 +52,19 @@ jobs:
             ${{ env.IMAGE_NAME }}:frontend-${{ github.sha }}
             ${{ env.IMAGE_NAME }}:frontend-latest
 
+      - name: Prepare server directory
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_PORT }}
+          script: |
+            set -euo pipefail
+            DEPLOY_USER="$(whoami)"
+            sudo mkdir -p /opt/online-quiz-system
+            sudo chown -R "$DEPLOY_USER":"$DEPLOY_USER" /opt/online-quiz-system
+
       - name: Copy production compose to server
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -64,17 +77,18 @@ jobs:
 
       - name: Deploy on server
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          PROD_ENV_B64: ${{ secrets.PROD_ENV_B64 }}
+          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+          BACKEND_IMAGE: ${{ env.IMAGE_NAME }}:backend-${{ github.sha }}
+          FRONTEND_IMAGE: ${{ env.IMAGE_NAME }}:frontend-${{ github.sha }}
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           port: ${{ secrets.DEPLOY_PORT }}
-          envs: |
-            PROD_ENV_B64=${{ secrets.PROD_ENV_B64 }}
-            GHCR_USERNAME=${{ secrets.GHCR_USERNAME }}
-            GHCR_TOKEN=${{ secrets.GHCR_TOKEN }}
-            BACKEND_IMAGE=${{ env.IMAGE_NAME }}:backend-${{ github.sha }}
-            FRONTEND_IMAGE=${{ env.IMAGE_NAME }}:frontend-${{ github.sha }}
+          envs: PROD_ENV_B64,GHCR_USERNAME,GHCR_TOKEN,BACKEND_IMAGE,FRONTEND_IMAGE
           script: |
             set -euo pipefail
 
@@ -87,7 +101,7 @@ jobs:
               exit 1
             fi
 
-          printf '%s' "${PROD_ENV_B64:-}" | base64 -d > .env
+            printf '%s' "${PROD_ENV_B64}" | base64 -d > .env
 
             # Ensure images are pinned to this deploy
             grep -v '^BACKEND_IMAGE=' .env | grep -v '^FRONTEND_IMAGE=' > .env.tmp || true
@@ -97,7 +111,7 @@ jobs:
 
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
 
-            docker compose -f docker-compose.prod.yml --env-file .env pull
-            docker compose -f docker-compose.prod.yml --env-file .env up -d
+            docker compose -f docker/docker-compose.prod.yml --env-file .env pull
+            docker compose -f docker/docker-compose.prod.yml --env-file .env up -d
 
             docker image prune -f

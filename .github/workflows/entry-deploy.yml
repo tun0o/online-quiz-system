@@ -82,12 +82,12 @@ jobs:
             sudo chown -R "$USER":"$USER" /opt/online-quiz-system
             cd /opt/online-quiz-system
 
-            if [ -z "${PROD_ENV_B64}" ]; then
+            if [ -z "${PROD_ENV_B64:-}" ]; then
               echo "PROD_ENV_B64 is empty" >&2
               exit 1
             fi
 
-            echo "$PROD_ENV_B64" | base64 -d > .env
+          printf '%s' "${PROD_ENV_B64:-}" | base64 -d > .env
 
             # Ensure images are pinned to this deploy
             grep -v '^BACKEND_IMAGE=' .env | grep -v '^FRONTEND_IMAGE=' > .env.tmp || true
